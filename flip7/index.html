@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>7连翻 计分器</title>
+    <link href="/static/common.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Players list */
+        .player-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 var(--space-md);
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .player-item .name {
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        .player-item .score {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--apple-blue);
+        }
+
+        .remove-btn {
+            color: var(--apple-red);
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 59, 48, 0.1);
+        }
+
+        .add-player-form {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-player-form input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .add-player-form input:focus {
+            border-color: var(--apple-blue);
+        }
+
+        /* Scoring section */
+        .round-player-block {
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .round-player-block:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .round-player-block h3 {
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--apple-black);
+        }
+
+        .card-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+        }
+
+        .card-btn {
+            background: rgba(0, 0, 0, 0.03);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 8px 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--apple-black);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            user-select: none;
+            position: relative;
+        }
+
+        .card-btn[data-num="true"].selected {
+            background: rgba(0, 113, 227, 0.1);
+            border-color: var(--apple-blue);
+            color: var(--apple-blue);
+        }
+
+        .card-btn[data-type="mod"].selected {
+            background: rgba(52, 199, 89, 0.1);
+            border-color: var(--apple-green);
+            color: var(--apple-green);
+        }
+
+        .card-btn[data-type="mult"].selected {
+            background: rgba(175, 82, 222, 0.1);
+            border-color: var(--apple-purple);
+            color: var(--apple-purple);
+        }
+
+        .card-btn .count-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--apple-red);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .card-btn.multi .count-badge {
+            display: flex;
+        }
+
+
+
+        /* Modals */
+        .game-over-modal .apple-modal-content {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .winner-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .winner-name {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--apple-black);
+            margin-bottom: 12px;
+        }
+
+        .winner-score {
+            font-size: 1.2rem;
+            color: var(--apple-gray);
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Nav -->
+    <nav class="apple-nav">
+        <div class="apple-nav-content" style="min-height: 44px;">
+            <a href="/" class="apple-nav-back" style="min-height: 44px;"><i class="fas fa-chevron-left"></i> 首页</a>
+            <span class="apple-nav-title"><i class="fas fa-layer-group" style="color: var(--apple-purple);"></i>
+                7连翻</span>
+            <div class="apple-nav-action">
+                <button class="apple-btn apple-btn-sm apple-btn-secondary" style="min-height: 44px;"
+                    @click="resetGame">重置</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="apple-container">
+        <div class="apple-hero">
+            <span class="apple-hero-emoji">🃏</span>
+            <h1>7连翻</h1>
+            <p>爆牌翻车 · 直通两百</p>
+        </div>
+
+        <div style="text-align: center; margin-bottom: var(--space-lg);">
+            <div class="apple-segment">
+                <button class="apple-segment-btn active" onclick="switchTab('play')">计分板</button>
+                <button class="apple-segment-btn" onclick="switchTab('leaderboard')">排行榜</button>
+            </div>
+        </div>
+
+        <div id="tab-play" class="tab-pane active">
+
+            <div class="apple-card" id="setup-section">
+                <div class="section-title"><i class="fas fa-users" style="color: var(--apple-blue);"></i> 玩家设置</div>
+                <ul class="player-list" id="player-list-ui"></ul>
+                <form class="add-player-form" onsubmit="addPlayer(event)">
+                    <input type="text" id="new-player-name" placeholder="输入玩家名字..." autocomplete="off" required>
+                    <button type="submit" class="apple-btn apple-btn-primary" style="padding: 0 20px;">增加</button>
+                </form>
+                <div style="margin-top: 16px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 16px;">
+                    <button onclick="resetGame()" class="apple-btn"
+                        style="color: var(--apple-red); border-color: var(--apple-red); width: 100%;">重新开始游戏</button>
+                </div>
+            </div>
+
+            <div class="apple-card" id="round-section" style="display: none;">
+                <div class="section-title"><i class="fas fa-layer-group" style="color: var(--apple-purple);"></i> 本回合结算
+                </div>
+                <div id="round-players-container"></div>
+                <button onclick="submitRound()" class="apple-btn apple-btn-success apple-btn-block apple-btn-lg"
+                    style="margin-top: var(--space-lg);">
+                    结算回合分数
+                </button>
+            </div>
+
+        </div>
+
+        <div id="tab-leaderboard" class="tab-pane">
+            <div id="inline-leaderboard-section">
+                <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
+                </div>
+                <div class="hist-lb-card">
+                    <div id="histLeaderboard">
+                        <div class="empty-state">
+                            <span class="empty-icon">🏆</span>
+                            暂无历史记录
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="apple-modal" style="z-index: 2000;">
+        <div class="apple-modal-content" style="max-width: 400px; margin: auto; border-radius: 20px;">
+            <div style="text-align: center; padding: 20px;">
+                <div class="winner-icon">🏆</div>
+                <h2 style="font-size: 1.5rem; color: var(--apple-black); margin-bottom: 8px;">游戏结束！</h2>
+                <div class="winner-name" id="winner-name-ui"></div>
+                <div class="winner-score" id="winner-score-ui"></div>
+
+                <button onclick="closeGameOver()" class="apple-btn apple-btn-primary apple-btn-lg apple-btn-block"
+                    style="margin-top: 30px;">
+                    太棒了
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/flip7/api';
+        let players = [];
+        // round state: name -> array of cards (strings)
+        let roundState = {};
+
+        const CARDS = [{
+            v: '0',
+            type: 'num'
+        }, {
+            v: '1',
+            type: 'num'
+        }, {
+            v: '2',
+            type: 'num'
+        }, {
+            v: '3',
+            type: 'num'
+        },
+        {
+            v: '4',
+            type: 'num'
+        }, {
+            v: '5',
+            type: 'num'
+        }, {
+            v: '6',
+            type: 'num'
+        }, {
+            v: '7',
+            type: 'num'
+        },
+        {
+            v: '8',
+            type: 'num'
+        }, {
+            v: '9',
+            type: 'num'
+        }, {
+            v: '10',
+            type: 'num'
+        }, {
+            v: '11',
+            type: 'num'
+        }, {
+            v: '12',
+            type: 'num'
+        },
+        {
+            v: '+2',
+            type: 'mod'
+        }, {
+            v: '+3',
+            type: 'mod'
+        }, {
+            v: '+4',
+            type: 'mod'
+        }, {
+            v: '+5',
+            type: 'mod'
+        },
+        {
+            v: '+6',
+            type: 'mod'
+        }, {
+            v: '+7',
+            type: 'mod'
+        }, {
+            v: '+8',
+            type: 'mod'
+        }, {
+            v: '+9',
+            type: 'mod'
+        }, {
+            v: '+10',
+            type: 'mod'
+        },
+        {
+            v: 'x2',
+            type: 'mult'
+        }
+        ];
+
+        async function fetchStatus() {
+            const res = await fetch(`${API_BASE}/status`);
+            const data = await res.json();
+            players = data.ranked;
+
+            if (data.status === 'finished') {
+                document.getElementById('round-section').style.display = 'none';
+                renderPlayers(true);
+            } else {
+                if (players.length > 0) {
+                    document.getElementById('round-section').style.display = 'block';
+                } else {
+                    document.getElementById('round-section').style.display = 'none';
+                }
+                renderPlayers(false);
+                renderRoundUI();
+            }
+        }
+
+        function renderPlayers(isFinished) {
+            const ul = document.getElementById('player-list-ui');
+            ul.innerHTML = '';
+            players.forEach((p, idx) => {
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                let rankStr = p.total_score >= 200 ? '👑 ' : `${p.rank}. `;
+                li.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--apple-gray); font-weight: 700; width: 24px; text-align: center;">${p.rank}</span>
+                        <div class="name">${p.name}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="score">${p.total_score} 分</span>
+                        ${!isFinished ? `<button class="remove-btn" onclick="removePlayer('${p.name}')"><i class="fas fa-trash-alt"></i></button>` : ''}
+                    </div>
+                `;
+                ul.appendChild(li);
+            });
+        }
+
+        function renderRoundUI() {
+            const container = document.getElementById('round-players-container');
+            container.innerHTML = '';
+
+            // Ensure roundState tracks all current players
+            let newRoundState = {};
+            players.forEach(p => {
+                newRoundState[p.name] = roundState[p.name] || [];
+
+                const block = document.createElement('div');
+                block.className = 'round-player-block';
+                block.innerHTML = `<h3>${p.name} 的最终手牌</h3>`;
+
+                const grid = document.createElement('div');
+                grid.className = 'card-selector';
+
+                CARDS.forEach(card => {
+                    const btn = document.createElement('button');
+                    btn.className = 'card-btn';
+                    btn.dataset.num = card.type === 'num' ? "true" : "false";
+                    btn.dataset.type = card.type;
+                    btn.innerHTML = `${card.v} <div class="count-badge"></div>`;
+
+                    const count = newRoundState[p.name].filter(c => c === card.v).length;
+                    if (count > 0) {
+                        btn.classList.add('selected');
+                        if (count > 1) {
+                            btn.classList.add('multi');
+                            btn.querySelector('.count-badge').innerText = count;
+                        }
+                    }
+
+                    btn.onclick = () => toggleCard(p.name, card.v, btn);
+                    grid.appendChild(btn);
+                });
+
+                block.appendChild(grid);
+                container.appendChild(block);
+            });
+            roundState = newRoundState;
+        }
+
+        function toggleCard(playerName, cardVal, btn) {
+            const idx = roundState[playerName].indexOf(cardVal);
+            if (idx === -1) {
+                // Not selected -> select 1
+                roundState[playerName].push(cardVal);
+            } else {
+                const count = roundState[playerName].filter(c => c === cardVal).length;
+                if (count === 1) {
+                    // Selected 1 -> select 2 (allows bust checking, or multiple mod cards)
+                    roundState[playerName].push(cardVal);
+                } else {
+                    // Selected 2 -> clear all of this card type
+                    roundState[playerName] = roundState[playerName].filter(c => c !== cardVal);
+                }
+            }
+
+            // UI Update locally to avoid full re-render
+            const count = roundState[playerName].filter(c => c === cardVal).length;
+            const badge = btn.querySelector('.count-badge');
+
+            if (count === 0) {
+                btn.classList.remove('selected', 'multi');
+            } else if (count === 1) {
+                btn.classList.add('selected');
+                btn.classList.remove('multi');
+            } else {
+                btn.classList.add('selected', 'multi');
+                badge.innerText = count;
+            }
+        }
+
+        async function addPlayer(e) {
+            e.preventDefault();
+            const input = document.getElementById('new-player-name');
+            const name = input.value.trim();
+            if (!name) return;
+
+            await fetch(`${API_BASE}/add_player`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name
+                })
+            });
+            input.value = '';
+            fetchStatus();
+        }
+
+        async function removePlayer(name) {
+            await fetch(`${API_BASE}/remove_player`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name
+                })
+            });
+            delete roundState[name];
+            fetchStatus();
+        }
+
+        async function resetGame() {
+            if (!confirm("确定要重新开始吗？分数将清零。")) return;
+            await fetch(`${API_BASE}/reset`, {
+                method: 'POST'
+            });
+            roundState = {};
+            fetchStatus();
+        }
+
+        async function submitRound() {
+            const payload = {
+                players: Object.keys(roundState).map(name => ({
+                    name,
+                    cards: roundState[name]
+                }))
+            };
+            const res = await fetch(`${API_BASE}/submit_round`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (data.status === 'game_over') {
+                document.getElementById('winner-name-ui').innerText = data.winner;
+                document.getElementById('winner-score-ui').innerText = '率先达到 200 分！';
+                document.getElementById('gameOverModal').classList.add('show');
+            } else {
+                // Show a quick toast or alert for scores? (Optional)
+                let msg = "本轮得分：\n";
+                Object.entries(data.round_scores).forEach(([n, s]) => msg += `${n}: ${s}\n`);
+                // alert(msg); // uncomment to debug round score
+            }
+
+            // Clear round selection
+            Object.keys(roundState).forEach(k => roundState[k] = []);
+            fetchStatus();
+            fetchLeaderboard();
+        }
+
+        function closeGameOver() {
+            document.getElementById('gameOverModal').classList.remove('show');
+            resetGame();
+        }
+
+        // Leaderboard logic
+        async function fetchLeaderboard() {
+            document.getElementById('histLeaderboard').innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">🏆</span>
+                        跑去查大名册了...
+                    </div>`;
+
+            try {
+                const res = await fetch(`${API_BASE}/leaderboard`);
+                const data = await res.json();
+
+                if (data.leaderboard) {
+                    if (data.leaderboard.length === 0) {
+                        document.getElementById('histLeaderboard').innerHTML = `
+                                <div class="empty-state">
+                                    <span class="empty-icon">👻</span>
+                                    还没人玩过呢，快去开一局！
+                                </div>`;
+                        return;
+                    }
+
+                    let html = `
+                                <div class="hist-lb-header">
+                                    <span>#</span>
+                                    <span>玩家</span>
+                                    <span style="text-align:right">统计</span>
+                                    <span style="text-align:right">均分</span>
+                                    <span style="text-align:right">爆/上局</span>
+                                </div>
+                        `;
+
+                    data.leaderboard.forEach((p, idx) => {
+                        const rank = idx + 1;
+                        let rankClass = '';
+                        let rankIcon = rank;
+                        if (rank === 1) {
+                            rankClass = 'gold';
+                            rankIcon = '👑';
+                        } else if (rank === 2) {
+                            rankClass = 'silver';
+                            rankIcon = '2';
+                        } else if (rank === 3) {
+                            rankClass = 'bronze';
+                            rankIcon = '3';
+                        }
+
+                        const lastScoreText = p.last_score !== null ? `${p.last_score}分` : '--';
+
+                        html += `
+                                <div class="hist-lb-row">
+                                    <span class="lb-rank ${rankClass}">${rankIcon}</span>
+                                    <span class="lb-name">${p.name}</span>
+                                    <span style="text-align:right; font-weight:700; color:var(--apple-gray); font-size: 0.95rem;">${p.total_games}局 · ${p.win_rate}%</span>
+                                    <span class="lb-amount" style="color:var(--apple-blue);">${p.avg_score}</span>
+                                    <span class="lb-bills" style="font-weight:700; color:var(--apple-gray);">爆${p.total_busts} / ${lastScoreText}</span>
+                                </div>
+                            `;
+                    });
+
+                    document.getElementById('histLeaderboard').innerHTML = html;
+                } else {
+                    document.getElementById('histLeaderboard').innerHTML =
+                        '<div class="empty-state">加载失败</div>';
+                }
+            } catch (e) {
+                document.getElementById('histLeaderboard').innerHTML =
+                    `<div class="empty-state">网络出错: ${e}</div>`;
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.apple-segment-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            if (tabId === 'leaderboard') fetchLeaderboard();
+        }
+
+        // Init
+        fetchStatus();
+        fetchLeaderboard();
+    </script>
+</body>
+
+</html>

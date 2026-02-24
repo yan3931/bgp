@@ -1,0 +1,85 @@
+{% set card_icons = {
+'侍卫 (Guard)': '🗡️',
+'牧师 (Priest)': '🙏',
+'牧师(Priest)': '🙏',
+'男爵 (Baron)': '⚔️',
+'侍女 (Handmaid)': '🛡️',
+'王子 (Prince)': '👑',
+'国王 (King)': '🤴',
+'女伯爵 (Countess)': '👸',
+'公主 (Princess)': '💖',
+'刺客 (Assassin)': '🗡️',
+'弄臣 (Jester)': '🃏',
+'红衣主教 (Cardinal)': '⛪',
+'男爵夫人 (Baroness)': '💃',
+'马屁精 (Sycophant)': '🎭',
+'伯爵 (Count)': '🏰',
+'警官 (Constable)': '🔒',
+'女伯爵 (Countess)': '👸',
+'太后': '👑',
+'大主教 (Bishop)': '✝️'
+} %}
+
+{% set card_abilities = {
+'刺客 (Assassin)': '被侍卫猜中时反杀侍卫',
+'弄臣 (Jester)': '预测一名玩家，其获胜则你得1分',
+'侍卫 (Guard)': '猜目标手牌(非侍卫)，猜中则目标出局',
+'牧师 (Priest)': '查看一名玩家的手牌',
+'红衣主教 (Cardinal)': '令两人互换手牌，你可看其中一张',
+'男爵 (Baron)': '与目标比牌，数字小者出局',
+'男爵夫人 (Baroness)': '查看一至两名玩家的手牌',
+'侍女 (Handmaid)': '免疫，下回合前不受其他卡牌影响',
+'马屁精 (Sycophant)': '指定一人，下一张牌的目标必须是TA',
+'王子 (Prince)': '指定一名玩家弃牌并重抽',
+'伯爵 (Count)': '结束比牌时，若在弃牌堆则你的数值+1',
+'国王 (King)': '与一名玩家交换手牌',
+'警官 (Constable)': '若出局时此牌在你的弃牌堆，则你得1分',
+'女伯爵 (Countess)': '若手持王子或国王，则必须打出',
+'太后 (Dowager)': '与目标比牌，数字大者出局',
+'公主 (Princess)': '被弃掉时，你立即出局',
+'大主教 (Bishop)': '猜目标数字，猜中得1分且目标可重抽'
+} %}
+
+{% for item in stats %}
+{% set card_number = item.name.split(' ')[0] %}
+{% set card_display = item.name.split(' - ')[1] if ' - ' in item.name else item.name %}
+{% set icon = card_icons.get(card_display, '🎴') %}
+{% set ability = card_abilities.get(card_display, '') %}
+<div class="card-item {% if item.remaining == 0 %}depleted{% endif %}" data-total="{{ item.total }}">
+
+    <!-- Character Icon -->
+    <div class="card-avatar card-num-{{ card_number }}">
+        <span class="card-emoji">{{ icon }}</span>
+        <span class="card-value">{{ card_number }}</span>
+    </div>
+
+    <!-- Card Body -->
+    <div class="card-body">
+        <div class="card-title-row">
+            <span class="card-title">{{ card_display }}</span>
+            <span
+                class="card-prob {% if item.probability >= 15 %}hot{% elif item.probability >= 8 %}warm{% else %}cold{% endif %}">
+                {{ item.probability }}%
+            </span>
+        </div>
+        <div class="card-ability">{{ ability }}</div>
+        <div class="card-meta">
+            <!-- Dot indicators: filled = remaining, empty = played -->
+            <div class="dots-track">
+                {% for i in range(item.total) %}
+                <span class="dot {% if i >= item.remaining %}used{% endif %}"></span>
+                {% endfor %}
+            </div>
+            <span class="card-count-label">{{ item.remaining }}/{{ item.total }}</span>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card-actions">
+        <button class="act-btn act-btn-minus" onclick="sendAction('remove', '{{ item.name }}')">
+            <i class="fas fa-minus" style="font-size:0.7rem;"></i>
+        </button>
+        <button class="act-btn act-btn-play" onclick="sendAction('add', '{{ item.name }}')">出</button>
+    </div>
+</div>
+{% endfor %}
