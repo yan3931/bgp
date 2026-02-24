@@ -1,1297 +1,1130 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>欢乐掷骰 · 区域争夺</title>
-    <link href="/static/common.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* body background managed by common.css */
+{% block title %}拉斯维加斯 - 欢乐掷骰 · 区域争夺{% endblock %}
 
-        /* ---- Page Hero (Customized gradient) ---- */
-        .apple-hero h1 {
-            background: linear-gradient(135deg, #00b894, #00cec9, #0984e3);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+{% block extra_head %}
+<style>
+    /* ---- Page Hero (Customized gradient) ---- */
+    .apple-hero h1 {
+        background: linear-gradient(135deg, #00b894, #00cec9, #0984e3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* ---- Section Title ---- */
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--apple-gray);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: var(--space-sm);
+        padding-left: 8px;
+    }
+
+    /* ---- Add Player ---- */
+    .add-player-row {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+    }
+
+    .add-player-row .apple-input {
+        flex: 1;
+        font-size: 1.05rem;
+        font-weight: 600;
+    }
+
+    .add-player-row .apple-input:focus {
+        background: #fff;
+        border-color: var(--apple-blue);
+        box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+    }
+
+    .add-player-row .apple-btn {
+        box-shadow: 0 6px 16px rgba(0, 113, 227, 0.25);
+        font-weight: 600;
+        padding: 0 24px;
+    }
+
+
+
+    .lb-tie-badge {
+        display: inline-block;
+        font-size: 0.65rem;
+        font-weight: 700;
+        background: rgba(255, 149, 0, 0.15);
+        color: var(--apple-orange);
+        padding: 4px 8px;
+        border-radius: var(--radius-pill);
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+
+    /* ---- Player Cards ---- */
+    .player-section {
+        margin-bottom: var(--space-md);
+    }
+
+    .player-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .player-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-lg);
+        cursor: pointer;
+        transition: background var(--transition-fast);
+        background: var(--apple-white);
+    }
+
+    .player-card-header:active {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .player-card-left {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .player-card-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .player-card-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: -0.01em;
+    }
+
+    .player-card-summary {
+        font-size: 0.85rem;
+        color: var(--apple-gray);
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    .player-card-chevron {
+        color: var(--apple-gray);
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        font-size: 1rem;
+    }
+
+    .player-card-chevron.open {
+        transform: rotate(90deg);
+        color: var(--apple-blue);
+    }
+
+    .player-card-body {
+        display: none;
+        padding: 0 var(--space-lg) var(--space-lg);
+        border-top: 1px solid rgba(0, 0, 0, 0.04);
+        margin-top: 4px;
+        padding-top: var(--space-md);
+    }
+
+    .player-card-body.open {
+        display: block;
+        animation: slideDown 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
         }
 
-        /* ---- Section Title ---- */
-        .section-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--apple-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: var(--space-sm);
-            padding-left: 8px;
-        }
-
-        /* ---- Add Player ---- */
-        .add-player-row {
-            display: flex;
-            gap: var(--space-sm);
-            margin-bottom: var(--space-lg);
-        }
-
-        .add-player-row .apple-input {
-            flex: 1;
-            font-size: 1.05rem;
-            font-weight: 600;
-        }
-
-        .add-player-row .apple-input:focus {
-            background: #fff;
-            border-color: var(--apple-blue);
-            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
-        }
-
-        .add-player-row .apple-btn {
-            box-shadow: 0 6px 16px rgba(0, 113, 227, 0.25);
-            font-weight: 600;
-            padding: 0 24px;
-        }
-
-        /* ---- Leaderboard & Cards common styling ---- */
-        .lb-card,
-        .player-card,
-        .hist-lb-card {
-            background: var(--apple-white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card);
-            overflow: hidden;
-            margin-bottom: var(--space-lg);
-            transition: all var(--transition-normal);
-        }
-
-        .lb-header,
-        .hist-lb-header {
-            display: grid;
-            padding: 12px var(--space-lg);
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--apple-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            background: var(--apple-bg);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .lb-header {
-            grid-template-columns: 40px 1fr 80px 60px;
-        }
-
-        .hist-lb-header {
-            grid-template-columns: 40px 1fr 80px 80px 80px 50px;
-        }
-
-        .lb-row,
-        .hist-lb-row {
-            display: grid;
-            align-items: center;
-            padding: 16px var(--space-lg);
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-            transition: background var(--transition-fast);
-        }
-
-        .lb-row {
-            grid-template-columns: 40px 1fr 80px 60px;
-        }
-
-        .hist-lb-row {
-            grid-template-columns: 40px 1fr 80px 80px 80px 50px;
-        }
-
-        .lb-row:last-child {
-            border-bottom: none;
-        }
-
-        .hist-lb-row:last-child {
-            border-bottom: none;
-        }
-
-        .lb-row:hover,
-        .hist-lb-row:hover {
-            background: rgba(0, 0, 0, 0.02);
-        }
-
-        .lb-rank {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--apple-gray);
-        }
-
-        .lb-rank.gold {
-            color: var(--apple-orange);
-            font-size: 1.15rem;
-        }
-
-        .lb-rank.silver {
-            color: #a0aec0;
-            font-size: 1.15rem;
-        }
-
-        .lb-rank.bronze {
-            color: var(--apple-brown);
-            font-size: 1.15rem;
-        }
-
-        .lb-name {
-            font-weight: 700;
-            font-size: 1.05rem;
-        }
-
-        .lb-amount {
-            font-weight: 700;
-            font-size: 1.15rem;
-            color: var(--apple-blue);
-            text-align: right;
-            letter-spacing: -0.02em;
-        }
-
-        .lb-bills {
-            font-size: 0.85rem;
-            color: var(--apple-gray);
-            text-align: right;
-            font-weight: 600;
-        }
-
-        .lb-tie-badge {
-            display: inline-block;
-            font-size: 0.65rem;
-            font-weight: 700;
-            background: rgba(255, 149, 0, 0.15);
-            color: var(--apple-orange);
-            padding: 4px 8px;
-            border-radius: var(--radius-pill);
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-
-        /* ---- Player Cards ---- */
-        .player-section {
-            margin-bottom: var(--space-md);
-        }
-
-        .player-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
-        }
-
-        .player-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: var(--space-lg);
-            cursor: pointer;
-            transition: background var(--transition-fast);
-            background: var(--apple-white);
-        }
-
-        .player-card-header:active {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .player-card-left {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-        }
-
-        .player-card-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .player-card-name {
-            font-weight: 700;
-            font-size: 1.1rem;
-            letter-spacing: -0.01em;
-        }
-
-        .player-card-summary {
-            font-size: 0.85rem;
-            color: var(--apple-gray);
-            font-weight: 500;
-            margin-top: 2px;
-        }
-
-        .player-card-chevron {
-            color: var(--apple-gray);
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            font-size: 1rem;
-        }
-
-        .player-card-chevron.open {
-            transform: rotate(90deg);
-            color: var(--apple-blue);
-        }
-
-        .player-card-body {
-            display: none;
-            padding: 0 var(--space-lg) var(--space-lg);
-            border-top: 1px solid rgba(0, 0, 0, 0.04);
-            margin-top: 4px;
-            padding-top: var(--space-md);
-        }
-
-        .player-card-body.open {
-            display: block;
-            animation: slideDown 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* ---- Bill Buttons ---- */
-        .bill-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: var(--space-sm);
-            margin-bottom: var(--space-lg);
-        }
-
-        .bill-btn {
-            font-family: var(--font-family);
-            font-size: 0.95rem;
-            font-weight: 700;
-            padding: 14px 6px;
-            border: 1px solid var(--apple-gray-light);
-            border-radius: var(--radius-md);
-            background: var(--apple-white);
-            color: var(--apple-black);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-        }
-
-        .bill-btn:hover {
-            border-color: var(--apple-green);
-            background: rgba(52, 199, 89, 0.1);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(52, 199, 89, 0.2);
-            color: var(--apple-green);
-        }
-
-        .bill-btn:active {
-            transform: scale(0.94);
-        }
-
-        .bill-btn .bill-icon {
-            font-size: 1.4rem;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        /* ---- Bill List ---- */
-        .bill-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background: var(--apple-bg);
-            border-radius: var(--radius-md);
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-            animation: fadeSlideIn 0.3s var(--ease-apple);
-        }
-
-        @keyframes fadeSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .bill-value-tag {
-            font-weight: 800;
-            padding: 6px 16px;
-            border-radius: var(--radius-pill);
-            font-size: 0.95rem;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .bill-remove-btn {
-            background: rgba(255, 59, 48, 0.1);
-            border: 1.5px solid rgba(255, 59, 48, 0.2);
-            border-radius: 12px;
-            cursor: pointer;
-            color: var(--apple-red);
-            font-size: 0.85rem;
-            font-weight: 600;
-            font-family: var(--font-family);
-            padding: 8px 16px;
-            min-height: 44px;
-            transition: all 0.3s var(--ease-apple);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .bill-remove-btn:hover {
-            background: rgba(255, 59, 48, 0.18);
-            border-color: var(--apple-red);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2);
-        }
-
-        .bill-remove-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* ---- Remove Player ---- */
-        .remove-player-btn {
-            font-family: var(--font-family);
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--apple-red);
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: var(--space-md) 0;
-            margin-top: var(--space-sm);
-            width: 100%;
-            opacity: 0.8;
-            transition: opacity var(--transition-fast);
-            text-align: center;
-        }
-
-        .remove-player-btn:hover {
+        to {
             opacity: 1;
-            text-decoration: underline;
+            transform: translateY(0);
         }
+    }
 
-        /* ---- Action Buttons Area ---- */
-        .action-area {
-            display: flex;
-            gap: var(--space-md);
-            justify-content: center;
-            padding: var(--space-lg) 0;
-            margin-bottom: var(--space-xl);
-        }
+    /* ---- Bill Buttons ---- */
+    .bill-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+    }
 
-        .action-area .apple-btn-success {
-            box-shadow: 0 6px 20px rgba(52, 199, 89, 0.3);
-            font-weight: 700;
-            padding: 0 32px;
-            border-radius: 30px;
-        }
+    .bill-btn {
+        font-family: var(--font-family);
+        font-size: 0.95rem;
+        font-weight: 700;
+        padding: 14px 6px;
+        border: 1px solid var(--apple-gray-light);
+        border-radius: var(--radius-md);
+        background: var(--apple-white);
+        color: var(--apple-black);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
 
-        /* ---- Historical Leaderboard ---- */
-        .hist-total {
-            font-weight: 700;
-            font-size: 1.05rem;
-            color: var(--apple-red);
-            text-align: right;
-        }
+    .bill-btn:hover {
+        border-color: var(--apple-green);
+        background: rgba(52, 199, 89, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(52, 199, 89, 0.2);
+        color: var(--apple-green);
+    }
 
-        .hist-last {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--apple-green);
-            text-align: right;
-        }
+    .bill-btn:active {
+        transform: scale(0.94);
+    }
 
-        .hist-games {
-            font-size: 0.85rem;
-            color: var(--apple-gray);
-            text-align: right;
-            font-weight: 500;
-        }
+    .bill-btn .bill-icon {
+        font-size: 1.4rem;
+        display: block;
+        margin-bottom: 4px;
+    }
 
-        /* ---- Empty State ---- */
-        .empty-state {
-            text-align: center;
-            padding: var(--space-2xl) var(--space-md);
-            color: var(--apple-gray);
-            font-size: 1rem;
-            font-weight: 500;
-        }
+    /* ---- Bill List ---- */
+    .bill-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: var(--apple-bg);
+        border-radius: var(--radius-md);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        animation: fadeSlideIn 0.3s var(--ease-apple);
+    }
 
-        .empty-state .empty-icon {
-            font-size: 3rem;
-            margin-bottom: var(--space-md);
-            display: block;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-        }
-
-        /* ---- End Game Confirmation Overlay ---- */
-        .end-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: var(--space-lg);
-        }
-
-        .end-modal {
-            background: var(--apple-bg);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            width: 100%;
-            max-width: 380px;
-            overflow: hidden;
-        }
-
-        .end-modal-header {
-            text-align: center;
-            padding: var(--space-xl) var(--space-lg) var(--space-md);
-        }
-
-        .end-modal-header h3 {
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 6px;
-        }
-
-        .end-modal-header p {
-            font-size: 0.9rem;
-            color: var(--apple-gray);
-            font-weight: 500;
-        }
-
-        .end-modal-body {
-            padding: 0 var(--space-lg) var(--space-lg);
-        }
-
-        .end-modal-result {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
-            font-size: 1rem;
-        }
-
-        .end-modal-result:last-child {
-            border-bottom: none;
-        }
-
-        .end-modal-actions {
-            display: flex;
-            gap: var(--space-md);
-            padding: 0 var(--space-lg) var(--space-xl);
-        }
-
-        .end-modal-actions .apple-btn {
-            flex: 1;
-            font-weight: 600;
-            padding: 14px 0;
-            border-radius: 20px;
-            font-size: 1.05rem;
-        }
-
-        /* ---- Toast ---- */
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: rgba(40, 40, 44, 0.9);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 14px 28px;
-            border-radius: 30px;
-            font-size: 0.95rem;
-            font-weight: 600;
+    @keyframes fadeSlideIn {
+        from {
             opacity: 0;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            z-index: 9999;
-            pointer-events: none;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(-10px);
         }
 
-        .toast.show {
+        to {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateY(0);
         }
+    }
 
-        /* ---- Vue & custom animations ---- */
-        .fade-enter-active,
-        .fade-leave-active {
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+    .bill-value-tag {
+        font-weight: 800;
+        padding: 6px 16px;
+        border-radius: var(--radius-pill);
+        font-size: 0.95rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
 
-        .fade-enter-from,
-        .fade-leave-to {
-            opacity: 0;
-        }
+    .bill-remove-btn {
+        background: rgba(255, 59, 48, 0.1);
+        border: 1.5px solid rgba(255, 59, 48, 0.2);
+        border-radius: 12px;
+        cursor: pointer;
+        color: var(--apple-red);
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: var(--font-family);
+        padding: 8px 16px;
+        min-height: 44px;
+        transition: all 0.3s var(--ease-apple);
+        -webkit-tap-highlight-color: transparent;
+    }
 
-        .modal-up-enter-active,
-        .modal-up-leave-active {
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+    .bill-remove-btn:hover {
+        background: rgba(255, 59, 48, 0.18);
+        border-color: var(--apple-red);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2);
+    }
 
-        .modal-up-enter-from,
-        .modal-up-leave-to {
-            opacity: 0;
-            transform: scale(0.95) translateY(20px);
-        }
+    .bill-remove-btn:active {
+        transform: scale(0.95);
+    }
 
-        /* Bill Color overrides */
-        .bill-30 {
-            background: rgba(175, 82, 222, 0.12);
-            color: #7d3c98;
-        }
+    /* ---- Remove Player ---- */
+    .remove-player-btn {
+        font-family: var(--font-family);
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--apple-red);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: var(--space-md) 0;
+        margin-top: var(--space-sm);
+        width: 100%;
+        opacity: 0.8;
+        transition: opacity var(--transition-fast);
+        text-align: center;
+    }
 
-        .bill-40 {
-            background: rgba(255, 149, 0, 0.12);
-            color: #cc7700;
-        }
+    .remove-player-btn:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
 
-        .bill-50 {
-            background: rgba(255, 59, 48, 0.12);
-            color: #cc2418;
-        }
+    /* ---- Action Buttons Area ---- */
+    .action-area {
+        display: flex;
+        gap: var(--space-md);
+        justify-content: center;
+        padding: var(--space-lg) 0;
+        margin-bottom: var(--space-xl);
+    }
 
-        .bill-60 {
-            background: rgba(90, 200, 250, 0.15);
-            color: #0891b2;
-        }
+    .action-area .apple-btn-success {
+        box-shadow: 0 6px 20px rgba(52, 199, 89, 0.3);
+        font-weight: 700;
+        padding: 0 32px;
+        border-radius: 30px;
+    }
 
-        .bill-70 {
-            background: rgba(255, 204, 0, 0.15);
-            color: #b38600;
-        }
+    /* ---- End Game Confirmation Overlay ---- */
+    .end-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-lg);
+    }
 
-        .bill-80 {
-            background: rgba(52, 199, 89, 0.12);
-            color: #1a9c4a;
-        }
+    .end-modal {
+        background: var(--apple-bg);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        width: 100%;
+        max-width: 380px;
+        overflow: hidden;
+    }
 
-        .bill-90 {
-            background: rgba(0, 113, 227, 0.12);
-            color: #0059b3;
-        }
+    .end-modal-header {
+        text-align: center;
+        padding: var(--space-xl) var(--space-lg) var(--space-md);
+    }
 
-        .bill-100 {
-            background: rgba(255, 59, 48, 0.08);
-            color: #e11d48;
-        }
+    .end-modal-header h3 {
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
+    }
 
-        /* .apple-home-btn already defined in common.css */
+    .end-modal-header p {
+        font-size: 0.9rem;
+        color: var(--apple-gray);
+        font-weight: 500;
+    }
 
-        /* ---- Tile Buttons Row ---- */
-        .tile-btn-row {
-            display: flex;
-            gap: var(--space-md);
-            justify-content: center;
-            padding: var(--space-lg) 0;
-            margin-bottom: var(--space-lg);
-        }
+    .end-modal-body {
+        padding: 0 var(--space-lg) var(--space-lg);
+    }
 
-        .tile-action-btn {
-            font-family: var(--font-family);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 14px 28px;
-            border: none;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
-            letter-spacing: -0.01em;
-        }
+    .end-modal-result {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+        font-size: 1rem;
+    }
 
-        .tile-action-btn:active {
-            transform: scale(0.95);
-        }
+    .end-modal-result:last-child {
+        border-bottom: none;
+    }
 
-        .tile-btn-setup {
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-            color: white;
-            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.35);
-        }
+    .end-modal-actions {
+        display: flex;
+        gap: var(--space-md);
+        padding: 0 var(--space-lg) var(--space-xl);
+    }
 
-        .tile-btn-setup:hover {
-            box-shadow: 0 8px 28px rgba(108, 92, 231, 0.45);
-            transform: translateY(-2px);
-        }
+    .end-modal-actions .apple-btn {
+        flex: 1;
+        font-weight: 600;
+        padding: 14px 0;
+        border-radius: 20px;
+        font-size: 1.05rem;
+    }
 
-        .tile-btn-info {
-            background: linear-gradient(135deg, #00b894, #00cec9);
-            color: white;
-            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.35);
-        }
+    /* ---- Toast ---- */
+    .toast {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(40, 40, 44, 0.9);
+        backdrop-filter: blur(10px);
+        color: white;
+        padding: 14px 28px;
+        border-radius: 30px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        z-index: 9999;
+        pointer-events: none;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        .tile-btn-info:hover {
-            box-shadow: 0 8px 28px rgba(0, 184, 148, 0.45);
-            transform: translateY(-2px);
-        }
+    .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 
-        /* ---- Tile Modal ---- */
-        .tile-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: var(--space-lg);
-            opacity: 0;
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+    /* ---- Vue & custom animations ---- */
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-        .tile-modal {
-            background: var(--apple-bg);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
-            width: 100%;
-            max-width: 480px;
-            max-height: 85vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transform: scale(0.95) translateY(20px);
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
+    }
 
-        .tile-modal-header {
-            text-align: center;
-            padding: var(--space-xl) var(--space-lg) var(--space-md);
-            flex-shrink: 0;
-        }
+    .modal-up-enter-active,
+    .modal-up-leave-active {
+        transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-        .tile-modal-header h3 {
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 4px;
-        }
+    .modal-up-enter-from,
+    .modal-up-leave-to {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+    }
 
-        .tile-modal-header p {
-            font-size: 0.9rem;
-            color: var(--apple-gray);
-            font-weight: 500;
-        }
+    /* Bill Color overrides */
+    .bill-30 {
+        background: rgba(175, 82, 222, 0.12);
+        color: #7d3c98;
+    }
 
-        .tile-modal-body {
-            padding: 0 var(--space-lg) var(--space-md);
-            overflow-y: auto;
-            flex: 1;
-            -webkit-overflow-scrolling: touch;
-        }
+    .bill-40 {
+        background: rgba(255, 149, 0, 0.12);
+        color: #cc7700;
+    }
 
-        .tile-modal-body::-webkit-scrollbar {
-            width: 4px;
-        }
+    .bill-50 {
+        background: rgba(255, 59, 48, 0.12);
+        color: #cc2418;
+    }
 
-        .tile-modal-body::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.15);
-            border-radius: 4px;
-        }
+    .bill-60 {
+        background: rgba(90, 200, 250, 0.15);
+        color: #0891b2;
+    }
 
-        .tile-card {
-            background: var(--apple-white);
-            border-radius: var(--radius-lg);
-            padding: var(--space-lg);
-            margin-bottom: var(--space-md);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-            border: 1px solid rgba(0, 0, 0, 0.04);
-            transition: all 0.3s var(--ease-apple);
-        }
+    .bill-70 {
+        background: rgba(255, 204, 0, 0.15);
+        color: #b38600;
+    }
 
-        .tile-card:hover {
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            transform: translateY(-1px);
-        }
+    .bill-80 {
+        background: rgba(52, 199, 89, 0.12);
+        color: #1a9c4a;
+    }
 
-        .tile-card-top {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            margin-bottom: 10px;
-        }
+    .bill-90 {
+        background: rgba(0, 113, 227, 0.12);
+        color: #0059b3;
+    }
 
-        .tile-casino-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: white;
-            flex-shrink: 0;
-        }
+    .bill-100 {
+        background: rgba(255, 59, 48, 0.08);
+        color: #e11d48;
+    }
 
-        .tile-casino-1 {
-            background: linear-gradient(135deg, #e17055, #d63031);
-        }
+    /* .apple-home-btn already defined in common.css */
 
-        .tile-casino-2 {
-            background: linear-gradient(135deg, #fdcb6e, #f39c12);
-        }
+    /* ---- Tile Buttons Row ---- */
+    .tile-btn-row {
+        display: flex;
+        gap: var(--space-md);
+        justify-content: center;
+        padding: var(--space-lg) 0;
+        margin-bottom: var(--space-lg);
+    }
 
-        .tile-casino-3 {
-            background: linear-gradient(135deg, #00b894, #00a085);
-        }
+    .tile-action-btn {
+        font-family: var(--font-family);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 28px;
+        border: none;
+        border-radius: 30px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        letter-spacing: -0.01em;
+    }
 
-        .tile-casino-4 {
-            background: linear-gradient(135deg, #0984e3, #0652DD);
-        }
+    .tile-action-btn:active {
+        transform: scale(0.95);
+    }
 
-        .tile-casino-5 {
-            background: linear-gradient(135deg, #6c5ce7, #5b4bd5);
-        }
+    .tile-btn-setup {
+        background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+        color: white;
+        box-shadow: 0 6px 20px rgba(108, 92, 231, 0.35);
+    }
 
-        .tile-casino-6 {
-            background: linear-gradient(135deg, #e84393, #c44569);
-        }
+    .tile-btn-setup:hover {
+        box-shadow: 0 8px 28px rgba(108, 92, 231, 0.45);
+        transform: translateY(-2px);
+    }
 
-        .tile-name-block {
-            flex: 1;
-        }
+    .tile-btn-info {
+        background: linear-gradient(135deg, #00b894, #00cec9);
+        color: white;
+        box-shadow: 0 6px 20px rgba(0, 184, 148, 0.35);
+    }
 
-        .tile-name {
-            font-size: 1.05rem;
-            font-weight: 800;
-            letter-spacing: -0.01em;
-            color: var(--apple-black);
-        }
+    .tile-btn-info:hover {
+        box-shadow: 0 8px 28px rgba(0, 184, 148, 0.45);
+        transform: translateY(-2px);
+    }
 
-        .tile-id-tag {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--apple-gray);
-            margin-top: 1px;
-        }
+    /* ---- Tile Modal ---- */
+    .tile-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-lg);
+        opacity: 0;
+        transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-        .tile-trigger {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: var(--radius-pill);
-            background: rgba(108, 92, 231, 0.1);
-            color: #6c5ce7;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
+    .tile-modal {
+        background: var(--apple-bg);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+        width: 100%;
+        max-width: 480px;
+        max-height: 85vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transform: scale(0.95) translateY(20px);
+        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-        .tile-desc {
-            font-size: 0.88rem;
-            color: #444;
-            line-height: 1.6;
-            font-weight: 500;
-        }
+    .tile-modal-header {
+        text-align: center;
+        padding: var(--space-xl) var(--space-lg) var(--space-md);
+        flex-shrink: 0;
+    }
 
-        .tile-bills-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(0, 0, 0, 0.06);
-        }
+    .tile-modal-header h3 {
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 4px;
+    }
 
-        .tile-bills-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--apple-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            flex-shrink: 0;
-        }
+    .tile-modal-header p {
+        font-size: 0.9rem;
+        color: var(--apple-gray);
+        font-weight: 500;
+    }
 
-        .tile-bill-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 5px 12px;
-            border-radius: var(--radius-pill);
-            font-size: 0.85rem;
-            font-weight: 800;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-        }
+    .tile-modal-body {
+        padding: 0 var(--space-lg) var(--space-md);
+        overflow-y: auto;
+        flex: 1;
+        -webkit-overflow-scrolling: touch;
+    }
 
-        .tile-bills-total {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--apple-blue);
-            margin-left: auto;
-            flex-shrink: 0;
-        }
+    .tile-modal-body::-webkit-scrollbar {
+        width: 4px;
+    }
 
-        .tile-modal-footer {
-            padding: var(--space-md) var(--space-lg) var(--space-xl);
-            flex-shrink: 0;
-            text-align: center;
-        }
+    .tile-modal-body::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 4px;
+    }
 
-        .tile-modal-close-btn {
-            font-family: var(--font-family);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 12px 32px;
-            border: none;
-            border-radius: 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: var(--apple-bg);
-            color: var(--apple-gray);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            transition: all 0.3s var(--ease-apple);
-        }
+    .tile-card {
+        background: var(--apple-white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-md);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        transition: all 0.3s var(--ease-apple);
+    }
 
-        .tile-modal-close-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: var(--apple-black);
-        }
+    .tile-card:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+    }
 
-        .tile-modal-close-btn:active {
-            transform: scale(0.96);
-        }
-    </style>
-</head>
+    .tile-card-top {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-bottom: 10px;
+    }
 
-<body>
+    .tile-casino-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: white;
+        flex-shrink: 0;
+    }
 
-    <!-- Nav -->
-    <nav class="apple-nav">
-        <div class="apple-nav-content" style="min-height: 44px;">
-            <a href="/" class="apple-nav-back" style="min-height: 44px;"><i class="fas fa-chevron-left"></i> 首页</a>
-            <span class="apple-nav-title"><i class="fas fa-dice" style="color: var(--apple-green);"></i>
-                拉斯维加斯</span>
+    .tile-casino-1 {
+        background: linear-gradient(135deg, #e17055, #d63031);
+    }
+
+    .tile-casino-2 {
+        background: linear-gradient(135deg, #fdcb6e, #f39c12);
+    }
+
+    .tile-casino-3 {
+        background: linear-gradient(135deg, #00b894, #00a085);
+    }
+
+    .tile-casino-4 {
+        background: linear-gradient(135deg, #0984e3, #0652DD);
+    }
+
+    .tile-casino-5 {
+        background: linear-gradient(135deg, #6c5ce7, #5b4bd5);
+    }
+
+    .tile-casino-6 {
+        background: linear-gradient(135deg, #e84393, #c44569);
+    }
+
+    .tile-name-block {
+        flex: 1;
+    }
+
+    .tile-name {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--apple-black);
+    }
+
+    .tile-id-tag {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--apple-gray);
+        margin-top: 1px;
+    }
+
+    .tile-trigger {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: var(--radius-pill);
+        background: rgba(108, 92, 231, 0.1);
+        color: #6c5ce7;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .tile-desc {
+        font-size: 0.88rem;
+        color: #444;
+        line-height: 1.6;
+        font-weight: 500;
+    }
+
+    .tile-bills-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .tile-bills-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--apple-gray);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+    }
+
+    .tile-bill-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 12px;
+        border-radius: var(--radius-pill);
+        font-size: 0.85rem;
+        font-weight: 800;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .tile-bills-total {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--apple-blue);
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .tile-modal-footer {
+        padding: var(--space-md) var(--space-lg) var(--space-xl);
+        flex-shrink: 0;
+        text-align: center;
+    }
+
+    .tile-modal-close-btn {
+        font-family: var(--font-family);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 32px;
+        border: none;
+        border-radius: 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--apple-bg);
+        color: var(--apple-gray);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s var(--ease-apple);
+    }
+
+    .tile-modal-close-btn:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--apple-black);
+    }
+
+    .tile-modal-close-btn:active {
+        transform: scale(0.96);
+    }
+</style>
+{% endblock %}
+
+{% block nav_title %}
+<i class="ph-fill ph-dice-six text-green" style="margin-right: 4px;"></i> 拉斯维加斯
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="apple-hero">
+    <span class="apple-hero-emoji">🎰</span>
+    <h1>拉斯维加斯</h1>
+    <p>金钱计算 · 张数决胜</p>
+</div>
+
+<!-- Add Player -->
+<div class="section-title">添加玩家</div>
+<div class="add-player-row">
+    <input id="playerNameInput" class="apple-input" type="text" placeholder="输入玩家名称" maxlength="12" autocomplete="off">
+    <button class="apple-btn apple-btn-primary" onclick="addPlayer()">
+        <i class="ph-bold ph-plus"></i> 添加
+    </button>
+</div>
+
+<!-- Current Game Leaderboard -->
+<div class="section-title">💰 本局排行</div>
+<div id="leaderboard">
+    <div class="apple-list mb-md">
+        <div class="empty-state">
+            <span class="empty-icon">🃏</span>
+            添加玩家开始计算
         </div>
-    </nav>
-
-    <div class="apple-container">
-
-        <!-- Hero -->
-        <div class="apple-hero">
-            <span class="apple-hero-emoji">🎰</span>
-            <h1>拉斯维加斯</h1>
-            <p>金钱计算 · 张数决胜</p>
-        </div>
-
-        <!-- Add Player -->
-        <div class="section-title">添加玩家</div>
-        <div class="add-player-row">
-            <input id="playerNameInput" class="apple-input" type="text" placeholder="输入玩家名称" maxlength="12"
-                autocomplete="off">
-            <button class="apple-btn apple-btn-primary" onclick="addPlayer()">
-                <i class="fas fa-plus"></i> 添加
-            </button>
-        </div>
-
-        <!-- Current Game Leaderboard -->
-        <div class="section-title">💰 本局排行</div>
-        <div class="lb-card">
-            <div class="lb-header">
-                <span>#</span>
-                <span>玩家</span>
-                <span style="text-align:right">金额</span>
-                <span style="text-align:right">张数</span>
-            </div>
-            <div id="leaderboard">
-                <div class="empty-state">
-                    <span class="empty-icon">🃏</span>
-                    添加玩家开始计算
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="action-area" id="actionArea" style="display:none;">
-            <button class="apple-btn apple-btn-success apple-btn-lg" onclick="showEndConfirm()">
-                <i class="fas fa-flag-checkered" style="margin-right:6px;"></i> 结束本局
-            </button>
-            <button class="apple-btn apple-btn-secondary" onclick="resetGame()"
-                style="padding:0 24px; border-radius:30px; font-weight:600;">
-                <i class="fas fa-redo"></i> 重置
-            </button>
-        </div>
-
-        <!-- Player Cards -->
-        <div class="section-title">🃏 玩家钞票</div>
-        <div id="playerCards" class="player-section"></div>
-
-        <!-- Historical Leaderboard -->
-        <div id="inline-leaderboard-section">
-            <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
-            </div>
-            <div class="hist-lb-card">
-                <div id="histLeaderboard">
-                    <div class="empty-state">
-                        <span class="empty-icon">🏆</span>
-                        暂无历史记录
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tile Action Buttons -->
-        <div class="tile-btn-row">
-            <button class="tile-action-btn tile-btn-setup" onclick="setupField()">
-                <i class="fas fa-dice"></i> 布置场地
-            </button>
-            <button class="tile-action-btn tile-btn-info" onclick="showFieldInfo()">
-                <i class="fas fa-book-open"></i> 场地说明
-            </button>
-        </div>
-
-        <footer class="apple-footer">
-            <p>Las Vegas © 2026</p>
-        </footer>
     </div>
+</div>
 
-    <!-- Home Button -->
-    <a href="/" class="apple-home-btn"><i class="fas fa-home"></i></a>
+<!-- Action Buttons -->
+<div class="action-area" id="actionArea" style="display:none;">
+    <button class="apple-btn apple-btn-success apple-btn-lg" onclick="showEndConfirm()">
+        <i class="ph-fill ph-flag-checkered" style="margin-right:6px;"></i> 结束本局
+    </button>
+    <button class="apple-btn apple-btn-secondary" onclick="resetGame()"
+        style="padding:0 24px; border-radius:30px; font-weight:600;">
+        <i class="ph-bold ph-arrow-clockwise"></i> 重置
+    </button>
+</div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast"></div>
+<!-- Player Cards -->
+<div class="section-title">🃏 玩家钞票</div>
+<div id="playerCards" class="player-section"></div>
 
-    <!-- End Game Overlay (hidden) -->
-    <div id="endOverlay" class="end-overlay"
-        style="display:none; transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0;"
-        onclick="hideEndConfirm(event)">
-        <div class="end-modal" onclick="event.stopPropagation()"
-            style="transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
-            <div class="end-modal-header">
-                <h3>🏁 结束本局</h3>
-                <p>以下结果将记录到排行榜</p>
-            </div>
-            <div class="end-modal-body" id="endModalBody"></div>
-            <div class="end-modal-actions">
-                <button class="apple-btn apple-btn-secondary" onclick="hideEndConfirm()">取消</button>
-                <button class="apple-btn apple-btn-success" onclick="confirmEndGame()">
-                    <i class="fas fa-check"></i> 确认结束
-                </button>
+<!-- Historical Leaderboard -->
+<div id="inline-leaderboard-section">
+    <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
+    </div>
+    <div id="histLeaderboard">
+        <div class="apple-list mb-xl">
+            <div class="empty-state">
+                <span class="empty-icon">👻</span>
+                还没人玩过呢，快去开一局！
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Setup Field Modal -->
-    <div id="setupOverlay" class="tile-overlay" style="display:none;" onclick="closeTileModal('setupOverlay', event)">
-        <div class="tile-modal" onclick="event.stopPropagation()">
-            <div class="tile-modal-header">
-                <h3>🎲 场地布置结果</h3>
-                <p>每个赌场已随机分配一块拓展板块</p>
-            </div>
-            <div class="tile-modal-body" id="setupModalBody"></div>
-            <div class="tile-modal-footer">
-                <button class="tile-modal-close-btn" onclick="closeTileModal('setupOverlay')">
-                    <i class="fas fa-times"></i> 关闭
-                </button>
-            </div>
+<!-- Tile Action Buttons -->
+<div class="tile-btn-row">
+    <button class="tile-action-btn tile-btn-setup" onclick="setupField()">
+        <i class="ph-fill ph-dice-five"></i> 布置场地
+    </button>
+    <button class="tile-action-btn tile-btn-info" onclick="showFieldInfo()">
+        <i class="ph-bold ph-book-open"></i> 场地说明
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- End Game Overlay (hidden) -->
+<div id="endOverlay" class="end-overlay"
+    style="display:none; transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0;"
+    onclick="hideEndConfirm(event)">
+    <div class="end-modal" onclick="event.stopPropagation()"
+        style="transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);">
+        <div class="end-modal-header">
+            <h3>🏁 结束本局</h3>
+            <p>以下结果将记录到排行榜</p>
+        </div>
+        <div class="end-modal-body" id="endModalBody"></div>
+        <div class="end-modal-actions">
+            <button class="apple-btn apple-btn-secondary" onclick="hideEndConfirm()">取消</button>
+            <button class="apple-btn apple-btn-success" onclick="confirmEndGame()">
+                <i class="ph-bold ph-check"></i> 确认结束
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- Field Info Modal -->
-    <div id="infoOverlay" class="tile-overlay" style="display:none;" onclick="closeTileModal('infoOverlay', event)">
-        <div class="tile-modal" onclick="event.stopPropagation()">
-            <div class="tile-modal-header">
-                <h3>📖 场地说明</h3>
-                <p>当前各赌场拓展板块的详细规则</p>
-            </div>
-            <div class="tile-modal-body" id="infoModalBody"></div>
-            <div class="tile-modal-footer">
-                <button class="tile-modal-close-btn" onclick="closeTileModal('infoOverlay')">
-                    <i class="fas fa-times"></i> 关闭
-                </button>
-            </div>
+<!-- Setup Field Modal -->
+<div id="setupOverlay" class="tile-overlay" style="display:none;" onclick="closeTileModal('setupOverlay', event)">
+    <div class="tile-modal" onclick="event.stopPropagation()">
+        <div class="tile-modal-header">
+            <h3>🎲 场地布置结果</h3>
+            <p>每个赌场已随机分配一块拓展板块</p>
+        </div>
+        <div class="tile-modal-body" id="setupModalBody"></div>
+        <div class="tile-modal-footer">
+            <button class="tile-modal-close-btn" onclick="closeTileModal('setupOverlay')">
+                <i class="ph-bold ph-x"></i> 关闭
+            </button>
         </div>
     </div>
+</div>
 
-    <script>
-        const BASE = '/lasvegas';
-        const DENOMINATIONS = [30, 40, 50, 60, 70, 80, 90, 100];
-        const AVATAR_COLORS = [
-            '#0984e3', '#00b894', '#e17055', '#6c5ce7',
-            '#fdcb6e', '#e84393', '#00cec9', '#d63031',
-            '#a29bfe', '#55a3e8'
-        ];
+<!-- Field Info Modal -->
+<div id="infoOverlay" class="tile-overlay" style="display:none;" onclick="closeTileModal('infoOverlay', event)">
+    <div class="tile-modal" onclick="event.stopPropagation()">
+        <div class="tile-modal-header">
+            <h3>📖 场地说明</h3>
+            <p>当前各赌场拓展板块的详细规则</p>
+        </div>
+        <div class="tile-modal-body" id="infoModalBody"></div>
+        <div class="tile-modal-footer">
+            <button class="tile-modal-close-btn" onclick="closeTileModal('infoOverlay')">
+                <i class="ph-bold ph-x"></i> 关闭
+            </button>
+        </div>
+    </div>
+</div>
 
-        let expandedPlayers = new Set();
-        let currentPlayers = []; // cache for end game modal
-        let currentSetup = null; // current tile assignment: [{casino, tile}, ...]
+<script>
+    const BASE = '/lasvegas';
+    const DENOMINATIONS = [30, 40, 50, 60, 70, 80, 90, 100];
+    const AVATAR_COLORS = [
+        '#0984e3', '#00b894', '#e17055', '#6c5ce7',
+        '#fdcb6e', '#e84393', '#00cec9', '#d63031',
+        '#a29bfe', '#55a3e8'
+    ];
 
-        // ---- Tile Data ----
-        const TILES = [{
-            id: 'A1',
-            name: 'Lucky Punch',
-            group: 'A',
-            trigger: '启动板块时',
-            desc: '玩家在桌下手里暗藏 1~3 个指示物，由左手边玩家猜数量。猜错，启动玩家获得面板对应奖励（圆片或现金）；猜对，无事发生。'
-        },
-        {
-            id: 'A2',
-            name: 'Jackpot',
-            group: 'A',
-            trigger: '启动板块时',
-            desc: '掷 2 颗黑骰子。若总和为 7 或掷出豹子（同点数），直接拿走大奖指示物当前盖住的奖金，并将指示物重置回 $30,000；若未达成，将大奖指示物向右推移 1 格（奖金变厚）。'
-        },
-        {
-            id: 'B1',
-            name: 'Prime-Time',
-            group: 'B',
-            trigger: '颁发奖金前',
-            desc: '该赌场最大赢家可掷 2 颗黑骰子，并将 0~2 颗黑骰分配到对应赌场。在随后的结算中，这些黑骰视为该赢家的有效战力。'
-        },
-        {
-            id: 'B2',
-            name: 'Fifty-Fifty',
-            group: 'B',
-            trigger: '启动板块时',
-            desc: '掷 2 颗黑骰并推进奖励标记。玩家可随时见好就收拿走当前奖金；若继续挑战，必须盲猜下一次掷骰结果比这次高或低。猜对可继续或拿奖金；猜错（或平局），直接输掉挑战，颗粒无收。'
-        },
-        {
-            id: 'C1',
-            name: 'High-Five',
-            group: 'C',
-            trigger: '启动板块时 / 颁发奖金时',
-            desc: '当你在此赌场放满第 5 个骰子（大骰子算 2 个）时，拿取"击掌标记"。结算时可直接兑换成钞票。'
-        },
-        {
-            id: 'C2',
-            name: 'Bad-Luck',
-            group: 'C',
-            trigger: '颁发奖金前',
-            desc: '在此赌场放置骰子最少（包括 0 个）的玩家，本轮结束时必须向银行倒扣 $50,000（可用圆片抵扣，钱不够则全扣光）。'
-        },
-        {
-            id: 'D1',
-            name: 'Pay-Day',
-            group: 'D',
-            trigger: '启动板块时',
-            desc: '计算场上全盘有你骰子的赌场数量，数量 x $10,000 即为你的收益（$1万~$2万发圆片，$3万~$6万发钞票）。'
-        },
-        {
-            id: 'D2',
-            name: 'Power-Play',
-            group: 'D',
-            trigger: '启动板块时 / 下回合开始前',
-            desc: '放骰子后若你在此处骰子数全场最多，夺得特权标记。若把标记保持到你的下个回合，你可以不掷骰子，直接将手里 1 颗骰子转到任意点数放进对应赌场。失去数量优势则需交还标记。'
-        },
-        {
-            id: 'E1',
-            name: 'No-Entry!',
-            group: 'E',
-            trigger: '启动板块时',
-            desc: '将"禁止进入"标记放到其他任意赌场，彻底封死该区域（不能进出骰子，板块失效）。同时你在本板块的奖励进度条前进并拿奖。后续启动此板块的玩家可选择是否转移该封锁标记。'
-        },
-        {
-            id: 'E2',
-            name: 'Knockout',
-            group: 'E',
-            trigger: '启动板块时',
-            desc: '所有人必须往此板块放 1 颗剩骰（最多放 2 颗，大骰算 1 颗，此板块不参与分钱）。随后，你可以把被别人强制塞到这里的自己的骰子拿回来。'
-        },
-        {
-            id: 'F1',
-            name: 'Block-It!',
-            group: 'F',
-            trigger: '启动板块时',
-            desc: '拿取板块上预设的一组灰骰子（充当中立玩家），空降到任意赌场去破坏别人的数量优势（制造平局）。'
-        },
-        {
-            id: 'F2',
-            name: 'Handicap',
-            group: 'F',
-            trigger: '启动板块时 / 颁发奖金时',
-            desc: '游戏初始各赌场有灰骰（中立势力）。启动时，你可以从任意赌场拿 1 颗灰骰放到本板块的圆圈内，换取对应奖励（圆片、钱、或改点数放骰/收回骰子）。留在赌场的灰骰结算时依然会阻碍玩家拿钱。'
-        },
-        {
-            id: 'G1',
-            name: 'Black-Box',
-            group: 'G',
-            trigger: '颁发奖金时',
-            desc: '该赌场最大赢家的左手边玩家，将 6 个面朝上的奖励标记暗中分为两堆。最大赢家盲选其中一堆拿走奖励（充满心理博弈的"你分我选"）。'
-        },
-        {
-            id: 'G2',
-            name: 'Double-Down',
-            group: 'G',
-            trigger: '启动板块时 / 颁发奖金时',
-            desc: '启动时，可将自己在此赌场的骰子移到本板块上。结算时，本板块如同一个独立的小赌场单独发钱（第一名 6 万，第二名 3 万），且不受其他行动干扰。'
-        },
-        {
-            id: 'H1',
-            name: 'Nice-Dice',
-            group: 'H',
-            trigger: '启动板块时 / 颁发奖金时',
-            desc: '将刚掷出或放入的骰子按点数放进本板块格子。如果格子里有别人的骰子，直接把他"挤"回对应点数的普通赌场去。结算时，留在格子里的骰子主人拿对应奖励。'
-        },
-        {
-            id: 'H2',
-            name: 'My-Choice',
-            group: 'H',
-            trigger: '启动板块时',
-            desc: '掷 2 颗黑骰，选 1 个结果执行动作：拿筹码、拿钱、白嫖一次其他板块能力、改 1 颗骰子点数放回场上/收回手里，或者把骰子放进"金框"（会把别人的挤出去），结算时独赢 6 万。'
-        },
-        ];
+    let expandedPlayers = new Set();
+    let currentPlayers = []; // cache for end game modal
+    let currentSetup = null; // current tile assignment: [{casino, tile}, ...]
 
-        const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    // ---- Tile Data ----
+    const TILES = [{
+        id: 'A1',
+        name: 'Lucky Punch',
+        group: 'A',
+        trigger: '启动板块时',
+        desc: '玩家在桌下手里暗藏 1~3 个指示物，由左手边玩家猜数量。猜错，启动玩家获得面板对应奖励（圆片或现金）；猜对，无事发生。'
+    },
+    {
+        id: 'A2',
+        name: 'Jackpot',
+        group: 'A',
+        trigger: '启动板块时',
+        desc: '掷 2 颗黑骰子。若总和为 7 或掷出豹子（同点数），直接拿走大奖指示物当前盖住的奖金，并将指示物重置回 $30,000；若未达成，将大奖指示物向右推移 1 格（奖金变厚）。'
+    },
+    {
+        id: 'B1',
+        name: 'Prime-Time',
+        group: 'B',
+        trigger: '颁发奖金前',
+        desc: '该赌场最大赢家可掷 2 颗黑骰子，并将 0~2 颗黑骰分配到对应赌场。在随后的结算中，这些黑骰视为该赢家的有效战力。'
+    },
+    {
+        id: 'B2',
+        name: 'Fifty-Fifty',
+        group: 'B',
+        trigger: '启动板块时',
+        desc: '掷 2 颗黑骰并推进奖励标记。玩家可随时见好就收拿走当前奖金；若继续挑战，必须盲猜下一次掷骰结果比这次高或低。猜对可继续或拿奖金；猜错（或平局），直接输掉挑战，颗粒无收。'
+    },
+    {
+        id: 'C1',
+        name: 'High-Five',
+        group: 'C',
+        trigger: '启动板块时 / 颁发奖金时',
+        desc: '当你在此赌场放满第 5 个骰子（大骰子算 2 个）时，拿取"击掌标记"。结算时可直接兑换成钞票。'
+    },
+    {
+        id: 'C2',
+        name: 'Bad-Luck',
+        group: 'C',
+        trigger: '颁发奖金前',
+        desc: '在此赌场放置骰子最少（包括 0 个）的玩家，本轮结束时必须向银行倒扣 $50,000（可用圆片抵扣，钱不够则全扣光）。'
+    },
+    {
+        id: 'D1',
+        name: 'Pay-Day',
+        group: 'D',
+        trigger: '启动板块时',
+        desc: '计算场上全盘有你骰子的赌场数量，数量 x $10,000 即为你的收益（$1万~$2万发圆片，$3万~$6万发钞票）。'
+    },
+    {
+        id: 'D2',
+        name: 'Power-Play',
+        group: 'D',
+        trigger: '启动板块时 / 下回合开始前',
+        desc: '放骰子后若你在此处骰子数全场最多，夺得特权标记。若把标记保持到你的下个回合，你可以不掷骰子，直接将手里 1 颗骰子转到任意点数放进对应赌场。失去数量优势则需交还标记。'
+    },
+    {
+        id: 'E1',
+        name: 'No-Entry!',
+        group: 'E',
+        trigger: '启动板块时',
+        desc: '将"禁止进入"标记放到其他任意赌场，彻底封死该区域（不能进出骰子，板块失效）。同时你在本板块的奖励进度条前进并拿奖。后续启动此板块的玩家可选择是否转移该封锁标记。'
+    },
+    {
+        id: 'E2',
+        name: 'Knockout',
+        group: 'E',
+        trigger: '启动板块时',
+        desc: '所有人必须往此板块放 1 颗剩骰（最多放 2 颗，大骰算 1 颗，此板块不参与分钱）。随后，你可以把被别人强制塞到这里的自己的骰子拿回来。'
+    },
+    {
+        id: 'F1',
+        name: 'Block-It!',
+        group: 'F',
+        trigger: '启动板块时',
+        desc: '拿取板块上预设的一组灰骰子（充当中立玩家），空降到任意赌场去破坏别人的数量优势（制造平局）。'
+    },
+    {
+        id: 'F2',
+        name: 'Handicap',
+        group: 'F',
+        trigger: '启动板块时 / 颁发奖金时',
+        desc: '游戏初始各赌场有灰骰（中立势力）。启动时，你可以从任意赌场拿 1 颗灰骰放到本板块的圆圈内，换取对应奖励（圆片、钱、或改点数放骰/收回骰子）。留在赌场的灰骰结算时依然会阻碍玩家拿钱。'
+    },
+    {
+        id: 'G1',
+        name: 'Black-Box',
+        group: 'G',
+        trigger: '颁发奖金时',
+        desc: '该赌场最大赢家的左手边玩家，将 6 个面朝上的奖励标记暗中分为两堆。最大赢家盲选其中一堆拿走奖励（充满心理博弈的"你分我选"）。'
+    },
+    {
+        id: 'G2',
+        name: 'Double-Down',
+        group: 'G',
+        trigger: '启动板块时 / 颁发奖金时',
+        desc: '启动时，可将自己在此赌场的骰子移到本板块上。结算时，本板块如同一个独立的小赌场单独发钱（第一名 6 万，第二名 3 万），且不受其他行动干扰。'
+    },
+    {
+        id: 'H1',
+        name: 'Nice-Dice',
+        group: 'H',
+        trigger: '启动板块时 / 颁发奖金时',
+        desc: '将刚掷出或放入的骰子按点数放进本板块格子。如果格子里有别人的骰子，直接把他"挤"回对应点数的普通赌场去。结算时，留在格子里的骰子主人拿对应奖励。'
+    },
+    {
+        id: 'H2',
+        name: 'My-Choice',
+        group: 'H',
+        trigger: '启动板块时',
+        desc: '掷 2 颗黑骰，选 1 个结果执行动作：拿筹码、拿钱、白嫖一次其他板块能力、改 1 颗骰子点数放回场上/收回手里，或者把骰子放进"金框"（会把别人的挤出去），结算时独赢 6 万。'
+    },
+    ];
 
-        // ---- Bill Pool ----
-        const BILL_POOL = {
-            30: 11,
-            40: 11,
-            50: 13,
-            60: 15,
-            70: 13,
-            80: 11,
-            90: 9,
-            100: 7
+    const GROUPS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+    // ---- Bill Pool ----
+    const BILL_POOL = {
+        30: 11,
+        40: 11,
+        50: 13,
+        60: 15,
+        70: 13,
+        80: 11,
+        90: 9,
+        100: 7
+    };
+
+    function getRemainingPool(players) {
+        // Clone the full pool
+        const remaining = {
+            ...BILL_POOL
         };
-
-        function getRemainingPool(players) {
-            // Clone the full pool
-            const remaining = {
-                ...BILL_POOL
-            };
-            // Subtract bills held by all players
-            players.forEach(p => {
-                if (p.bills) {
-                    p.bills.forEach(b => {
-                        if (remaining[b.value] !== undefined) {
-                            remaining[b.value] = Math.max(0, remaining[b.value] - 1);
-                        }
-                    });
-                }
-            });
-            return remaining;
-        }
-
-        function drawBillFromPool(pool) {
-            // Weighted random draw: each denomination's weight = remaining count
-            const entries = Object.entries(pool)
-                .filter(([, count]) => count > 0)
-                .map(([val, count]) => ({
-                    value: parseInt(val),
-                    count
-                }));
-            if (!entries.length) return null;
-
-            const totalWeight = entries.reduce((s, e) => s + e.count, 0);
-            let r = Math.random() * totalWeight;
-            for (const e of entries) {
-                r -= e.count;
-                if (r <= 0) {
-                    pool[e.value]--;
-                    return e.value;
-                }
+        // Subtract bills held by all players
+        players.forEach(p => {
+            if (p.bills) {
+                p.bills.forEach(b => {
+                    if (remaining[b.value] !== undefined) {
+                        remaining[b.value] = Math.max(0, remaining[b.value] - 1);
+                    }
+                });
             }
-            // Fallback
-            const last = entries[entries.length - 1];
-            pool[last.value]--;
-            return last.value;
-        }
+        });
+        return remaining;
+    }
 
-        function distributeBills(players) {
-            const pool = getRemainingPool(players);
-            const pairs = [];
-            for (let i = 0; i < 6; i++) {
-                const b1 = drawBillFromPool(pool);
-                const b2 = drawBillFromPool(pool);
-                const bills = [b1, b2].filter(v => v !== null).sort((a, b) => b - a);
-                pairs.push(bills);
-            }
-            // Sort pairs: highest total first; tie → highest single bill first
-            pairs.sort((a, b) => {
-                const totalA = a.reduce((s, v) => s + v, 0);
-                const totalB = b.reduce((s, v) => s + v, 0);
-                if (totalB !== totalA) return totalB - totalA;
-                return (b[0] || 0) - (a[0] || 0);
-            });
-            // Assign: highest total → casino 6, next → 5, ... lowest → 1
-            const result = new Array(6);
-            for (let i = 0; i < pairs.length; i++) {
-                result[5 - i] = pairs[i]; // pairs[0] (highest) → index 5 (casino 6)
-            }
-            return result;
-        }
-
-        // ---- Tile Setup Logic ----
-        async function setupField() {
-            // Fetch current player data to compute remaining bill pool
-            const statusData = await apiGet('/api/status');
-            const players = statusData.players || [];
-
-            // Step 1: From each group pick 1 tile randomly -> 8 candidates
-            const candidates = GROUPS.map(g => {
-                const groupTiles = TILES.filter(t => t.group === g);
-                return groupTiles[Math.floor(Math.random() * groupTiles.length)];
-            });
-            // Step 2: Shuffle and pick 6
-            const shuffled = [...candidates].sort(() => Math.random() - 0.5);
-            const chosen = shuffled.slice(0, 6);
-
-            // Step 3: Draw & sort bills for each casino (highest total → casino 6)
-            const casinoBills = distributeBills(players);
-
-            // Step 4: Assign to casinos 1-6
-            currentSetup = chosen.map((tile, i) => ({
-                casino: i + 1,
-                tile,
-                bills: casinoBills[i]
+    function drawBillFromPool(pool) {
+        // Weighted random draw: each denomination's weight = remaining count
+        const entries = Object.entries(pool)
+            .filter(([, count]) => count > 0)
+            .map(([val, count]) => ({
+                value: parseInt(val),
+                count
             }));
+        if (!entries.length) return null;
 
-            // Render setup modal
-            renderSetupModal();
-            openTileModal('setupOverlay');
+        const totalWeight = entries.reduce((s, e) => s + e.count, 0);
+        let r = Math.random() * totalWeight;
+        for (const e of entries) {
+            r -= e.count;
+            if (r <= 0) {
+                pool[e.value]--;
+                return e.value;
+            }
         }
+        // Fallback
+        const last = entries[entries.length - 1];
+        pool[last.value]--;
+        return last.value;
+    }
 
-        function renderBillTags(bills) {
-            if (!bills || !bills.length) return '';
-            const tags = bills.map(v =>
-                `<span class="tile-bill-tag bill-${v}">$${v}k</span>`
-            ).join('');
-            const total = bills.reduce((s, v) => s + v, 0);
-            return `<div class="tile-bills-row">
+    function distributeBills(players) {
+        const pool = getRemainingPool(players);
+        const pairs = [];
+        for (let i = 0; i < 6; i++) {
+            const b1 = drawBillFromPool(pool);
+            const b2 = drawBillFromPool(pool);
+            const bills = [b1, b2].filter(v => v !== null).sort((a, b) => b - a);
+            pairs.push(bills);
+        }
+        // Sort pairs: highest total first; tie → highest single bill first
+        pairs.sort((a, b) => {
+            const totalA = a.reduce((s, v) => s + v, 0);
+            const totalB = b.reduce((s, v) => s + v, 0);
+            if (totalB !== totalA) return totalB - totalA;
+            return (b[0] || 0) - (a[0] || 0);
+        });
+        // Assign: highest total → casino 6, next → 5, ... lowest → 1
+        const result = new Array(6);
+        for (let i = 0; i < pairs.length; i++) {
+            result[5 - i] = pairs[i]; // pairs[0] (highest) → index 5 (casino 6)
+        }
+        return result;
+    }
+
+    // ---- Tile Setup Logic ----
+    async function setupField() {
+        // Fetch current player data to compute remaining bill pool
+        const statusData = await apiGet('/api/status');
+        const players = statusData.players || [];
+
+        // Step 1: From each group pick 1 tile randomly -> 8 candidates
+        const candidates = GROUPS.map(g => {
+            const groupTiles = TILES.filter(t => t.group === g);
+            return groupTiles[Math.floor(Math.random() * groupTiles.length)];
+        });
+        // Step 2: Shuffle and pick 6
+        const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+        const chosen = shuffled.slice(0, 6);
+
+        // Step 3: Draw & sort bills for each casino (highest total → casino 6)
+        const casinoBills = distributeBills(players);
+
+        // Step 4: Assign to casinos 1-6
+        currentSetup = chosen.map((tile, i) => ({
+            casino: i + 1,
+            tile,
+            bills: casinoBills[i]
+        }));
+
+        // Render setup modal
+        renderSetupModal();
+        openTileModal('setupOverlay');
+    }
+
+    function renderBillTags(bills) {
+        if (!bills || !bills.length) return '';
+        const tags = bills.map(v =>
+            `<span class="tile-bill-tag bill-${v}">$${v}k</span>`
+        ).join('');
+        const total = bills.reduce((s, v) => s + v, 0);
+        return `<div class="tile-bills-row">
                 <span class="tile-bills-label">奖金</span>
                 ${tags}
                 <span class="tile-bills-total">合计 ${total}万</span>
             </div>`;
-        }
+    }
 
-        function renderSetupModal() {
-            const body = document.getElementById('setupModalBody');
-            let html = '';
-            currentSetup.forEach(({
-                casino,
-                tile,
-                bills
-            }) => {
-                html += `<div class="tile-card">
+    function renderSetupModal() {
+        const body = document.getElementById('setupModalBody');
+        let html = '';
+        currentSetup.forEach(({
+            casino,
+            tile,
+            bills
+        }) => {
+            html += `<div class="tile-card">
                     <div class="tile-card-top">
                         <div class="tile-casino-badge tile-casino-${casino}">${casino}</div>
                         <div class="tile-name-block">
@@ -1302,23 +1135,23 @@
                     <div class="tile-trigger">${escHtml(tile.trigger)}</div>
                     ${renderBillTags(bills)}
                 </div>`;
-            });
-            body.innerHTML = html;
-        }
+        });
+        body.innerHTML = html;
+    }
 
-        function showFieldInfo() {
-            if (!currentSetup) {
-                showToast('请先布置场地');
-                return;
-            }
-            const body = document.getElementById('infoModalBody');
-            let html = '';
-            currentSetup.forEach(({
-                casino,
-                tile,
-                bills
-            }) => {
-                html += `<div class="tile-card">
+    function showFieldInfo() {
+        if (!currentSetup) {
+            showToast('请先布置场地');
+            return;
+        }
+        const body = document.getElementById('infoModalBody');
+        let html = '';
+        currentSetup.forEach(({
+            casino,
+            tile,
+            bills
+        }) => {
+            html += `<div class="tile-card">
                     <div class="tile-card-top">
                         <div class="tile-casino-badge tile-casino-${casino}">${casino}</div>
                         <div class="tile-name-block">
@@ -1330,286 +1163,298 @@
                     <div class="tile-desc">${escHtml(tile.desc)}</div>
                     ${renderBillTags(bills)}
                 </div>`;
+        });
+        body.innerHTML = html;
+        openTileModal('infoOverlay');
+    }
+
+    function openTileModal(id) {
+        const overlay = document.getElementById(id);
+        const modal = overlay.querySelector('.tile-modal');
+        overlay.style.display = 'flex';
+        void overlay.offsetWidth; // trigger reflow
+        overlay.style.opacity = '1';
+        modal.style.transform = 'scale(1) translateY(0)';
+    }
+
+    function closeTileModal(id, e) {
+        if (e && e.target !== e.currentTarget) return;
+        const overlay = document.getElementById(id);
+        const modal = overlay.querySelector('.tile-modal');
+        overlay.style.opacity = '0';
+        modal.style.transform = 'scale(0.95) translateY(20px)';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 400);
+    }
+
+    // ---- API helpers ----
+    async function apiPost(path, body = {}) {
+        const res = await fetch(BASE + path, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+        return res.json();
+    }
+    async function apiGet(path) {
+        const res = await fetch(BASE + path);
+        return res.json();
+    }
+
+    // ---- Toast ----
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    // ---- Player Management ----
+    async function addPlayer() {
+        const input = document.getElementById('playerNameInput');
+        const name = input.value.trim();
+        if (!name) return;
+        const res = await apiPost('/api/add_player', {
+            name
+        });
+        if (res.status === 'exists') {
+            showToast('玩家已存在');
+            return;
+        }
+        input.value = '';
+        expandedPlayers.add(name);
+        showToast(`${name} 已加入`);
+        refresh();
+    }
+
+    async function removePlayer(name) {
+        if (!confirm(`确定移除 ${name}？`)) return;
+        await apiPost('/api/remove_player', {
+            name
+        });
+        expandedPlayers.delete(name);
+        showToast(`${name} 已移除`);
+        refresh();
+    }
+
+    // ---- Bill Management ----
+    async function addBill(playerName, value) {
+        const pool = getRemainingPool(currentPlayers);
+        if (pool[value] > 0) {
+            await apiPost('/api/add_bill', {
+                player_name: playerName,
+                value
             });
-            body.innerHTML = html;
-            openTileModal('infoOverlay');
-        }
-
-        function openTileModal(id) {
-            const overlay = document.getElementById(id);
-            const modal = overlay.querySelector('.tile-modal');
-            overlay.style.display = 'flex';
-            void overlay.offsetWidth; // trigger reflow
-            overlay.style.opacity = '1';
-            modal.style.transform = 'scale(1) translateY(0)';
-        }
-
-        function closeTileModal(id, e) {
-            if (e && e.target !== e.currentTarget) return;
-            const overlay = document.getElementById(id);
-            const modal = overlay.querySelector('.tile-modal');
-            overlay.style.opacity = '0';
-            modal.style.transform = 'scale(0.95) translateY(20px)';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 400);
-        }
-
-        // ---- API helpers ----
-        async function apiPost(path, body = {}) {
-            const res = await fetch(BASE + path, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            });
-            return res.json();
-        }
-        async function apiGet(path) {
-            const res = await fetch(BASE + path);
-            return res.json();
-        }
-
-        // ---- Toast ----
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 1800);
-        }
-
-        // ---- Player Management ----
-        async function addPlayer() {
-            const input = document.getElementById('playerNameInput');
-            const name = input.value.trim();
-            if (!name) return;
-            const res = await apiPost('/api/add_player', {
-                name
-            });
-            if (res.status === 'exists') {
-                showToast('玩家已存在');
-                return;
-            }
-            input.value = '';
-            expandedPlayers.add(name);
-            showToast(`${name} 已加入`);
             refresh();
+            return;
         }
 
-        async function removePlayer(name) {
-            if (!confirm(`确定移除 ${name}？`)) return;
-            await apiPost('/api/remove_player', {
-                name
-            });
-            expandedPlayers.delete(name);
-            showToast(`${name} 已移除`);
-            refresh();
-        }
+        const player = currentPlayers.find(p => p.name === playerName);
+        if (!player) return;
 
-        // ---- Bill Management ----
-        async function addBill(playerName, value) {
-            const pool = getRemainingPool(currentPlayers);
-            if (pool[value] > 0) {
+        const playerBills = player.bills || [];
+        const uniquePlayerValues = [...new Set(playerBills.map(b => b.value))].sort((a, b) => a - b);
+
+        // Strategy A: Give larger bill from pool, take smaller bill from player
+        for (const v_have of uniquePlayerValues) {
+            const v_new = value + v_have;
+            if (pool[v_new] > 0) {
+                const billToRemove = playerBills.find(b => b.value === v_have);
+                await apiPost('/api/remove_bill', {
+                    player_name: playerName,
+                    bill_id: billToRemove.id
+                });
                 await apiPost('/api/add_bill', {
                     player_name: playerName,
-                    value
+                    value: v_new
                 });
+                showToast(`${value}万已用完，给 ${v_new}万找零 ${v_have}万`);
                 refresh();
                 return;
             }
-
-            const player = currentPlayers.find(p => p.name === playerName);
-            if (!player) return;
-
-            const playerBills = player.bills || [];
-            const uniquePlayerValues = [...new Set(playerBills.map(b => b.value))].sort((a, b) => a - b);
-
-            // Strategy A: Give larger bill from pool, take smaller bill from player
-            for (const v_have of uniquePlayerValues) {
-                const v_new = value + v_have;
-                if (pool[v_new] > 0) {
-                    const billToRemove = playerBills.find(b => b.value === v_have);
-                    await apiPost('/api/remove_bill', {
-                        player_name: playerName,
-                        bill_id: billToRemove.id
-                    });
-                    await apiPost('/api/add_bill', {
-                        player_name: playerName,
-                        value: v_new
-                    });
-                    showToast(`${value}万已用完，给 ${v_new}万找零 ${v_have}万`);
-                    refresh();
-                    return;
-                }
-            }
-
-            // Strategy B: Give two smaller bills from pool
-            const availablePoolValues = Object.keys(pool).map(Number).filter(v => pool[v] > 0).sort((a, b) => a -
-                b);
-            for (const v1 of availablePoolValues) {
-                const v2 = value - v1;
-                if (pool[v2] > 0) {
-                    if (v1 === v2 && pool[v1] < 2) continue;
-                    await apiPost('/api/add_bill', {
-                        player_name: playerName,
-                        value: v1
-                    });
-                    await apiPost('/api/add_bill', {
-                        player_name: playerName,
-                        value: v2
-                    });
-                    showToast(`${value}万已用完，拆分为 ${v1}万和 ${v2}万`);
-                    refresh();
-                    return;
-                }
-            }
-
-            showToast(`⚠️ ${value}万已被用完，且无法找零！`);
-        }
-        async function removeBill(playerName, billId) {
-            await apiPost('/api/remove_bill', {
-                player_name: playerName,
-                bill_id: billId
-            });
-            refresh();
         }
 
-        // ---- End Game ----
-        function showEndConfirm() {
-            if (!currentPlayers.length) return;
-            const body = document.getElementById('endModalBody');
-            let html = '';
-            currentPlayers.forEach((p, i) => {
-                html += `<div class="end-modal-result">
+        // Strategy B: Give two smaller bills from pool
+        const availablePoolValues = Object.keys(pool).map(Number).filter(v => pool[v] > 0).sort((a, b) => a -
+            b);
+        for (const v1 of availablePoolValues) {
+            const v2 = value - v1;
+            if (pool[v2] > 0) {
+                if (v1 === v2 && pool[v1] < 2) continue;
+                await apiPost('/api/add_bill', {
+                    player_name: playerName,
+                    value: v1
+                });
+                await apiPost('/api/add_bill', {
+                    player_name: playerName,
+                    value: v2
+                });
+                showToast(`${value}万已用完，拆分为 ${v1}万和 ${v2}万`);
+                refresh();
+                return;
+            }
+        }
+
+        showToast(`⚠️ ${value}万已被用完，且无法找零！`);
+    }
+    async function removeBill(playerName, billId) {
+        await apiPost('/api/remove_bill', {
+            player_name: playerName,
+            bill_id: billId
+        });
+        refresh();
+    }
+
+    // ---- End Game ----
+    function showEndConfirm() {
+        if (!currentPlayers.length) return;
+        const body = document.getElementById('endModalBody');
+        let html = '';
+        currentPlayers.forEach((p, i) => {
+            html += `<div class="end-modal-result">
             <span style="font-weight:600">${i + 1}. ${escHtml(p.name)}</span>
             <span style="font-weight:800;color:var(--apple-green)">${p.total_amount}万 <span style="font-weight:600; font-size: 0.85rem; color: var(--apple-gray)">· ${p.bill_count}张</span></span>
         </div>`;
-            });
-            body.innerHTML = html;
-            const overlay = document.getElementById('endOverlay');
-            const modal = overlay.querySelector('.end-modal');
-            overlay.style.display = 'flex';
-            // Trigger reflow for animation
-            void overlay.offsetWidth;
-            overlay.style.opacity = '1';
-            modal.style.transform = 'scale(1) translateY(0)';
+        });
+        body.innerHTML = html;
+        const overlay = document.getElementById('endOverlay');
+        const modal = overlay.querySelector('.end-modal');
+        overlay.style.display = 'flex';
+        // Trigger reflow for animation
+        void overlay.offsetWidth;
+        overlay.style.opacity = '1';
+        modal.style.transform = 'scale(1) translateY(0)';
+    }
+
+    function hideEndConfirm(e) {
+        if (e && e.target !== e.currentTarget) return;
+        const overlay = document.getElementById('endOverlay');
+        const modal = overlay.querySelector('.end-modal');
+        overlay.style.opacity = '0';
+        modal.style.transform = 'scale(0.95) translateY(20px)';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 400); // Wait for transition
+    }
+
+    async function confirmEndGame() {
+        hideEndConfirm();
+        const res = await apiPost('/api/end_game');
+        if (res.status === 'error') {
+            showToast(res.msg || '无法结束');
+            return;
+        }
+        expandedPlayers.clear();
+        showToast('🏁 本局已结束，结果已记录！');
+        refresh();
+    }
+
+    // ---- Reset ----
+    async function resetGame() {
+        if (!confirm('确定重置？当前数据将清除（不影响历史记录）。')) return;
+        await apiPost('/api/reset');
+        expandedPlayers.clear();
+        showToast('游戏已重置');
+        refresh();
+    }
+
+    // ---- Render ----
+    function getAvatarColor(i) {
+        return AVATAR_COLORS[i % AVATAR_COLORS.length];
+    }
+
+    function getBillColorClass(v) {
+        return `bill-${v}`;
+    }
+
+    function renderLeaderboard(players) {
+        const container = document.getElementById('leaderboard');
+        const actionArea = document.getElementById('actionArea');
+        if (!players.length) {
+            container.innerHTML = `
+                <div class="apple-list mb-md">
+                    <div class="empty-state">
+                        <span class="empty-icon">🃏</span>
+                        添加玩家开始计算
+                    </div>
+                </div>`;
+            actionArea.style.display = 'none';
+            return;
+        }
+        actionArea.style.display = 'flex';
+
+        const amountGroups = {};
+        players.forEach(p => {
+            if (!amountGroups[p.total_amount]) amountGroups[p.total_amount] = [];
+            amountGroups[p.total_amount].push(p.name);
+        });
+
+        let html = '<div class="apple-list mb-md">';
+        players.forEach((p, i) => {
+            const rank = i + 1;
+            let rankClass = (rank === 1 && p.total_amount > 0) ? 'rank-1' : (rank === 2 ? 'rank-2' : (rank === 3 ? 'rank-3' : 'rank-other'));
+            let rankIcon = (rank === 1 && p.total_amount > 0) ? '👑' : rank;
+            const isTied = amountGroups[p.total_amount].length > 1 && p.total_amount > 0;
+
+            html += `<div class="apple-list-item">
+                <div class="rank-num ${rankClass}">${rankIcon}</div>
+                <div class="apple-list-item-content">
+                    <div class="apple-list-item-title">${escHtml(p.name)}${isTied ? '<span class="lb-tie-badge">平局</span>' : ''}</div>
+                </div>
+                <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
+                    <div style="text-align: right; width: 40px;">
+                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">张数</div>
+                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">${p.bill_count}张</div>
+                    </div>
+                    <div style="text-align: right; width: 60px;">
+                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">金额</div>
+                        <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-green);">${p.total_amount}万</div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function renderPlayerCards(players) {
+        const container = document.getElementById('playerCards');
+        if (!players.length) {
+            container.innerHTML = '';
+            return;
         }
 
-        function hideEndConfirm(e) {
-            if (e && e.target !== e.currentTarget) return;
-            const overlay = document.getElementById('endOverlay');
-            const modal = overlay.querySelector('.end-modal');
-            overlay.style.opacity = '0';
-            modal.style.transform = 'scale(0.95) translateY(20px)';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 400); // Wait for transition
-        }
+        let html = '';
+        players.forEach((p, idx) => {
+            const color = getAvatarColor(idx);
+            const isOpen = expandedPlayers.has(p.name);
+            const initial = p.name.charAt(0).toUpperCase();
 
-        async function confirmEndGame() {
-            hideEndConfirm();
-            const res = await apiPost('/api/end_game');
-            if (res.status === 'error') {
-                showToast(res.msg || '无法结束');
-                return;
-            }
-            expandedPlayers.clear();
-            showToast('🏁 本局已结束，结果已记录！');
-            refresh();
-        }
-
-        // ---- Reset ----
-        async function resetGame() {
-            if (!confirm('确定重置？当前数据将清除（不影响历史记录）。')) return;
-            await apiPost('/api/reset');
-            expandedPlayers.clear();
-            showToast('游戏已重置');
-            refresh();
-        }
-
-        // ---- Render ----
-        function getAvatarColor(i) {
-            return AVATAR_COLORS[i % AVATAR_COLORS.length];
-        }
-
-        function getBillColorClass(v) {
-            return `bill-${v}`;
-        }
-
-        function renderLeaderboard(players) {
-            const container = document.getElementById('leaderboard');
-            const actionArea = document.getElementById('actionArea');
-            if (!players.length) {
-                container.innerHTML = `<div class="empty-state"><span class="empty-icon">🃏</span>添加玩家开始计算</div>`;
-                actionArea.style.display = 'none';
-                return;
-            }
-            actionArea.style.display = 'flex';
-
-            const amountGroups = {};
-            players.forEach(p => {
-                if (!amountGroups[p.total_amount]) amountGroups[p.total_amount] = [];
-                amountGroups[p.total_amount].push(p.name);
-            });
-
-            let html = '';
-            players.forEach((p, i) => {
-                const rank = i + 1;
-                let rankClass = '';
-                let rankIcon = rank;
-                if (rank === 1 && p.total_amount > 0) {
-                    rankClass = 'gold';
-                    rankIcon = '👑';
-                } else if (rank === 2) rankClass = 'silver';
-                else if (rank === 3) rankClass = 'bronze';
-                const isTied = amountGroups[p.total_amount].length > 1 && p.total_amount > 0;
-
-                html += `<div class="lb-row">
-            <span class="lb-rank ${rankClass}">${rankIcon}</span>
-            <span class="lb-name">${escHtml(p.name)}${isTied ? '<span class="lb-tie-badge">平局</span>' : ''}</span>
-            <span class="lb-amount">${p.total_amount}万</span>
-            <span class="lb-bills">${p.bill_count}张</span>
-        </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function renderPlayerCards(players) {
-            const container = document.getElementById('playerCards');
-            if (!players.length) {
-                container.innerHTML = '';
-                return;
-            }
-
-            let html = '';
-            players.forEach((p, idx) => {
-                const color = getAvatarColor(idx);
-                const isOpen = expandedPlayers.has(p.name);
-                const initial = p.name.charAt(0).toUpperCase();
-
-                let billBtnsHtml = DENOMINATIONS.map(v =>
-                    `<button class="bill-btn" onclick="addBill('${escAttr(p.name)}', ${v})">
+            let billBtnsHtml = DENOMINATIONS.map(v =>
+                `<button class="bill-btn" onclick="addBill('${escAttr(p.name)}', ${v})">
                 <span class="bill-icon">💵</span>${v}万
             </button>`
-                ).join('');
+            ).join('');
 
-                let billListHtml = '';
-                if (p.bills && p.bills.length) {
-                    billListHtml = p.bills.map(b =>
-                        `<div class="bill-item">
+            let billListHtml = '';
+            if (p.bills && p.bills.length) {
+                billListHtml = p.bills.map(b =>
+                    `<div class="bill-item">
                     <span class="bill-value-tag ${getBillColorClass(b.value)}">${b.value}万</span>
                     <button class="bill-remove-btn" onclick="removeBill('${escAttr(p.name)}', '${b.id}')">
-                        <i class="fas fa-times"></i> 移除
+                        <i class="ph-bold ph-x"></i> 移除
                     </button>
                 </div>`
-                    ).join('');
-                } else {
-                    billListHtml =
-                        '<div style="text-align:center;color:var(--apple-gray);font-size:0.9rem;font-weight:500;padding:var(--space-md) 0;">暂无钞票</div>';
-                }
+                ).join('');
+            } else {
+                billListHtml =
+                    '<div style="text-align:center;color:var(--apple-gray);font-size:0.9rem;font-weight:500;padding:var(--space-md) 0;">暂无钞票</div>';
+            }
 
-                html += `<div class="player-card">
+            html += `<div class="player-card">
             <div class="player-card-header" onclick="togglePlayer('${escAttr(p.name)}')">
                 <div class="player-card-left">
                     <div class="player-card-avatar" style="background:${color}">${initial}</div>
@@ -1618,7 +1463,7 @@
                         <div class="player-card-summary">${p.total_amount}万 · ${p.bill_count}张钞票</div>
                     </div>
                 </div>
-                <i class="fas fa-chevron-right player-card-chevron ${isOpen ? 'open' : ''}"></i>
+                <i class="ph-bold ph-caret-right player-card-chevron ${isOpen ? 'open' : ''}"></i>
             </div>
             <div class="player-card-body ${isOpen ? 'open' : ''}">
                 <div class="section-title" style="margin-top:var(--space-xs)">添加钞票</div>
@@ -1626,98 +1471,95 @@
                 <div class="section-title">钞票明细</div>
                 <div class="bill-list">${billListHtml}</div>
                 <button class="remove-player-btn" onclick="removePlayer('${escAttr(p.name)}')">
-                    <i class="fas fa-trash-alt" style="margin-right: 4px;"></i>移除此玩家
+                    <i class="ph-bold ph-trash" style="margin-right: 4px;"></i>移除此玩家
                 </button>
             </div>
         </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function renderHistLeaderboard(lb) {
-            const container = document.getElementById('histLeaderboard');
-            if (!lb.length) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <span class="empty-icon">👻</span>
-                        还没人玩过呢，快去开一局！
-                    </div>`;
-                return;
-            }
-
-            let html = `
-                <div class="hist-lb-header">
-                    <span>#</span>
-                    <span>玩家</span>
-                    <span style="text-align:right">总计</span>
-                    <span style="text-align:right">上场</span>
-                    <span style="text-align:right">场均</span>
-                </div>
-            `;
-            lb.forEach((p, i) => {
-                const rank = i + 1;
-                let rankClass = '';
-                let rankIcon = rank;
-                if (rank === 1 && p.total_amount > 0) {
-                    rankClass = 'gold';
-                    rankIcon = '👑';
-                } else if (rank === 2) {
-                    rankClass = 'silver';
-                    rankIcon = '2';
-                } else if (rank === 3) {
-                    rankClass = 'bronze';
-                    rankIcon = '3';
-                }
-
-                const lastAmtStr = p.last_game_amount > 0 ? `+${p.last_game_amount}万` : '--';
-                const avgAmtStr = p.avg_amount > 0 ? `${p.avg_amount}万` : '--';
-
-                html += `<div class="hist-lb-row">
-                    <span class="lb-rank ${rankClass}">${rankIcon}</span>
-                    <span class="lb-name">${escHtml(p.name)}</span>
-                    <span style="text-align:right; font-weight:700; color:var(--apple-gray); font-size: 0.95rem;">${p.total_amount}万</span>
-                    <span class="lb-amount" style="color:var(--apple-green);">${lastAmtStr}</span>
-                    <span class="lb-bills" style="font-weight:700; color:var(--apple-gray);">${avgAmtStr}</span>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function togglePlayer(name) {
-            if (expandedPlayers.has(name)) expandedPlayers.delete(name);
-            else expandedPlayers.add(name);
-            refresh();
-        }
-
-        // ---- Helpers ----
-        function escHtml(s) {
-            const d = document.createElement('div');
-            d.textContent = s;
-            return d.innerHTML;
-        }
-
-        function escAttr(s) {
-            return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
-
-        // ---- Refresh ----
-        async function refresh() {
-            const [statusData, lbData] = await Promise.all([
-                apiGet('/api/status'),
-                apiGet('/api/leaderboard')
-            ]);
-            currentPlayers = statusData.ranked;
-            renderLeaderboard(statusData.ranked);
-            renderPlayerCards(statusData.players);
-            renderHistLeaderboard(lbData.leaderboard);
-        }
-
-        // ---- Init ----
-        document.getElementById('playerNameInput').addEventListener('keydown', e => {
-            if (e.key === 'Enter') addPlayer();
         });
-        refresh();
-    </script>
-</body>
+        container.innerHTML = html;
+    }
 
-</html>
+    function renderHistLeaderboard(lb) {
+        const container = document.getElementById('histLeaderboard');
+        if (!lb.length) {
+            container.innerHTML = `
+                    <div class="apple-list mb-xl">
+                        <div class="empty-state">
+                            <span class="empty-icon">👻</span>
+                            还没人玩过呢，快去开一局！
+                        </div>
+                    </div>`;
+            return;
+        }
+
+        let html = '<div class="apple-list mb-xl">';
+        lb.forEach((p, i) => {
+            const rank = i + 1;
+            let rankClass = (rank === 1 && p.total_amount > 0) ? 'rank-1' : (rank === 2 ? 'rank-2' : (rank === 3 ? 'rank-3' : 'rank-other'));
+            let rankIcon = (rank === 1 && p.total_amount > 0) ? '👑' : rank;
+
+            const lastAmtStr = p.last_game_amount > 0 ? `+${p.last_game_amount}万` : '--';
+            const avgAmtStr = p.avg_amount > 0 ? `${p.avg_amount}万` : '--';
+
+            html += `<div class="apple-list-item">
+                <div class="rank-num ${rankClass}">${rankIcon}</div>
+                <div class="apple-list-item-content">
+                    <div class="apple-list-item-title">${escHtml(p.name)}</div>
+                </div>
+                <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
+                    <div style="text-align: right; width: 60px;">
+                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">总计</div>
+                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">${p.total_amount}万</div>
+                    </div>
+                    <div style="text-align: right; width: 60px;">
+                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">场均</div>
+                        <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-green);">${avgAmtStr}</div>
+                    </div>
+                    <div style="text-align: right; width: 60px;">
+                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">上场</div>
+                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">${lastAmtStr}</div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function togglePlayer(name) {
+        if (expandedPlayers.has(name)) expandedPlayers.delete(name);
+        else expandedPlayers.add(name);
+        refresh();
+    }
+
+    // ---- Helpers ----
+    function escHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function escAttr(s) {
+        return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // ---- Refresh ----
+    async function refresh() {
+        const [statusData, lbData] = await Promise.all([
+            apiGet('/api/status'),
+            apiGet('/api/leaderboard')
+        ]);
+        currentPlayers = statusData.ranked;
+        renderLeaderboard(statusData.ranked);
+        renderPlayerCards(statusData.players);
+        renderHistLeaderboard(lbData.leaderboard);
+    }
+
+    // ---- Init ----
+    document.getElementById('playerNameInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') addPlayer();
+    });
+    refresh();
+</script>
+</script>
+{% endblock %}

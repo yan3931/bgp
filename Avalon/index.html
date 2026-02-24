@@ -1,1533 +1,1433 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>阵营推理 · 身份隐藏</title>
-    <link href="/static/common.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            padding-bottom: 80px;
+{% block title %}阿瓦隆 - 阵营推理 · 身份隐藏{% endblock %}
+
+{% block extra_head %}
+<style>
+    body {
+        padding-bottom: 80px;
+    }
+
+    /* ---- Page Hero ---- */
+
+    .role-img {
+        max-height: 280px;
+        border-radius: 16px;
+        margin-bottom: var(--space-md);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s;
+    }
+
+    .role-img:hover {
+        transform: scale(1.03) translateY(-4px);
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+    }
+
+    .vision-list {
+        list-style: none;
+        padding: 0;
+        margin: var(--space-sm) 0 0;
+    }
+
+    .vision-list li {
+        font-size: 0.9rem;
+        padding: 6px 0;
+        color: var(--apple-gray);
+        font-weight: 500;
+    }
+
+    .vision-list li.evil {
+        color: var(--apple-red);
+        font-weight: 600;
+    }
+
+    .team-display {
+        background: var(--apple-bg);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        text-align: center;
+        margin: var(--space-md) 0;
+    }
+
+    .team-display .names {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--apple-black);
+        letter-spacing: -0.02em;
+    }
+
+    .vote-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: var(--space-lg);
+    }
+
+    .vote-overlay h2 {
+        color: white;
+        margin-bottom: var(--space-xl);
+        font-size: 1.8rem;
+        letter-spacing: -0.04em;
+    }
+
+    .vote-team-box,
+    .lady-result-box {
+        background: rgba(40, 40, 44, 0.85);
+        backdrop-filter: blur(20px);
+        padding: var(--space-lg) var(--space-xl);
+        border-radius: var(--radius-xl);
+        margin-bottom: var(--space-xl);
+        text-align: center;
+        width: 85%;
+        max-width: 340px;
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    .vote-team-box strong {
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: white;
+    }
+
+    .lady-result-box .alignment-good {
+        color: var(--apple-blue);
+        font-size: 2rem;
+        font-weight: 800;
+        margin-top: 10px;
+    }
+
+    .lady-result-box .alignment-evil {
+        color: var(--apple-red);
+        font-size: 2rem;
+        font-weight: 800;
+        margin-top: 10px;
+    }
+
+    .vote-btn-big {
+        width: 85%;
+        max-width: 320px;
+        padding: 16px;
+        border-radius: var(--radius-xl);
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        border: none;
+        margin: 8px 0;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        font-family: var(--font-family);
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .vote-btn-big.green {
+        background: var(--apple-green);
+    }
+
+    .vote-btn-big.red {
+        background: var(--apple-red);
+    }
+
+    .vote-btn-big.blue {
+        background: var(--apple-blue);
+    }
+
+    .vote-btn-big:active {
+        transform: scale(0.96);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .vote-btn-big:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .vote-btn-big:disabled {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    .lady-target-btn {
+        padding: 16px;
+        border-radius: 20px;
+        font-size: 1.15rem;
+        font-weight: 700;
+        border: none;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        width: 100%;
+    }
+
+    .lady-target-btn:not(:disabled):hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .lady-target-btn:not(:disabled):active {
+        transform: scale(0.96);
+    }
+
+    .lady-target-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 85%;
+        max-width: 320px;
+    }
+
+    .error-toast {
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20000;
+        padding: 14px 28px;
+        border-radius: 30px;
+        background: rgba(255, 59, 48, 0.9);
+        backdrop-filter: blur(10px);
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 600;
+        box-shadow: 0 12px 24px rgba(255, 59, 48, 0.3);
+        letter-spacing: -0.01em;
+    }
+
+    .count-control {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-lg);
+        margin: var(--space-lg) 0;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 24px;
+        padding: 12px;
+    }
+
+    .count-control .count-display {
+        font-size: 2.5rem;
+        font-weight: 800;
+        min-width: 60px;
+        text-align: center;
+        letter-spacing: -0.04em;
+        color: var(--apple-black);
+    }
+
+    .count-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: none;
+        background: var(--apple-white);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        font-size: 1.5rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        color: var(--apple-blue);
+    }
+
+    .count-btn:active {
+        transform: scale(0.9);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .config-preview {
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 16px;
+        padding: var(--space-lg);
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--apple-gray);
+        margin-bottom: var(--space-lg);
+        line-height: 1.6;
+    }
+
+    .status-box {
+        text-align: center;
+        padding: var(--space-2xl) 0;
+    }
+
+    .status-count {
+        font-size: 4rem;
+        font-weight: 800;
+        color: var(--apple-black);
+        letter-spacing: -0.04em;
+    }
+
+    .status-count .total {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--apple-gray);
+    }
+
+    .chips-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .apple-chip {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        font-weight: 600;
+    }
+
+    .lb-section {
+        padding: var(--space-xl) 0;
+    }
+
+    .lb-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: var(--space-md);
+        letter-spacing: -0.03em;
+    }
+
+
+
+    .lancelot-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        margin: var(--space-md) 0;
+        font-size: 0.9rem;
+    }
+
+    .lancelot-toggle label {
+        cursor: pointer;
+        color: var(--apple-gray);
+        font-weight: 600;
+    }
+
+    .toggle-switch {
+        position: relative;
+        width: 50px;
+        height: 30px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        inset: 0;
+        background: var(--apple-gray-light);
+        border-radius: 30px;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-switch input:checked+.toggle-slider {
+        background: var(--apple-blue);
+    }
+
+    .toggle-switch input:checked+.toggle-slider::before {
+        transform: translateX(20px);
+    }
+
+    .swap-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        font-size: 0.6rem;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--apple-orange);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .swap-badge.no-swap {
+        background: var(--apple-gray-light);
+        color: var(--apple-gray);
+    }
+
+    .alignment-swap-indicator {
+        display: inline-block;
+        animation: pulse-glow 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+
+        0%,
+        100% {
+            opacity: 1;
         }
 
-        /* ---- Page Hero ---- */
-
-        .role-img {
-            max-height: 280px;
-            border-radius: 16px;
-            margin-bottom: var(--space-md);
-            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s;
-        }
-
-        .role-img:hover {
-            transform: scale(1.03) translateY(-4px);
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
-        }
-
-        .vision-list {
-            list-style: none;
-            padding: 0;
-            margin: var(--space-sm) 0 0;
-        }
-
-        .vision-list li {
-            font-size: 0.9rem;
-            padding: 6px 0;
-            color: var(--apple-gray);
-            font-weight: 500;
-        }
-
-        .vision-list li.evil {
-            color: var(--apple-red);
-            font-weight: 600;
-        }
-
-        .team-display {
-            background: var(--apple-bg);
-            border-radius: var(--radius-md);
-            padding: var(--space-md);
-            text-align: center;
-            margin: var(--space-md) 0;
-        }
-
-        .team-display .names {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--apple-black);
-            letter-spacing: -0.02em;
-        }
-
-        .vote-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: var(--space-lg);
-        }
-
-        .vote-overlay h2 {
-            color: white;
-            margin-bottom: var(--space-xl);
-            font-size: 1.8rem;
-            letter-spacing: -0.04em;
-        }
-
-        .vote-team-box,
-        .lady-result-box {
-            background: rgba(40, 40, 44, 0.85);
-            backdrop-filter: blur(20px);
-            padding: var(--space-lg) var(--space-xl);
-            border-radius: var(--radius-xl);
-            margin-bottom: var(--space-xl);
-            text-align: center;
-            width: 85%;
-            max-width: 340px;
-            box-shadow: var(--shadow-lg);
-            color: white;
-        }
-
-        .vote-team-box strong {
-            font-size: 1.4rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: white;
-        }
-
-        .lady-result-box .alignment-good {
-            color: var(--apple-blue);
-            font-size: 2rem;
-            font-weight: 800;
-            margin-top: 10px;
-        }
-
-        .lady-result-box .alignment-evil {
-            color: var(--apple-red);
-            font-size: 2rem;
-            font-weight: 800;
-            margin-top: 10px;
-        }
-
-        .vote-btn-big {
-            width: 85%;
-            max-width: 320px;
-            padding: 16px;
-            border-radius: var(--radius-xl);
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-            border: none;
-            margin: 8px 0;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            font-family: var(--font-family);
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .vote-btn-big.green {
-            background: var(--apple-green);
-        }
-
-        .vote-btn-big.red {
-            background: var(--apple-red);
-        }
-
-        .vote-btn-big.blue {
-            background: var(--apple-blue);
-        }
-
-        .vote-btn-big:active {
-            transform: scale(0.96);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .vote-btn-big:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-        }
-
-        .vote-btn-big:disabled {
+        50% {
             opacity: 0.4;
-            pointer-events: none;
         }
+    }
 
-        .lady-target-btn {
-            padding: 16px;
-            border-radius: 20px;
-            font-size: 1.15rem;
-            font-weight: 700;
-            border: none;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            width: 100%;
-        }
+    .reveal-list {
+        list-style: none;
+        padding: 0;
+    }
 
-        .lady-target-btn:not(:disabled):hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
+    .reveal-list li {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+        font-size: 1rem;
+    }
 
-        .lady-target-btn:not(:disabled):active {
-            transform: scale(0.96);
-        }
+    .reveal-list li:last-child {
+        border-bottom: none;
+    }
 
-        .lady-target-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 85%;
-            max-width: 320px;
-        }
+    .apple-toggle-input:checked+.apple-toggle-btn {
+        background: var(--apple-blue);
+        border-color: var(--apple-blue);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+    }
 
-        .error-toast {
-            position: fixed;
-            top: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 20000;
-            padding: 14px 28px;
-            border-radius: 30px;
-            background: rgba(255, 59, 48, 0.9);
-            backdrop-filter: blur(10px);
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-            box-shadow: 0 12px 24px rgba(255, 59, 48, 0.3);
-            letter-spacing: -0.01em;
-        }
+    .apple-btn-primary {
+        box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
+    }
 
-        .count-control {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--space-lg);
-            margin: var(--space-lg) 0;
-            background: rgba(0, 0, 0, 0.03);
-            border-radius: 24px;
-            padding: 12px;
-        }
+    .apple-btn-success {
+        box-shadow: 0 4px 14px rgba(52, 199, 89, 0.3);
+    }
 
-        .count-control .count-display {
-            font-size: 2.5rem;
-            font-weight: 800;
-            min-width: 60px;
-            text-align: center;
-            letter-spacing: -0.04em;
-            color: var(--apple-black);
-        }
+    /* Transitions */
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-        .count-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: none;
-            background: var(--apple-white);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            font-size: 1.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            color: var(--apple-blue);
-        }
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
 
-        .count-btn:active {
-            transform: scale(0.9);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-        }
+    .overlay-enter-active,
+    .overlay-leave-active {
+        transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), backdrop-filter 0.4s;
+    }
 
-        .config-preview {
-            background: rgba(0, 0, 0, 0.03);
-            border-radius: 16px;
-            padding: var(--space-lg);
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--apple-gray);
-            margin-bottom: var(--space-lg);
-            line-height: 1.6;
-        }
+    .overlay-enter-from,
+    .overlay-leave-to {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
 
-        .status-box {
-            text-align: center;
-            padding: var(--space-2xl) 0;
-        }
+    .slide-up-enter-active,
+    .slide-up-leave-active {
+        transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-        .status-count {
-            font-size: 4rem;
-            font-weight: 800;
-            color: var(--apple-black);
-            letter-spacing: -0.04em;
-        }
+    .slide-up-enter-from,
+    .slide-up-leave-to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+</style>
+{% endblock %}
 
-        .status-count .total {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--apple-gray);
-        }
+{% block nav_title %}
+<i class="ph-fill ph-shield-check text-blue" style="margin-right: 4px;"></i> 阿瓦隆
+{% endblock %}
 
-        .chips-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-        }
+{% block content %}
+{% raw %}
+<div id="app" v-cloak>
 
-        .apple-chip {
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            border-radius: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            font-weight: 600;
-        }
+    <!-- Hero -->
+    <div class="apple-hero">
+        <span class="apple-hero-emoji">🛡️</span>
+        <h1>阿瓦隆</h1>
+        <p>阵营推理 · 身份隐藏</p>
+    </div>
 
-        .lb-section {
-            padding: var(--space-xl) 0;
-        }
+    <!-- Error Toast -->
+    <transition name="slide-up">
+        <div v-if="errorMsg" class="error-toast">{{ errorMsg }}</div>
+    </transition>
 
-        .lb-title {
-            font-size: 1.4rem;
-            font-weight: 800;
-            text-align: center;
-            margin-bottom: var(--space-md);
-            letter-spacing: -0.03em;
-        }
-
-        .lb-table {
-            background: var(--apple-white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card);
-            overflow: hidden;
-            margin-bottom: var(--space-lg);
-        }
-
-        .lb-table-header {
-            display: grid;
-            grid-template-columns: 36px 1fr 60px 80px 50px;
-            padding: 12px var(--space-lg);
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--apple-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            background: var(--apple-bg);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .lb-table-row {
-            display: grid;
-            grid-template-columns: 36px 1fr 60px 80px 50px;
-            align-items: center;
-            padding: 16px var(--space-lg);
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-            transition: background var(--transition-fast);
-        }
-
-        .lb-table-row:last-child {
-            border-bottom: none;
-        }
-
-        .lb-table-row:hover {
-            background: rgba(0, 0, 0, 0.02);
-        }
-
-        .lb-table-rank {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--apple-gray);
-        }
-
-        .lb-table-rank.gold {
-            color: var(--apple-orange);
-            font-size: 1.15rem;
-        }
-
-        .lb-table-rank.silver {
-            color: #a0aec0;
-            font-size: 1.15rem;
-        }
-
-        .lb-table-rank.bronze {
-            color: var(--apple-brown);
-            font-size: 1.15rem;
-        }
-
-        .lb-table-name {
-            font-weight: 700;
-            font-size: 1.05rem;
-        }
-
-        .lb-table-stat {
-            font-size: 0.85rem;
-            color: var(--apple-gray);
-            font-weight: 600;
-            text-align: right;
-        }
-
-        .lb-table-stat.wins {
-            color: var(--apple-black);
-            font-weight: 800;
-        }
-
-        .lb-table-stat.win-rate {
-            font-weight: 700;
-            font-size: 1.15rem;
-            color: var(--apple-blue);
-            letter-spacing: -0.02em;
-            text-align: right;
-        }
-
-        .lb-empty {
-            text-align: center;
-            padding: var(--space-xl) var(--space-md);
-            color: var(--apple-gray);
-            font-size: 0.9rem;
-        }
-
-        .lancelot-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--space-sm);
-            margin: var(--space-md) 0;
-            font-size: 0.9rem;
-        }
-
-        .lancelot-toggle label {
-            cursor: pointer;
-            color: var(--apple-gray);
-            font-weight: 600;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 50px;
-            height: 30px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            inset: 0;
-            background: var(--apple-gray-light);
-            border-radius: 30px;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .toggle-slider::before {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            left: 3px;
-            bottom: 3px;
-            background: white;
-            border-radius: 50%;
-            transition: 0.3s;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        .toggle-switch input:checked+.toggle-slider {
-            background: var(--apple-blue);
-        }
-
-        .toggle-switch input:checked+.toggle-slider::before {
-            transform: translateX(20px);
-        }
-
-        .swap-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            font-size: 0.6rem;
-            width: 16px;
-            height: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: var(--apple-orange);
-            color: white;
-            font-weight: 700;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .swap-badge.no-swap {
-            background: var(--apple-gray-light);
-            color: var(--apple-gray);
-        }
-
-        .alignment-swap-indicator {
-            display: inline-block;
-            animation: pulse-glow 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse-glow {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
-        }
-
-        .reveal-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .reveal-list li {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 16px;
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-            font-size: 1rem;
-        }
-
-        .reveal-list li:last-child {
-            border-bottom: none;
-        }
-
-        .apple-toggle-input:checked+.apple-toggle-btn {
-            background: var(--apple-blue);
-            border-color: var(--apple-blue);
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
-        }
-
-        .apple-btn-primary {
-            box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
-        }
-
-        .apple-btn-success {
-            box-shadow: 0 4px 14px rgba(52, 199, 89, 0.3);
-        }
-
-        /* Transitions */
-        .fade-enter-active,
-        .fade-leave-active {
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .fade-enter-from,
-        .fade-leave-to {
-            opacity: 0;
-            transform: translateY(12px) scale(0.98);
-        }
-
-        .overlay-enter-active,
-        .overlay-leave-active {
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), backdrop-filter 0.4s;
-        }
-
-        .overlay-enter-from,
-        .overlay-leave-to {
-            opacity: 0;
-            backdrop-filter: blur(0px);
-        }
-
-        .slide-up-enter-active,
-        .slide-up-leave-active {
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .slide-up-enter-from,
-        .slide-up-leave-to {
-            opacity: 0;
-            transform: translateY(20px);
+    <style>
+        /* Setup switch style specific overrides */
+        #lady-toggle-input:checked+.toggle-slider {
+            background: var(--apple-purple, #af52de) !important;
         }
     </style>
-</head>
 
-<body>
+    <!-- Step 1: Join / Setup -->
+    <div v-if="step === 1" class="apple-section">
 
-    <div id="app" v-cloak>
+        <div class="apple-card">
+            <h4 class="mb-md">加入游戏</h4>
+            <input v-model="myName" class="apple-input mb-md" placeholder="输入你的昵称">
 
-        <!-- Nav -->
-        <nav class="apple-nav">
-            <div class="apple-nav-content" style="min-height: 44px;">
-                <a href="/" class="apple-nav-back" style="min-height: 44px;"><i class="fas fa-chevron-left"></i> 首页</a>
-                <span class="apple-nav-title"><i class="fas fa-shield-alt" style="color: var(--apple-blue);"></i>
-                    阿瓦隆</span>
-            </div>
-        </nav>
-
-        <div class="apple-container">
-
-            <!-- Hero -->
-            <div class="apple-hero">
-                <span class="apple-hero-emoji">🛡️</span>
-                <h1>阿瓦隆</h1>
-                <p>阵营推理 · 身份隐藏</p>
+            <div v-if="status === 'joining'" class="apple-alert apple-alert-info mb-md">
+                <div class="d-flex justify-between items-center">
+                    <span class="apple-tag apple-tag-blue">等待中</span>
+                    <span class="fw-700">{{ currentCount }} / {{ targetCount }} 人</span>
+                </div>
+                <div class="text-muted text-sm mt-sm">已加入: {{ allPlayers.join(', ') }}</div>
             </div>
 
-            <!-- Error Toast -->
-            <transition name="slide-up">
-                <div v-if="errorMsg" class="error-toast">{{ errorMsg }}</div>
-            </transition>
-
-            <style>
-                /* Setup switch style specific overrides */
-                #lady-toggle-input:checked+.toggle-slider {
-                    background: var(--apple-purple, #af52de) !important;
-                }
-            </style>
-
-            <!-- Step 1: Join / Setup -->
-            <div v-if="step === 1" class="apple-section">
-
-                <div class="apple-card">
-                    <h4 class="mb-md">加入游戏</h4>
-                    <input v-model="myName" class="apple-input mb-md" placeholder="输入你的昵称">
-
-                    <div v-if="status === 'joining'" class="apple-alert apple-alert-info mb-md">
-                        <div class="d-flex justify-between items-center">
-                            <span class="apple-tag apple-tag-blue">等待中</span>
-                            <span class="fw-700">{{ currentCount }} / {{ targetCount }} 人</span>
-                        </div>
-                        <div class="text-muted text-sm mt-sm">已加入: {{ allPlayers.join(', ') }}</div>
-                    </div>
-
-                    <div v-if="status === 'joining'">
-                        <button class="apple-btn apple-btn-primary apple-btn-block" @click="joinGame"
-                            :disabled="!myName">加入房间</button>
-                    </div>
-                    <div v-if="status === 'active' || status === 'assassin'">
-                        <div class="apple-alert apple-alert-info mb-md">游戏已开始，输入名字重连</div>
-                        <button class="apple-btn apple-btn-primary apple-btn-block"
-                            style="background: var(--apple-orange);" @click="joinGame" :disabled="!myName">重连</button>
-                    </div>
-                    <div v-if="status === 'empty'" class="text-center text-muted" style="padding: var(--space-lg) 0;">
-                        当前无房间，请先创建
-                    </div>
-                </div>
-
-                <div v-if="status === 'empty'" class="apple-card">
-                    <h4 class="mb-md">创建新房间</h4>
-                    <p class="text-sm text-muted mb-md">标准包配置</p>
-
-                    <div class="count-control">
-                        <button class="count-btn" @click="decrementPlayerCount()">−</button>
-                        <div class="count-display">{{ playerCount }}</div>
-                        <button class="count-btn" @click="incrementPlayerCount()">+</button>
-                    </div>
-
-                    <!-- 湖中仙女开关 (8人局及以上) -->
-                    <div v-if="playerCount >= 8" class="lancelot-toggle">
-                        <span>🧚 启用湖中仙女</span>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="lady-toggle-input" v-model="ladyOfLakeEnabled">
-                            <label for="lady-toggle-input" class="toggle-slider"></label>
-                        </div>
-                    </div>
-
-                    <!-- 王者之剑开关 (8-12人局可选) -->
-                    <div v-if="playerCount >= 8" class="lancelot-toggle">
-                        <span>🗡️ 启用王者之剑</span>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="excalibur-toggle-input" v-model="excaliburEnabled">
-                            <label for="excalibur-toggle-input" class="toggle-slider"></label>
-                        </div>
-                    </div>
-
-                    <!-- 兰斯洛特开关 (10人和12人局) -->
-                    <div v-if="playerCount === 10 || playerCount === 12" class="lancelot-toggle">
-                        <span>⚔️ 启用兰斯洛特变体</span>
-                        <div class="toggle-switch"
-                            :style="playerCount === 12 ? 'opacity: 0.6; pointer-events: none;' : ''">
-                            <input type="checkbox" id="lancelot-toggle-input" v-model="lancelotEnabled"
-                                :disabled="playerCount === 12">
-                            <label for="lancelot-toggle-input" class="toggle-slider"></label>
-                        </div>
-                    </div>
-
-                    <div class="config-preview" v-html="getConfigPreview()"></div>
-
-                    <button class="apple-btn apple-btn-success apple-btn-block apple-btn-lg"
-                        @click="createGame">开新局</button>
-                </div>
+            <div v-if="status === 'joining'">
+                <button class="apple-btn apple-btn-primary apple-btn-block" @click="joinGame"
+                    :disabled="!myName">加入房间</button>
             </div>
-
-            <!-- Avalon Leaderboard -->
-            <div v-if="step === 1" id="inline-leaderboard-section">
-                <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
-                </div>
-                <div class="hist-lb-card">
-                    <div id="histLeaderboard">
-                        <div v-if="lbData.length === 0" class="empty-state">
-                            <span class="empty-icon">👻</span>
-                            还没人玩过呢，快去开一局！
-                        </div>
-                        <div v-else>
-                            <div class="hist-lb-header">
-                                <span>#</span>
-                                <span>玩家</span>
-                                <span style="text-align:right">胜负</span>
-                                <span style="text-align:right">胜率</span>
-                                <span style="text-align:right">场次</span>
-                            </div>
-                            <div v-for="(p, i) in lbData" class="hist-lb-row">
-                                <span class="lb-rank" :class="{gold: i===0, silver: i===1, bronze: i===2}">{{ i === 0 ?
-                                    '👑' : (i===1 ? '2' : (i===2 ? '3' : i+1)) }}</span>
-                                <span class="lb-name">{{ p.name }}</span>
-                                <span
-                                    style="text-align:right; font-weight:700; color:var(--apple-gray); font-size: 0.95rem;">{{
-                                    p.wins }}-{{ p.total - p.wins }}</span>
-                                <span class="lb-amount" style="color:var(--apple-green);">{{ p.win_rate }}%</span>
-                                <span class="lb-bills" style="font-weight:700; color:var(--apple-gray);">{{ p.total
-                                    }}局</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div v-if="status === 'active' || status === 'assassin'">
+                <div class="apple-alert apple-alert-info mb-md">游戏已开始，输入名字重连</div>
+                <button class="apple-btn apple-btn-primary apple-btn-block" style="background: var(--apple-orange);"
+                    @click="joinGame" :disabled="!myName">重连</button>
             </div>
-
-            <!-- Step 2: Lobby -->
-            <div v-if="step === 2" class="apple-section">
-                <div class="apple-card">
-                    <div v-if="status === 'joining'" class="status-box">
-                        <p class="text-muted mb-sm">等待玩家加入...</p>
-                        <div class="status-count">{{ currentCount }} <span class="total">/ {{ targetCount }}</span>
-                        </div>
-                        <div class="d-flex justify-center mt-md">
-                            <div class="apple-spinner"></div>
-                        </div>
-                        <p class="text-sm text-muted mt-md">满员后自动发牌开始</p>
-                    </div>
-                    <div v-else-if="status === 'active'" class="status-box">
-                        <h3 class="text-green">游戏开始!</h3>
-                    </div>
-
-                    <div class="chips-wrap mt-md">
-                        <span v-for="p in allPlayers" class="apple-chip" :class="{me: p===myName}">{{ p }}</span>
-                    </div>
-
-                    <div class="text-center mt-lg"
-                        style="border-top: 0.5px solid rgba(0,0,0,0.06); padding-top: var(--space-md);">
-                        <button class="apple-btn apple-btn-sm apple-btn-outline"
-                            style="color: var(--apple-red); border-color: rgba(255,59,48,0.3);"
-                            @click="resetGame">重置游戏</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3: Main Game -->
-            <div v-if="step === 3" class="apple-section" style="padding-top: var(--space-md);">
-
-                <!-- Identity -->
-                <div class="apple-card mb-md">
-                    <div class="d-flex justify-between items-center mb-md">
-                        <h5 style="margin:0;">你的身份</h5>
-                        <button class="apple-btn apple-btn-sm apple-btn-secondary" @click="showRole=!showRole">{{
-                            showRole?'隐藏':'显示' }}</button>
-                    </div>
-                    <div v-if="showRole">
-                        <div class="apple-role" :class="isCurrentlyEvil() ? 'evil' : 'good'">
-                            <img :src="getRoleImage(myRole)" class="role-img" v-if="myRole"
-                                style="display:block; margin:0 auto;">
-                            <div style="font-size:1.2rem;">{{ roleMap[myRole] || myRole }}</div>
-                            <!-- 兰斯洛特阵营状态 -->
-                            <div v-if="currentAlignment" class="mt-sm text-sm"
-                                :class="currentAlignment === 'evil' ? 'text-red' : 'text-blue'">
-                                <span :class="{'alignment-swap-indicator': lancelotSwapped}">
-                                    {{ currentAlignment === 'evil' ? '⚡ 当前阵营: 邪恶' : '🛡️ 当前阵营: 正义' }}
-                                </span>
-                            </div>
-                        </div>
-                        <div v-if="visionData.length" class="mt-md"
-                            style="background:var(--apple-bg); padding:var(--space-md); border-radius:var(--radius-md);">
-                            <div class="fw-600 text-sm mb-sm">你的视野</div>
-                            <ul class="vision-list">
-                                <li v-for="v in visionData"
-                                    :class="{'evil': v.identity.includes('坏') || v.identity.includes('同')}">
-                                    {{ v.name }}: {{ v.identity }}
-                                </li>
-                            </ul>
-                        </div>
-                        <div v-else class="text-center text-muted text-sm mt-md">(你没有特殊视野)</div>
-                    </div>
-                </div>
-
-                <!-- Mission Progress -->
-                <div class="apple-card mb-md text-center">
-                    <div class="apple-dots mb-md">
-                        <div v-for="i in 5" class="apple-dot"
-                            :class="[getMissionStatusClass(i), {current: i === missionHistory.length + 1}]">
-                            <span>{{ i }}</span>
-                            <span class="sub" v-if="missionHistory[i-1]">{{ missionHistory[i-1].fail_count }}坏</span>
-                            <!-- 兰斯洛特转换牌徽标 -->
-                            <span
-                                v-if="lancelotEnabled && lancelotSwapReveal[i-1] !== null && lancelotSwapReveal[i-1] !== undefined"
-                                class="swap-badge" :class="{'no-swap': !lancelotSwapReveal[i-1]}">
-                                {{ lancelotSwapReveal[i-1] ? '⚡' : '—' }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="text-sm text-muted">
-                        流局: <span class="fw-700 text-red">{{ voteFailCount }}/5</span>
-                        &nbsp;|&nbsp; 第 {{ missionHistory.length + 1 }} 轮需 <span class="fw-700">{{ requiredTeamSize
-                            }}</span> 人
-                    </div>
-                    <div class="text-sm mt-xs" v-if="captain">
-                        👑 当前队长: <span class="fw-700 text-orange">{{ captain }}</span>
-                    </div>
-                    <!-- 湖中仙女持有者 -->
-                    <div class="text-sm mt-xs" v-if="ladyOfLakeHolder">
-                        🧚 湖中仙女: <span class="fw-700" style="color: var(--apple-purple, #af52de);">{{ ladyOfLakeHolder
-                            }}</span>
-                    </div>
-                </div>
-
-                <!-- Lady of the Lake Result (仅持有者可见) -->
-                <div v-if="ladyOfLakeResult && ladyOfLakeInspector === myName" class="apple-card mb-md"
-                    style="border: 2px solid var(--apple-purple, #af52de);">
-                    <h6 class="text-center mb-sm" style="color: var(--apple-purple, #af52de);">🧚 查验结果</h6>
-                    <div class="text-center">
-                        <strong>{{ ladyOfLakeResult.target }}</strong> 的阵营是:
-                        <span :class="ladyOfLakeResult.alignment === 'good' ? 'text-blue fw-700' : 'text-red fw-700'">
-                            {{ ladyOfLakeResult.alignment === 'good' ? '🛡️ 好人' : '🗡️ 坏人' }}
-                        </span>
-                    </div>
-                    <div class="text-sm text-muted text-center mt-sm">你可以选择公布真相或进行伪装</div>
-                </div>
-
-                <!-- Last Vote Snapshot -->
-                <div v-if="Object.keys(lastVoteSnapshot).length" class="apple-card mb-md">
-                    <h6 class="mb-sm text-sm text-muted fw-600">上轮投票票型</h6>
-                    <div class="chips-wrap">
-                        <span v-for="(vote, name) in lastVoteSnapshot" class="apple-chip"
-                            :class="{'approve': vote==='approve', 'reject': vote==='reject'}">
-                            {{ name }} <i class="fas"
-                                :class="vote==='approve'?'fa-check text-green':'fa-times text-red'"
-                                style="margin-left:4px;"></i>
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Vote Team Phase -->
-                <div v-if="voteTeamActive" class="apple-card mb-md" style="border: 2px solid var(--apple-blue);">
-                    <h5 class="text-center text-blue mb-md">🗳️ 组队投票中</h5>
-                    <div class="team-display">
-                        <div class="text-sm text-muted">提议队伍</div>
-                        <div class="names">{{ missionTeam.join('、') }}</div>
-                    </div>
-                    <div class="chips-wrap mt-md">
-                        <span v-for="p in allPlayers" class="apple-chip"
-                            :class="{'approve': teamVotes[p]==='approve', 'reject': teamVotes[p]==='reject'}"
-                            :style="!teamVotes[p] ? 'opacity:0.4' : ''">
-                            {{ p }} <i v-if="teamVotes[p]" class="fas"
-                                :class="teamVotes[p]==='approve'?'fa-check':'fa-times'" style="margin-left:4px;"></i>
-                        </span>
-                    </div>
-                    <div v-if="lastVoteResult" class="mt-md apple-alert"
-                        :class="lastVoteResult==='approved'?'apple-alert-success':'apple-alert-danger'">
-                        投票结果: {{ lastVoteResult==='approved'?'✅ 通过':'❌ 拒绝' }}
-                    </div>
-                </div>
-
-                <!-- Propose Team -->
-                <div v-if="!voteTeamActive && !missionActive && !ladyOfLakeActive && status==='active'"
-                    class="apple-card mb-md">
-                    <div class="d-flex justify-between items-center mb-md">
-                        <h5 style="margin:0;">发起组队</h5>
-                        <span class="apple-tag apple-tag-orange">需 {{ requiredTeamSize }} 人</span>
-                    </div>
-                    <div class="apple-toggle-grid mb-md">
-                        <template v-for="p in allPlayers" :key="p">
-                            <input type="checkbox" :id="'chk-'+p" :value="p" v-model="selectedTeam"
-                                class="apple-toggle-input">
-                            <label :for="'chk-'+p" class="apple-toggle-btn">
-                                {{ p === captain ? '👑' : '' }}{{ p }}
-                            </label>
-                        </template>
-                    </div>
-                    <button class="apple-btn apple-btn-primary apple-btn-block apple-btn-lg" @click="proposeTeam"
-                        :disabled="selectedTeam.length !== requiredTeamSize">
-                        🚀 发车 ({{ selectedTeam.length }}/{{ requiredTeamSize }})
-                    </button>
-                </div>
-
-                <!-- Mission Execution -->
-                <div v-if="missionActive" class="apple-card mb-md" style="border: 2px solid var(--apple-green);">
-                    <h5 class="text-center text-green mb-md">⚔️ 任务执行中</h5>
-                    <p class="text-center">队员: <strong>{{ missionTeam.join('、') }}</strong></p>
-                    <div v-if="!missionTeam.includes(myName)" class="text-center text-muted text-sm mt-md">等待队员出票...
-                    </div>
-                </div>
-
-                <!-- Lady of the Lake Active (等待仙女查验) -->
-                <div v-if="ladyOfLakeActive && ladyOfLakeHolder !== myName" class="apple-card mb-md"
-                    style="border: 2px solid var(--apple-purple, #af52de);">
-                    <h5 class="text-center mb-md" style="color: var(--apple-purple, #af52de);">🧚 湖中仙女查验中</h5>
-                    <p class="text-center text-muted">等待 <strong>{{ ladyOfLakeHolder }}</strong> 选择查验目标...</p>
-                </div>
-
-                <!-- Overlay: Vote Team -->
-                <transition name="overlay">
-                    <div v-if="voteTeamActive && !teamVotes[myName]" class="vote-overlay">
-                        <h2>同意这个队伍吗?</h2>
-                        <div class="vote-team-box"><strong>{{ missionTeam.join('、') }}</strong></div>
-                        <button class="vote-btn-big green" @click="submitTeamVote('approve')">👍 同意</button>
-                        <button class="vote-btn-big red" @click="submitTeamVote('reject')">👎 反对</button>
-                    </div>
-                </transition>
-
-                <!-- Overlay: Mission Vote -->
-                <transition name="overlay">
-                    <div v-if="missionActive && missionTeam.includes(myName) && !hasActed" class="vote-overlay">
-                        <h2>执行任务</h2>
-                        <button class="vote-btn-big blue" @click="voteMission('success')"
-                            :disabled="isLancelotMustFail()" :style="isLancelotMustFail()?'opacity:0.35':''">🛡️
-                            成功</button>
-                        <button class="vote-btn-big red" @click="voteMission('fail')" :disabled="!isCurrentlyEvil()"
-                            :style="!isCurrentlyEvil()?'opacity:0.35':''">🗡️ 失败</button>
-                        <div v-if="!isCurrentlyEvil()"
-                            style="color: rgba(255,255,255,0.5); margin-top: var(--space-sm); font-size: 0.85rem;">
-                            好人只能投成功
-                        </div>
-                        <div v-if="isLancelotMustFail()"
-                            style="color: rgba(255,255,255,0.5); margin-top: var(--space-sm); font-size: 0.85rem;">
-                            当前阵营为邪恶的兰斯洛特必须投失败
-                        </div>
-                    </div>
-                </transition>
-
-                <!-- Overlay: Lady of the Lake -->
-                <transition name="overlay">
-                    <div v-if="ladyOfLakeActive && ladyOfLakeHolder === myName" class="vote-overlay">
-                        <h2>🧚 湖中仙女</h2>
-                        <p style="color: rgba(255,255,255,0.7); margin-bottom: var(--space-lg); text-align: center;">
-                            选择一名玩家查验其阵营
-                        </p>
-                        <div class="lady-target-list">
-                            <button v-for="p in allPlayers" :key="'lady-'+p" class="lady-target-btn"
-                                :disabled="ladyOfLakeHistory.includes(p) || p === myName" @click="inspectPlayer(p)">
-                                {{ p }}
-                                <span v-if="ladyOfLakeHistory.includes(p)" style="font-size:0.75rem; opacity:0.5;">
-                                    (已查验)</span>
-                            </button>
-                        </div>
-                    </div>
-                </transition>
-
-                <!-- Overlay: Lady of Lake Result -->
-                <transition name="overlay">
-                    <div v-if="showLadyResult" class="vote-overlay" @click="showLadyResult = false">
-                        <h2>🧚 查验结果</h2>
-                        <div class="lady-result-box">
-                            <div class="fw-700 mb-md" style="font-size:1.1rem;">{{ ladyResultData.target }}</div>
-                            <div :class="ladyResultData.alignment === 'good' ? 'alignment-good' : 'alignment-evil'">
-                                {{ ladyResultData.alignment === 'good' ? '🛡️ 好人' : '🗡️ 坏人' }}
-                            </div>
-                            <p class="text-sm text-muted mt-md">你可以自由选择公布或隐瞒此结果</p>
-                        </div>
-                        <p style="color: rgba(255,255,255,0.4); margin-top: var(--space-lg); font-size: 0.85rem;">
-                            点击任意处关闭
-                        </p>
-                    </div>
-                </transition>
-
-                <!-- Overlay: Excalibur Assign (队长分配王者之剑) -->
-                <transition name="overlay">
-                    <div v-if="excaliburPhase === 'assign' && myName === captain" class="vote-overlay">
-                        <h2>🗡️ 分配王者之剑</h2>
-                        <p style="color: rgba(255,255,255,0.7); margin-bottom: var(--space-lg); text-align: center;">
-                            选择一名队员持有王者之剑
-                        </p>
-                        <div class="lady-target-list">
-                            <button v-for="p in missionTeam" :key="'exc-'+p" class="lady-target-btn"
-                                :disabled="p === myName" @click="assignExcalibur(p)">
-                                {{ p }}
-                                <span v-if="p === myName" style="font-size:0.75rem; opacity:0.5;">(自己)</span>
-                            </button>
-                        </div>
-                    </div>
-                </transition>
-
-                <!-- Excalibur Assign waiting (non-captain sees waiting) -->
-                <div v-if="excaliburPhase === 'assign' && myName !== captain" class="apple-card mb-md"
-                    style="border: 2px solid var(--apple-orange);">
-                    <h5 class="text-center mb-md" style="color: var(--apple-orange);">🗡️ 王者之剑分配中</h5>
-                    <p class="text-center text-muted">等待队长 <strong>{{ captain }}</strong> 分配王者之剑...</p>
-                </div>
-
-                <!-- Excalibur holder badge during mission -->
-                <div v-if="excaliburHolder && excaliburPhase === 'mission' && !missionActive"
-                    class="apple-card mb-md text-center" style="border: 2px solid var(--apple-orange);">
-                    <p>🗡️ <strong>{{ excaliburHolder }}</strong> 持有王者之剑</p>
-                </div>
-
-                <!-- Overlay: Excalibur Decide (持剑者决策) -->
-                <transition name="overlay">
-                    <div v-if="excaliburPhase === 'decide' && myName === excaliburHolder" class="vote-overlay">
-                        <h2>🗡️ 王者之剑</h2>
-                        <p style="color: rgba(255,255,255,0.7); margin-bottom: var(--space-lg); text-align: center;">
-                            选择一名队员替换其投票并查看结果，或跳过
-                        </p>
-                        <div class="lady-target-list">
-                            <button v-for="p in missionTeam" :key="'excu-'+p" class="lady-target-btn"
-                                @click="useExcalibur(p)">
-                                🗡️ {{ p }}
-                            </button>
-                            <button class="lady-target-btn" style="background: rgba(255,255,255,0.08); margin-top: 8px;"
-                                @click="useExcalibur(null)">
-                                ✕ 不使用
-                            </button>
-                        </div>
-                    </div>
-                </transition>
-
-                <!-- Excalibur decide waiting (non-holder) -->
-                <div v-if="excaliburPhase === 'decide' && myName !== excaliburHolder" class="apple-card mb-md"
-                    style="border: 2px solid var(--apple-orange);">
-                    <h5 class="text-center mb-md" style="color: var(--apple-orange);">🗡️ 王者之剑决策中</h5>
-                    <p class="text-center text-muted">等待 <strong>{{ excaliburHolder }}</strong> 决定是否使用王者之剑...</p>
-                </div>
-
-                <!-- Overlay: Excalibur Result (持剑者查看结果) -->
-                <transition name="overlay">
-                    <div v-if="showExcaliburResult" class="vote-overlay" @click="showExcaliburResult = false">
-                        <h2>🗡️ 王者之剑结果</h2>
-                        <div class="lady-result-box">
-                            <div class="fw-700 mb-md" style="font-size:1.1rem;">{{ excaliburResultData.target }}</div>
-                            <div
-                                :class="excaliburResultData.original_vote === 'fail' ? 'alignment-evil' : 'alignment-good'">
-                                {{ excaliburResultData.original_vote === 'fail' ? '🗡️ 原始投票：失败' : '🛡️ 原始投票：成功' }}
-                            </div>
-                            <div style="margin-top: var(--space-md); font-size: 0.85rem; color: rgba(255,255,255,0.5);">
-                                已替换为{{ excaliburResultData.original_vote === 'fail' ? '成功' : '失败' }}票，点击任意处关闭
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-            </div>
-
-            <!-- Assassin Phase -->
-            <div v-if="status === 'assassin'" class="apple-section">
-                <div class="apple-card text-center">
-                    <h3 class="text-red mb-lg"><i class="fas fa-skull-crossbones"></i> 刺杀阶段</h3>
-                    <p class="text-muted mb-lg">好人完成了3个任务！{{ getAssassinRoleName() }}正在选择刺杀目标...</p>
-
-                    <div v-if="canAssassinate()">
-                        <h5 class="mb-md">选择刺杀目标 (猜测梅林)</h5>
-                        <div class="apple-toggle-grid">
-                            <template v-for="p in allPlayers" :key="'kill-'+p">
-                                <button class="apple-btn apple-btn-outline"
-                                    style="color: var(--apple-red); border-color: rgba(255,59,48,0.3);"
-                                    @click="assassinate(p)">
-                                    {{ p }}
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-                    <div v-else class="text-muted">等待{{ getAssassinRoleName() }}选择...</div>
-                </div>
-            </div>
-
-            <!-- Game Over -->
-            <div v-if="status === 'ended'" class="apple-section">
-                <div class="apple-card text-center">
-                    <h2 class="mb-lg" :class="gameWinner==='good'?'text-blue':'text-red'" style="font-size:1.8rem;">
-                        {{ gameWinner === 'good' ? '🛡️ 好人胜利!' : '🗡️ 坏人胜利!' }}
-                    </h2>
-                    <div v-if="assassinTarget" class="text-muted mb-lg">
-                        刺客刺杀了: <strong class="text-red">{{ assassinTarget }}</strong>
-                    </div>
-                    <ul class="reveal-list mb-lg" style="padding: 0 var(--space-md);">
-                        <li v-for="p in revealedPlayers">
-                            <span>{{ p.name }}</span>
-                            <span :class="isEvil(p.role)?'text-red fw-600':'text-blue fw-600'">{{ roleMap[p.role]
-                                }}</span>
-                        </li>
-                    </ul>
-                    <button class="apple-btn apple-btn-primary apple-btn-block apple-btn-lg mb-sm"
-                        @click="quickRestart">🔄
-                        一键重开</button>
-                    <button class="apple-btn apple-btn-secondary apple-btn-block" @click="resetGame">⚙️ 更换人数</button>
-                </div>
-            </div>
-
-            <!-- Game Controls -->
-            <div v-if="step === 3 || status === 'assassin' || status === 'active'" class="apple-card text-center"
-                style="background: var(--apple-bg); box-shadow: none; margin-top: var(--space-lg);">
-                <div class="game-controls">
-                    <button class="apple-btn apple-btn-sm" style="background: var(--apple-orange); color: white;"
-                        @click="quickRestart">🔄 重开</button>
-                    <button class="apple-btn apple-btn-sm apple-btn-outline"
-                        style="color: var(--apple-red); border-color: rgba(255,59,48,0.3);" @click="endGame">🚪 结束
-                </div>
-
-                <footer class="apple-footer">
-                    <p>Avalon © 2026</p>
-                </footer>
+            <div v-if="status === 'empty'" class="text-center text-muted" style="padding: var(--space-lg) 0;">
+                当前无房间，请先创建
             </div>
         </div>
 
-        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-        <script>
-            const {
-                createApp
-            } = Vue;
-            createApp({
-                data() {
-                    return {
-                        step: 1,
-                        status: 'empty',
-                        errorMsg: '',
-                        myName: localStorage.getItem('avalon_name') || '',
-                        playerCount: 5,
-                        lancelotEnabled: false,
-                        ladyOfLakeEnabled: true,
-                        targetCount: 0,
-                        currentCount: 0,
-                        allPlayers: [],
-                        missionHistory: [],
-                        voteFailCount: 0,
-                        missionActive: false,
-                        missionTeam: [],
-                        hasActed: false,
-                        myRole: '',
-                        visionData: [],
-                        showRole: true,
-                        voteTeamActive: false,
-                        teamVotes: {},
-                        lastVoteResult: null,
-                        lastVoteSnapshot: {},
-                        selectedTeam: [],
-                        revealedPlayers: [],
-                        captain: null,
-                        requiredTeamSize: 2,
-                        gameWinner: null,
-                        assassinTarget: null,
-                        // 湖中仙女
-                        ladyOfLakeHolder: null,
-                        ladyOfLakeActive: false,
-                        ladyOfLakeResult: null,
-                        ladyOfLakeInspector: null,
-                        ladyOfLakeHistory: [],
-                        showLadyResult: false,
-                        ladyResultData: {},
-                        // 兰斯洛特
-                        lancelotSwapped: false,
-                        lancelotSwapReveal: [],
-                        currentAlignment: null,
-                        // 刺杀角色
-                        assassinRole: null,
-                        // 王者之剑
-                        excaliburEnabled: false,
-                        excaliburHolder: null,
-                        excaliburPhase: 'none',
-                        excaliburResult: null,
-                        showExcaliburResult: false,
-                        excaliburResultData: {},
-                        // 排行榜
-                        lbData: [],
-                        roleMap: {
-                            'Merlin': '梅林',
-                            'Percival': '派西维尔',
-                            'Loyal Servant': '忠臣',
-                            'Morgana': '莫甘娜',
-                            'Assassin': '刺客',
-                            'Mordred': '莫德雷德',
-                            'Oberon': '奥伯伦',
-                            'Minion': '爪牙',
-                            'Lancelot Good': '兰斯洛特(正义)',
-                            'Lancelot Evil': '兰斯洛特(邪恶)'
-                        },
-                        configPresets: {
-                            5: '🛡️ 好人: 梅林, 派西维尔, 忠臣<br>🗡️ 坏人: 莫甘娜, 刺客',
-                            6: '🛡️ 好人: 梅林, 派西维尔, 忠臣×2<br>🗡️ 坏人: 莫甘娜, 刺客',
-                            7: '🛡️ 好人: 梅林, 派西维尔, 忠臣×2<br>🗡️ 坏人: 莫甘娜, 刺客, 奥伯伦',
-                            8: '🛡️ 好人: 梅林, 派西维尔, 忠臣×3<br>🗡️ 坏人: 莫甘娜, 刺客, 爪牙',
-                            9: '🛡️ 好人: 梅林, 派西维尔, 忠臣×4<br>🗡️ 坏人: 莫甘娜, 刺客, 莫德雷德',
-                            10: '🛡️ 好人: 梅林, 派西维尔, 忠臣×4<br>🗡️ 坏人: 莫甘娜, 刺客, 奥伯伦, 莫德雷德',
-                            '10_lancelot': '🛡️ 好人: 梅林, 派西维尔, 忠臣×3, 兰斯洛特(正义)<br>🗡️ 坏人: 莫甘娜, 莫德雷德, 奥伯伦, 兰斯洛特(邪恶)<br><br><small style="color:var(--apple-orange)">⚠️ 无刺客，莫甘娜执行刺杀</small>',
-                            12: '🛡️ 好人: 梅林, 派西维尔, 忠臣×4, 兰斯洛特(正义)<br>🗡️ 坏人: 莫甘娜, 刺客, 莫德雷德, 奥伯伦, 兰斯洛特(邪恶)',
-                        }
-                    }
-                },
-                watch: {
-                    myName(val) {
-                        localStorage.setItem('avalon_name', val);
-                    }
-                },
-                mounted() {
-                    this.startPolling();
-                    this.fetchLeaderboard();
-                },
-                methods: {
-                    incrementPlayerCount() {
-                        if (this.playerCount === 10) {
-                            this.playerCount = 12;
-                            this.lancelotEnabled = true;
-                        } else if (this.playerCount < 10) {
-                            this.playerCount++;
-                        }
-                    },
-                    decrementPlayerCount() {
-                        if (this.playerCount === 12) this.playerCount = 10;
-                        else if (this.playerCount > 5) this.playerCount--;
-                    },
-                    getConfigPreview() {
-                        let preview;
-                        if ((this.playerCount === 10 || this.playerCount === 12) && this.lancelotEnabled) {
-                            preview = this.playerCount === 10 ? this.configPresets['10_lancelot'] : this
-                                .configPresets[12];
-                        } else {
-                            preview = this.configPresets[this.playerCount] || this.configPresets[6];
-                        }
-                        let extraProps = [];
-                        if (this.ladyOfLakeEnabled && this.playerCount >= 8) {
-                            extraProps.push('<span style="color:var(--apple-purple,#af52de)">🧚 湖中仙女</span>');
-                        }
-                        if (this.excaliburEnabled && this.playerCount >= 8) {
-                            extraProps.push('<span style="color:var(--apple-orange)">🗡️ 王者之剑</span>');
-                        }
-                        if (extraProps.length > 0) {
-                            preview +=
-                                '<br><div style="margin-top:8px; font-weight:600; font-size: 0.85em;">附加选项: ' +
-                                extraProps.join(' | ') + '</div>';
-                        }
-                        return preview;
-                    },
-                    async createGame() {
-                        try {
-                            await axios.post('/avalon/reset_game', {
-                                player_count: this.playerCount,
-                                lancelot_enabled: this.lancelotEnabled && (this.playerCount ===
-                                    10 || this.playerCount === 12),
-                                excalibur_enabled: this.excaliburEnabled && this.playerCount >= 8,
-                                lady_of_lake_enabled: this.ladyOfLakeEnabled && this.playerCount >=
-                                    8
-                            });
-                            this.joinGame();
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async joinGame() {
-                        if (!this.myName) return;
-                        try {
-                            await axios.post('/avalon/join', {
-                                player_name: this.myName
-                            });
-                            this.step = 2;
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async resetGame() {
-                        if (!confirm("确定重置并更换人数?")) return;
-                        try {
-                            await axios.post('/avalon/clear_game');
-                            this.step = 1;
-                            this.status = 'empty';
-                            this.fetchLeaderboard();
-                        } catch (e) { }
-                    },
-                    async proposeTeam() {
-                        if (this.selectedTeam.length !== this.requiredTeamSize) {
-                            return alert(`本轮需要 ${this.requiredTeamSize} 人`);
-                        }
-                        try {
-                            await axios.post('/avalon/propose_team', {
-                                team: this.selectedTeam
-                            });
-                            this.selectedTeam = [];
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async submitTeamVote(vote) {
-                        try {
-                            await axios.post('/avalon/vote_team', {
-                                player_name: this.myName,
-                                vote
-                            });
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async voteMission(action) {
-                        try {
-                            await axios.post('/avalon/vote_mission', {
-                                player_name: this.myName,
-                                action
-                            });
-                            this.hasActed = true;
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async assassinate(target) {
-                        if (!confirm(`确定刺杀 ${target}?`)) return;
-                        try {
-                            await axios.post('/avalon/assassinate', {
-                                target
-                            });
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async inspectPlayer(target) {
-                        if (!confirm(`确定查验 ${target}?`)) return;
-                        try {
-                            const res = await axios.post('/avalon/lady_of_lake', {
-                                target
-                            });
-                            this.ladyResultData = {
-                                target,
-                                alignment: res.data.alignment
-                            };
-                            this.showLadyResult = true;
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async quickRestart() {
-                        if (!confirm("确定重开？所有玩家将自动加入新局")) return;
-                        try {
-                            await axios.post('/avalon/reset_game', {
-                                player_count: this.targetCount || this.playerCount,
-                                lancelot_enabled: this.lancelotEnabled,
-                                excalibur_enabled: this.excaliburEnabled,
-                                lady_of_lake_enabled: this.ladyOfLakeEnabled
-                            });
-                            this.step = 1;
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async endGame() {
-                        if (!confirm("确定结束当前游戏？")) return;
-                        try {
-                            await axios.post('/avalon/end_game');
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    isCurrentlyEvil() {
-                        if (this.currentAlignment) {
-                            return this.currentAlignment === 'evil';
-                        }
-                        return this.isEvil(this.myRole);
-                    },
-                    isLancelotMustFail() {
-                        // 当前处于邪恶阵营的兰斯洛特必须投失败
-                        if ((this.myRole === 'Lancelot Good' || this.myRole === 'Lancelot Evil') && this
-                            .isCurrentlyEvil()) {
-                            return true;
-                        }
-                        return false;
-                    },
-                    canAssassinate() {
-                        // 判断当前玩家是否可以执行刺杀
-                        if (this.assassinRole === this.myRole) return true;
-                        // 兼容：原始逻辑
-                        if (!this.assassinRole && this.myRole === 'Assassin') return true;
-                        return false;
-                    },
-                    getAssassinRoleName() {
-                        if (this.assassinRole) {
-                            return this.roleMap[this.assassinRole] || this.assassinRole;
-                        }
-                        return '刺客';
-                    },
-                    async assignExcalibur(target) {
-                        try {
-                            await axios.post('/avalon/assign_excalibur', {
-                                target
-                            });
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    async useExcalibur(target) {
-                        if (target && !confirm(`确定对 ${target} 使用王者之剑？将替换其投票并查看结果`)) return;
-                        try {
-                            const res = await axios.post('/avalon/use_excalibur', {
-                                target
-                            });
-                            if (res.data.excalibur_result) {
-                                this.excaliburResultData = res.data.excalibur_result;
-                                this.showExcaliburResult = true;
-                            }
-                        } catch (e) {
-                            this.showError(e);
-                        }
-                    },
-                    startPolling() {
-                        setInterval(async () => {
-                            if (this.step === 1) {
-                                try {
-                                    const res = await axios.get('/avalon/lobby');
-                                    const d = res.data;
-                                    this.status = d.status;
-                                    this.currentCount = d.current_count;
-                                    this.targetCount = d.target_count;
-                                    this.allPlayers = d.players || [];
-                                    if (d.status !== 'empty') {
-                                        this.lancelotEnabled = d.lancelot_enabled || false;
-                                        this.excaliburEnabled = d.excalibur_enabled || false;
-                                        if (d.lady_of_lake_enabled !== undefined) {
-                                            this.ladyOfLakeEnabled = d.lady_of_lake_enabled;
-                                        }
-                                    }
+        <div v-if="status === 'empty'" class="apple-card">
+            <h4 class="mb-md">创建新房间</h4>
+            <p class="text-sm text-muted mb-md">标准包配置</p>
 
-                                    const prevPlayers = d.previous_players || [];
-                                    if (this.myName && prevPlayers.includes(this.myName) && !d
-                                        .players.includes(this.myName) && d.status === 'joining') {
-                                        this.joinGame();
-                                    }
+            <div class="count-control">
+                <button class="count-btn" @click="decrementPlayerCount()">−</button>
+                <div class="count-display">{{ playerCount }}</div>
+                <button class="count-btn" @click="incrementPlayerCount()">+</button>
+            </div>
 
-                                    if (this.myName && d.players.includes(this.myName) && d
-                                        .status === 'active') {
-                                        this.step = 3;
-                                    }
-                                } catch (e) { }
-                                return;
-                            }
+            <!-- 湖中仙女开关 (8人局及以上) -->
+            <div v-if="playerCount >= 8" class="lancelot-toggle">
+                <span>🧚 启用湖中仙女</span>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="lady-toggle-input" v-model="ladyOfLakeEnabled">
+                    <label for="lady-toggle-input" class="toggle-slider"></label>
+                </div>
+            </div>
 
-                            if (!this.myName) return;
-                            try {
-                                const res = await axios.get(`/avalon/status/${this.myName}`);
-                                const d = res.data;
-                                this.status = d.status;
+            <!-- 王者之剑开关 (8-12人局可选) -->
+            <div v-if="playerCount >= 8" class="lancelot-toggle">
+                <span>🗡️ 启用王者之剑</span>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="excalibur-toggle-input" v-model="excaliburEnabled">
+                    <label for="excalibur-toggle-input" class="toggle-slider"></label>
+                </div>
+            </div>
 
-                                if (d.status === 'joining') {
-                                    const prevPlayers = d.last_vote_snapshot ? [] : (d
-                                        .previous_players || []);
-                                    if (this.myName && !d.players_list.includes(this.myName)) {
-                                        this.step = 1;
-                                        this.joinGame();
-                                    } else if (this.step > 2) {
-                                        this.step = 2;
-                                    }
-                                } else if (d.status === 'active' || d.status === 'assassin') {
-                                    if (this.step === 2) this.step = 3;
-                                } else if (d.status === 'ended') {
-                                    this.revealedPlayers = d.revealed_players;
-                                    this.gameWinner = d.game_winner;
-                                    this.assassinTarget = d.assassin_target;
-                                } else if (d.status === 'empty') {
-                                    this.step = 1;
-                                    this.gameWinner = null;
-                                    this.assassinTarget = null;
-                                    this.revealedPlayers = [];
-                                }
+            <!-- 兰斯洛特开关 (10人和12人局) -->
+            <div v-if="playerCount === 10 || playerCount === 12" class="lancelot-toggle">
+                <span>⚔️ 启用兰斯洛特变体</span>
+                <div class="toggle-switch" :style="playerCount === 12 ? 'opacity: 0.6; pointer-events: none;' : ''">
+                    <input type="checkbox" id="lancelot-toggle-input" v-model="lancelotEnabled"
+                        :disabled="playerCount === 12">
+                    <label for="lancelot-toggle-input" class="toggle-slider"></label>
+                </div>
+            </div>
 
-                                this.currentCount = d.current_count;
-                                this.targetCount = d.target_count;
-                                this.allPlayers = d.players_list;
+            <div class="config-preview" v-html="getConfigPreview()"></div>
 
-                                if (d.status === 'active' || d.status === 'assassin') {
-                                    this.myRole = d.your_role;
-                                    this.visionData = d.vision || [];
-                                    this.missionHistory = d.mission_history || [];
-                                    this.voteFailCount = d.vote_fail_count;
-                                    this.missionActive = d.mission_active;
-                                    this.missionTeam = d.mission_team || [];
-                                    this.hasActed = d.has_acted;
-                                    this.voteTeamActive = d.vote_team_active;
-                                    this.teamVotes = d.team_votes || {};
-                                    this.lastVoteResult = d.last_vote_result;
-                                    this.lastVoteSnapshot = d.last_vote_snapshot || {};
-                                    this.captain = d.captain;
-                                    this.requiredTeamSize = d.required_team_size;
-
-                                    // 湖中仙女
-                                    this.ladyOfLakeHolder = d.lady_of_lake_holder;
-                                    this.ladyOfLakeActive = d.lady_of_lake_active;
-                                    this.ladyOfLakeResult = d.lady_of_lake_result;
-                                    this.ladyOfLakeInspector = d.lady_of_lake_inspector || null;
-                                    this.ladyOfLakeHistory = d.lady_of_lake_history || [];
-
-                                    // 兰斯洛特
-                                    this.lancelotEnabled = d.lancelot_enabled;
-                                    this.lancelotSwapped = d.lancelot_swapped;
-                                    this.lancelotSwapReveal = d.lancelot_swap_reveal || [];
-                                    this.currentAlignment = d.current_alignment;
-
-                                    // 刺杀角色
-                                    this.assassinRole = d.assassin_role;
-
-                                    // 王者之剑
-                                    this.excaliburEnabled = d.excalibur_enabled;
-                                    this.excaliburHolder = d.excalibur_holder;
-                                    this.excaliburPhase = d.excalibur_phase || 'none';
-                                    if (d.excalibur_result) {
-                                        this.excaliburResult = d.excalibur_result;
-                                    }
-                                }
-
-                            } catch (e) { }
-                        }, 1000);
-                    },
-                    getMissionStatusClass(i) {
-                        const r = this.missionHistory[i - 1];
-                        return r ? (r.result === 'success' ? 'success' : 'fail') : '';
-                    },
-                    isEvil(role) {
-                        return ['Morgana', 'Assassin', 'Mordred', 'Oberon', 'Minion', 'Lancelot Evil'].includes(
-                            role);
-                    },
-                    getRoleImage(role) {
-                        if (!role) return '';
-                        const map = {
-                            'Merlin': 'MERLIN.jpg',
-                            'Percival': 'PERCIVAL.jpg',
-                            'Loyal Servant': 'SERVANT.jpg',
-                            'Morgana': 'MORGANA.jpg',
-                            'Assassin': 'ASSASSIN.jpg',
-                            'Mordred': 'MORDRED.jpg',
-                            'Oberon': 'OBERON.jpg',
-                            'Minion': 'MINION.jpg',
-                            'Lancelot Good': 'LANCELOT(GOOD).png',
-                            'Lancelot Evil': 'LANCELOT(EVIL).png'
-                        };
-                        return '/avalon/assets/' + (map[role] || 'SERVANT.jpg');
-                    },
-                    showError(e) {
-                        this.errorMsg = e.response?.data?.detail || "Error";
-                        setTimeout(() => this.errorMsg = '', 3000);
-                    },
-                    async fetchLeaderboard() {
-                        try {
-                            const res = await axios.get('/avalon/leaderboard');
-                            this.lbData = res.data.leaderboard || [];
-                        } catch (e) { }
-                    }
-                }
-            }).mount('#app');
-        </script>
+            <button class="apple-btn apple-btn-success apple-btn-block apple-btn-lg" @click="createGame">开新局</button>
+        </div>
     </div>
-</body>
 
-</html>
+    <!-- Avalon Leaderboard -->
+    <div v-if="step === 1" id="inline-leaderboard-section">
+        <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
+        </div>
+        <div class="apple-list mb-xl">
+            <div v-if="lbData.length === 0" class="text-center text-muted" style="padding: var(--space-xl);">
+                <div class="empty-state">
+                    <span class="empty-icon">👻</span>
+                    还没人玩过呢，快去开一局！
+                </div>
+            </div>
+            <div v-else>
+                <div v-for="(p, i) in lbData" :key="p.name" class="apple-list-item">
+                    <div class="rank-num"
+                        :class="i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : (i === 2 ? 'rank-3' : 'rank-other'))">
+                        {{ i === 0 ? '👑' : i + 1 }}
+                    </div>
+
+                    <div class="apple-list-item-content">
+                        <div class="apple-list-item-title">{{ p.name }}</div>
+                    </div>
+
+                    <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
+                        <div style="text-align: right;">
+                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">胜负</div>
+                            <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">{{ p.wins
+                                }}-{{ p.total - p.wins }}</div>
+                        </div>
+                        <div style="text-align: right; width: 60px;">
+                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">胜率</div>
+                            <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-green);">{{ p.win_rate
+                                }}%</div>
+                        </div>
+                        <div style="text-align: right; width: 40px;">
+                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">场次</div>
+                            <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">{{ p.total }}局
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Lobby -->
+    <div v-if="step === 2" class="apple-section">
+        <div class="apple-card">
+            <div v-if="status === 'joining'" class="status-box">
+                <p class="text-muted mb-sm">等待玩家加入...</p>
+                <div class="status-count">{{ currentCount }} <span class="total">/ {{ targetCount }}</span>
+                </div>
+                <div class="d-flex justify-center mt-md">
+                    <div class="apple-spinner"></div>
+                </div>
+                <p class="text-sm text-muted mt-md">满员后自动发牌开始</p>
+            </div>
+            <div v-else-if="status === 'active'" class="status-box">
+                <h3 class="text-green">游戏开始!</h3>
+            </div>
+
+            <div class="chips-wrap mt-md">
+                <span v-for="p in allPlayers" class="apple-chip" :class="{me: p===myName}">{{ p }}</span>
+            </div>
+
+            <div class="text-center mt-lg"
+                style="border-top: 0.5px solid rgba(0,0,0,0.06); padding-top: var(--space-md);">
+                <button class="apple-btn apple-btn-sm apple-btn-outline"
+                    style="color: var(--apple-red); border-color: rgba(255,59,48,0.3);" @click="resetGame">重置游戏</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Main Game -->
+    <div v-if="step === 3" class="apple-section" style="padding-top: var(--space-md);">
+
+        <!-- Identity -->
+        <div class="apple-card mb-md">
+            <div class="d-flex justify-between items-center mb-md">
+                <h5 style="margin:0;">你的身份</h5>
+                <button class="apple-btn apple-btn-sm apple-btn-secondary" @click="showRole=!showRole">{{
+                    showRole?'隐藏':'显示' }}</button>
+            </div>
+            <div v-if="showRole">
+                <div class="apple-role" :class="isCurrentlyEvil() ? 'evil' : 'good'">
+                    <img :src="getRoleImage(myRole)" class="role-img" v-if="myRole"
+                        style="display:block; margin:0 auto;">
+                    <div style="font-size:1.2rem;">{{ roleMap[myRole] || myRole }}</div>
+                    <!-- 兰斯洛特阵营状态 -->
+                    <div v-if="currentAlignment" class="mt-sm text-sm"
+                        :class="currentAlignment === 'evil' ? 'text-red' : 'text-blue'">
+                        <span :class="{'alignment-swap-indicator': lancelotSwapped}">
+                            {{ currentAlignment === 'evil' ? '⚡ 当前阵营: 邪恶' : '🛡️ 当前阵营: 正义' }}
+                        </span>
+                    </div>
+                </div>
+                <div v-if="visionData.length" class="mt-md"
+                    style="background:var(--apple-bg); padding:var(--space-md); border-radius:var(--radius-md);">
+                    <div class="fw-600 text-sm mb-sm">你的视野</div>
+                    <ul class="vision-list">
+                        <li v-for="v in visionData"
+                            :class="{'evil': v.identity.includes('坏') || v.identity.includes('同')}">
+                            {{ v.name }}: {{ v.identity }}
+                        </li>
+                    </ul>
+                </div>
+                <div v-else class="text-center text-muted text-sm mt-md">(你没有特殊视野)</div>
+            </div>
+        </div>
+
+        <!-- Mission Progress -->
+        <div class="apple-card mb-md text-center">
+            <div class="apple-dots mb-md">
+                <div v-for="i in 5" class="apple-dot"
+                    :class="[getMissionStatusClass(i), {current: i === missionHistory.length + 1}]">
+                    <span>{{ i }}</span>
+                    <span class="sub" v-if="missionHistory[i-1]">{{ missionHistory[i-1].fail_count }}坏</span>
+                    <!-- 兰斯洛特转换牌徽标 -->
+                    <span
+                        v-if="lancelotEnabled && lancelotSwapReveal[i-1] !== null && lancelotSwapReveal[i-1] !== undefined"
+                        class="swap-badge" :class="{'no-swap': !lancelotSwapReveal[i-1]}">
+                        {{ lancelotSwapReveal[i-1] ? '⚡' : '—' }}
+                    </span>
+                </div>
+            </div>
+            <div class="text-sm text-muted">
+                流局: <span class="fw-700 text-red">{{ voteFailCount }}/5</span>
+                &nbsp;|&nbsp; 第 {{ missionHistory.length + 1 }} 轮需 <span class="fw-700">{{ requiredTeamSize
+                    }}</span> 人
+            </div>
+            <div class="text-sm mt-xs" v-if="captain">
+                👑 当前队长: <span class="fw-700 text-orange">{{ captain }}</span>
+            </div>
+            <!-- 湖中仙女持有者 -->
+            <div class="text-sm mt-xs" v-if="ladyOfLakeHolder">
+                🧚 湖中仙女: <span class="fw-700" style="color: var(--apple-purple, #af52de);">{{ ladyOfLakeHolder
+                    }}</span>
+            </div>
+        </div>
+
+        <!-- Lady of the Lake Result (仅持有者可见) -->
+        <div v-if="ladyOfLakeResult && ladyOfLakeInspector === myName" class="apple-card mb-md"
+            style="border: 2px solid var(--apple-purple, #af52de);">
+            <h6 class="text-center mb-sm" style="color: var(--apple-purple, #af52de);">🧚 查验结果</h6>
+            <div class="text-center">
+                <strong>{{ ladyOfLakeResult.target }}</strong> 的阵营是:
+                <span :class="ladyOfLakeResult.alignment === 'good' ? 'text-blue fw-700' : 'text-red fw-700'">
+                    {{ ladyOfLakeResult.alignment === 'good' ? '🛡️ 好人' : '🗡️ 坏人' }}
+                </span>
+            </div>
+            <div class="text-sm text-muted text-center mt-sm">你可以选择公布真相或进行伪装</div>
+        </div>
+
+        <!-- Last Vote Snapshot -->
+        <div v-if="Object.keys(lastVoteSnapshot).length" class="apple-card mb-md">
+            <h6 class="mb-sm text-sm text-muted fw-600">上轮投票票型</h6>
+            <div class="chips-wrap">
+                <span v-for="(vote, name) in lastVoteSnapshot" class="apple-chip"
+                    :class="{'approve': vote==='approve', 'reject': vote==='reject'}">
+                    {{ name }} <i class="fas" :class="vote==='approve'?'fa-check text-green':'fa-times text-red'"
+                        style="margin-left:4px;"></i>
+                </span>
+            </div>
+        </div>
+
+        <!-- Vote Team Phase -->
+        <div v-if="voteTeamActive" class="apple-card mb-md" style="border: 2px solid var(--apple-blue);">
+            <h5 class="text-center text-blue mb-md">🗳️ 组队投票中</h5>
+            <div class="team-display">
+                <div class="text-sm text-muted">提议队伍</div>
+                <div class="names">{{ missionTeam.join('、') }}</div>
+            </div>
+            <div class="chips-wrap mt-md">
+                <span v-for="p in allPlayers" class="apple-chip"
+                    :class="{'approve': teamVotes[p]==='approve', 'reject': teamVotes[p]==='reject'}"
+                    :style="!teamVotes[p] ? 'opacity:0.4' : ''">
+                    {{ p }} <i v-if="teamVotes[p]" class="fas" :class="teamVotes[p]==='approve'?'fa-check':'fa-times'"
+                        style="margin-left:4px;"></i>
+                </span>
+            </div>
+            <div v-if="lastVoteResult" class="mt-md apple-alert"
+                :class="lastVoteResult==='approved'?'apple-alert-success':'apple-alert-danger'">
+                投票结果: {{ lastVoteResult==='approved'?'✅ 通过':'❌ 拒绝' }}
+            </div>
+        </div>
+
+        <!-- Propose Team -->
+        <div v-if="!voteTeamActive && !missionActive && !ladyOfLakeActive && status==='active'"
+            class="apple-card mb-md">
+            <div class="d-flex justify-between items-center mb-md">
+                <h5 style="margin:0;">发起组队</h5>
+                <span class="apple-tag apple-tag-orange">需 {{ requiredTeamSize }} 人</span>
+            </div>
+            <div class="apple-toggle-grid mb-md">
+                <template v-for="p in allPlayers" :key="p">
+                    <input type="checkbox" :id="'chk-'+p" :value="p" v-model="selectedTeam" class="apple-toggle-input">
+                    <label :for="'chk-'+p" class="apple-toggle-btn">
+                        {{ p === captain ? '👑' : '' }}{{ p }}
+                    </label>
+                </template>
+            </div>
+            <button class="apple-btn apple-btn-primary apple-btn-block apple-btn-lg" @click="proposeTeam"
+                :disabled="selectedTeam.length !== requiredTeamSize">
+                🚀 发车 ({{ selectedTeam.length }}/{{ requiredTeamSize }})
+            </button>
+        </div>
+
+        <!-- Mission Execution -->
+        <div v-if="missionActive" class="apple-card mb-md" style="border: 2px solid var(--apple-green);">
+            <h5 class="text-center text-green mb-md">⚔️ 任务执行中</h5>
+            <p class="text-center">队员: <strong>{{ missionTeam.join('、') }}</strong></p>
+            <div v-if="!missionTeam.includes(myName)" class="text-center text-muted text-sm mt-md">等待队员出票...
+            </div>
+        </div>
+
+        <!-- Lady of the Lake Active (等待仙女查验) -->
+        <div v-if="ladyOfLakeActive && ladyOfLakeHolder !== myName" class="apple-card mb-md"
+            style="border: 2px solid var(--apple-purple, #af52de);">
+            <h5 class="text-center mb-md" style="color: var(--apple-purple, #af52de);">🧚 湖中仙女查验中</h5>
+            <p class="text-center text-muted">等待 <strong>{{ ladyOfLakeHolder }}</strong> 选择查验目标...</p>
+        </div>
+
+        <!-- Overlay: Vote Team -->
+        <transition name="overlay">
+            <div v-if="voteTeamActive && !teamVotes[myName]" class="vote-overlay">
+                <h2>同意这个队伍吗?</h2>
+                <div class="vote-team-box"><strong>{{ missionTeam.join('、') }}</strong></div>
+                <button class="vote-btn-big green" @click="submitTeamVote('approve')">👍 同意</button>
+                <button class="vote-btn-big red" @click="submitTeamVote('reject')">👎 反对</button>
+            </div>
+        </transition>
+
+        <!-- Overlay: Mission Vote -->
+        <transition name="overlay">
+            <div v-if="missionActive && missionTeam.includes(myName) && !hasActed" class="vote-overlay">
+                <h2>执行任务</h2>
+                <button class="vote-btn-big blue" @click="voteMission('success')" :disabled="isLancelotMustFail()"
+                    :style="isLancelotMustFail()?'opacity:0.35':''">🛡️
+                    成功</button>
+                <button class="vote-btn-big red" @click="voteMission('fail')" :disabled="!isCurrentlyEvil()"
+                    :style="!isCurrentlyEvil()?'opacity:0.35':''">🗡️ 失败</button>
+                <div v-if="!isCurrentlyEvil()"
+                    style="color: rgba(255,255,255,0.5); margin-top: var(--space-sm); font-size: 0.85rem;">
+                    好人只能投成功
+                </div>
+                <div v-if="isLancelotMustFail()"
+                    style="color: rgba(255,255,255,0.5); margin-top: var(--space-sm); font-size: 0.85rem;">
+                    当前阵营为邪恶的兰斯洛特必须投失败
+                </div>
+            </div>
+        </transition>
+
+        <!-- Overlay: Lady of the Lake -->
+        <transition name="overlay">
+            <div v-if="ladyOfLakeActive && ladyOfLakeHolder === myName" class="vote-overlay">
+                <h2>🧚 湖中仙女</h2>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: var(--space-lg); text-align: center;">
+                    选择一名玩家查验其阵营
+                </p>
+                <div class="lady-target-list">
+                    <button v-for="p in allPlayers" :key="'lady-'+p" class="lady-target-btn"
+                        :disabled="ladyOfLakeHistory.includes(p) || p === myName" @click="inspectPlayer(p)">
+                        {{ p }}
+                        <span v-if="ladyOfLakeHistory.includes(p)" style="font-size:0.75rem; opacity:0.5;">
+                            (已查验)</span>
+                    </button>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Overlay: Lady of Lake Result -->
+        <transition name="overlay">
+            <div v-if="showLadyResult" class="vote-overlay" @click="showLadyResult = false">
+                <h2>🧚 查验结果</h2>
+                <div class="lady-result-box">
+                    <div class="fw-700 mb-md" style="font-size:1.1rem;">{{ ladyResultData.target }}</div>
+                    <div :class="ladyResultData.alignment === 'good' ? 'alignment-good' : 'alignment-evil'">
+                        {{ ladyResultData.alignment === 'good' ? '🛡️ 好人' : '🗡️ 坏人' }}
+                    </div>
+                    <p class="text-sm text-muted mt-md">你可以自由选择公布或隐瞒此结果</p>
+                </div>
+                <p style="color: rgba(255,255,255,0.4); margin-top: var(--space-lg); font-size: 0.85rem;">
+                    点击任意处关闭
+                </p>
+            </div>
+        </transition>
+
+        <!-- Overlay: Excalibur Assign (队长分配王者之剑) -->
+        <transition name="overlay">
+            <div v-if="excaliburPhase === 'assign' && myName === captain" class="vote-overlay">
+                <h2>🗡️ 分配王者之剑</h2>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: var(--space-lg); text-align: center;">
+                    选择一名队员持有王者之剑
+                </p>
+                <div class="lady-target-list">
+                    <button v-for="p in missionTeam" :key="'exc-'+p" class="lady-target-btn" :disabled="p === myName"
+                        @click="assignExcalibur(p)">
+                        {{ p }}
+                        <span v-if="p === myName" style="font-size:0.75rem; opacity:0.5;">(自己)</span>
+                    </button>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Excalibur Assign waiting (non-captain sees waiting) -->
+        <div v-if="excaliburPhase === 'assign' && myName !== captain" class="apple-card mb-md"
+            style="border: 2px solid var(--apple-orange);">
+            <h5 class="text-center mb-md" style="color: var(--apple-orange);">🗡️ 王者之剑分配中</h5>
+            <p class="text-center text-muted">等待队长 <strong>{{ captain }}</strong> 分配王者之剑...</p>
+        </div>
+
+        <!-- Excalibur holder badge during mission -->
+        <div v-if="excaliburHolder && excaliburPhase === 'mission' && !missionActive"
+            class="apple-card mb-md text-center" style="border: 2px solid var(--apple-orange);">
+            <p>🗡️ <strong>{{ excaliburHolder }}</strong> 持有王者之剑</p>
+        </div>
+
+        <!-- Overlay: Excalibur Decide (持剑者决策) -->
+        <transition name="overlay">
+            <div v-if="excaliburPhase === 'decide' && myName === excaliburHolder" class="vote-overlay">
+                <h2>🗡️ 王者之剑</h2>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: var(--space-lg); text-align: center;">
+                    选择一名队员替换其投票并查看结果，或跳过
+                </p>
+                <div class="lady-target-list">
+                    <button v-for="p in missionTeam" :key="'excu-'+p" class="lady-target-btn" @click="useExcalibur(p)">
+                        🗡️ {{ p }}
+                    </button>
+                    <button class="lady-target-btn" style="background: rgba(255,255,255,0.08); margin-top: 8px;"
+                        @click="useExcalibur(null)">
+                        ✕ 不使用
+                    </button>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Excalibur decide waiting (non-holder) -->
+        <div v-if="excaliburPhase === 'decide' && myName !== excaliburHolder" class="apple-card mb-md"
+            style="border: 2px solid var(--apple-orange);">
+            <h5 class="text-center mb-md" style="color: var(--apple-orange);">🗡️ 王者之剑决策中</h5>
+            <p class="text-center text-muted">等待 <strong>{{ excaliburHolder }}</strong> 决定是否使用王者之剑...</p>
+        </div>
+
+        <!-- Overlay: Excalibur Result (持剑者查看结果) -->
+        <transition name="overlay">
+            <div v-if="showExcaliburResult" class="vote-overlay" @click="showExcaliburResult = false">
+                <h2>🗡️ 王者之剑结果</h2>
+                <div class="lady-result-box">
+                    <div class="fw-700 mb-md" style="font-size:1.1rem;">{{ excaliburResultData.target }}</div>
+                    <div :class="excaliburResultData.original_vote === 'fail' ? 'alignment-evil' : 'alignment-good'">
+                        {{ excaliburResultData.original_vote === 'fail' ? '🗡️ 原始投票：失败' : '🛡️ 原始投票：成功' }}
+                    </div>
+                    <div style="margin-top: var(--space-md); font-size: 0.85rem; color: rgba(255,255,255,0.5);">
+                        已替换为{{ excaliburResultData.original_vote === 'fail' ? '成功' : '失败' }}票，点击任意处关闭
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <!-- Assassin Phase -->
+    <div v-if="status === 'assassin'" class="apple-section">
+        <div class="apple-card text-center">
+            <h3 class="text-red mb-lg"><i class="ph-fill ph-skull"></i> 刺杀阶段</h3>
+            <p class="text-muted mb-lg">好人完成了3个任务！{{ getAssassinRoleName() }}正在选择刺杀目标...</p>
+
+            <div v-if="canAssassinate()">
+                <h5 class="mb-md">选择刺杀目标 (猜测梅林)</h5>
+                <div class="apple-toggle-grid">
+                    <template v-for="p in allPlayers" :key="'kill-'+p">
+                        <button class="apple-btn apple-btn-outline"
+                            style="color: var(--apple-red); border-color: rgba(255,59,48,0.3);" @click="assassinate(p)">
+                            {{ p }}
+                        </button>
+                    </template>
+                </div>
+            </div>
+            <div v-else class="text-muted">等待{{ getAssassinRoleName() }}选择...</div>
+        </div>
+    </div>
+
+    <!-- Game Over -->
+    <div v-if="status === 'ended'" class="apple-section">
+        <div class="apple-card text-center">
+            <h2 class="mb-lg" :class="gameWinner==='good'?'text-blue':'text-red'" style="font-size:1.8rem;">
+                {{ gameWinner === 'good' ? '🛡️ 好人胜利!' : '🗡️ 坏人胜利!' }}
+            </h2>
+            <div v-if="assassinTarget" class="text-muted mb-lg">
+                刺客刺杀了: <strong class="text-red">{{ assassinTarget }}</strong>
+            </div>
+            <ul class="reveal-list mb-lg" style="padding: 0 var(--space-md);">
+                <li v-for="p in revealedPlayers">
+                    <span>{{ p.name }}</span>
+                    <span :class="isEvil(p.role)?'text-red fw-600':'text-blue fw-600'">{{ roleMap[p.role]
+                        }}</span>
+                </li>
+            </ul>
+            <button class="apple-btn apple-btn-primary apple-btn-block apple-btn-lg mb-sm" @click="quickRestart">🔄
+                一键重开</button>
+            <button class="apple-btn apple-btn-secondary apple-btn-block" @click="resetGame">⚙️ 更换人数</button>
+        </div>
+    </div>
+
+    <!-- Game Controls -->
+    <div v-if="step === 3 || status === 'assassin' || status === 'active'" class="apple-card text-center"
+        style="background: var(--apple-bg); box-shadow: none; margin-top: var(--space-lg);">
+        <div class="game-controls">
+            <button class="apple-btn apple-btn-sm" style="background: var(--apple-orange); color: white;"
+                @click="quickRestart">🔄 重开</button>
+            <button class="apple-btn apple-btn-sm apple-btn-outline"
+                style="color: var(--apple-red); border-color: rgba(255,59,48,0.3);" @click="endGame">🚪 结束
+        </div>
+
+        <footer class="apple-footer">
+            <p>Avalon © 2026</p>
+        </footer>
+    </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const {
+        createApp
+    } = Vue;
+    createApp({
+        data() {
+            return {
+                step: 1,
+                status: 'empty',
+                errorMsg: '',
+                myName: localStorage.getItem('avalon_name') || '',
+                playerCount: 5,
+                lancelotEnabled: false,
+                ladyOfLakeEnabled: true,
+                targetCount: 0,
+                currentCount: 0,
+                allPlayers: [],
+                missionHistory: [],
+                voteFailCount: 0,
+                missionActive: false,
+                missionTeam: [],
+                hasActed: false,
+                myRole: '',
+                visionData: [],
+                showRole: true,
+                voteTeamActive: false,
+                teamVotes: {},
+                lastVoteResult: null,
+                lastVoteSnapshot: {},
+                selectedTeam: [],
+                revealedPlayers: [],
+                captain: null,
+                requiredTeamSize: 2,
+                gameWinner: null,
+                assassinTarget: null,
+                // 湖中仙女
+                ladyOfLakeHolder: null,
+                ladyOfLakeActive: false,
+                ladyOfLakeResult: null,
+                ladyOfLakeInspector: null,
+                ladyOfLakeHistory: [],
+                showLadyResult: false,
+                ladyResultData: {},
+                // 兰斯洛特
+                lancelotSwapped: false,
+                lancelotSwapReveal: [],
+                currentAlignment: null,
+                // 刺杀角色
+                assassinRole: null,
+                // 王者之剑
+                excaliburEnabled: false,
+                excaliburHolder: null,
+                excaliburPhase: 'none',
+                excaliburResult: null,
+                showExcaliburResult: false,
+                excaliburResultData: {},
+                // 排行榜
+                lbData: [],
+                roleMap: {
+                    'Merlin': '梅林',
+                    'Percival': '派西维尔',
+                    'Loyal Servant': '忠臣',
+                    'Morgana': '莫甘娜',
+                    'Assassin': '刺客',
+                    'Mordred': '莫德雷德',
+                    'Oberon': '奥伯伦',
+                    'Minion': '爪牙',
+                    'Lancelot Good': '兰斯洛特(正义)',
+                    'Lancelot Evil': '兰斯洛特(邪恶)'
+                },
+                configPresets: {
+                    5: '🛡️ 好人: 梅林, 派西维尔, 忠臣<br>🗡️ 坏人: 莫甘娜, 刺客',
+                    6: '🛡️ 好人: 梅林, 派西维尔, 忠臣×2<br>🗡️ 坏人: 莫甘娜, 刺客',
+                    7: '🛡️ 好人: 梅林, 派西维尔, 忠臣×2<br>🗡️ 坏人: 莫甘娜, 刺客, 奥伯伦',
+                    8: '🛡️ 好人: 梅林, 派西维尔, 忠臣×3<br>🗡️ 坏人: 莫甘娜, 刺客, 爪牙',
+                    9: '🛡️ 好人: 梅林, 派西维尔, 忠臣×4<br>🗡️ 坏人: 莫甘娜, 刺客, 莫德雷德',
+                    10: '🛡️ 好人: 梅林, 派西维尔, 忠臣×4<br>🗡️ 坏人: 莫甘娜, 刺客, 奥伯伦, 莫德雷德',
+                    '10_lancelot': '🛡️ 好人: 梅林, 派西维尔, 忠臣×3, 兰斯洛特(正义)<br>🗡️ 坏人: 莫甘娜, 莫德雷德, 奥伯伦, 兰斯洛特(邪恶)<br><br><small style="color:var(--apple-orange)">⚠️ 无刺客，莫甘娜执行刺杀</small>',
+                    12: '🛡️ 好人: 梅林, 派西维尔, 忠臣×4, 兰斯洛特(正义)<br>🗡️ 坏人: 莫甘娜, 刺客, 莫德雷德, 奥伯伦, 兰斯洛特(邪恶)',
+                }
+            }
+        },
+        watch: {
+            myName(val) {
+                localStorage.setItem('avalon_name', val);
+            }
+        },
+        mounted() {
+            this.startPolling();
+            this.fetchLeaderboard();
+        },
+        methods: {
+            incrementPlayerCount() {
+                if (this.playerCount === 10) {
+                    this.playerCount = 12;
+                    this.lancelotEnabled = true;
+                } else if (this.playerCount < 10) {
+                    this.playerCount++;
+                }
+            },
+            decrementPlayerCount() {
+                if (this.playerCount === 12) this.playerCount = 10;
+                else if (this.playerCount > 5) this.playerCount--;
+            },
+            getConfigPreview() {
+                let preview;
+                if ((this.playerCount === 10 || this.playerCount === 12) && this.lancelotEnabled) {
+                    preview = this.playerCount === 10 ? this.configPresets['10_lancelot'] : this
+                        .configPresets[12];
+                } else {
+                    preview = this.configPresets[this.playerCount] || this.configPresets[6];
+                }
+                let extraProps = [];
+                if (this.ladyOfLakeEnabled && this.playerCount >= 8) {
+                    extraProps.push('<span style="color:var(--apple-purple,#af52de)">🧚 湖中仙女</span>');
+                }
+                if (this.excaliburEnabled && this.playerCount >= 8) {
+                    extraProps.push('<span style="color:var(--apple-orange)">🗡️ 王者之剑</span>');
+                }
+                if (extraProps.length > 0) {
+                    preview +=
+                        '<br><div style="margin-top:8px; font-weight:600; font-size: 0.85em;">附加选项: ' +
+                        extraProps.join(' | ') + '</div>';
+                }
+                return preview;
+            },
+            async createGame() {
+                try {
+                    await axios.post('/avalon/reset_game', {
+                        player_count: this.playerCount,
+                        lancelot_enabled: this.lancelotEnabled && (this.playerCount ===
+                            10 || this.playerCount === 12),
+                        excalibur_enabled: this.excaliburEnabled && this.playerCount >= 8,
+                        lady_of_lake_enabled: this.ladyOfLakeEnabled && this.playerCount >=
+                            8
+                    });
+                    this.joinGame();
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async joinGame() {
+                if (!this.myName) return;
+                try {
+                    await axios.post('/avalon/join', {
+                        player_name: this.myName
+                    });
+                    this.step = 2;
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async resetGame() {
+                if (!confirm("确定重置并更换人数?")) return;
+                try {
+                    await axios.post('/avalon/clear_game');
+                    this.step = 1;
+                    this.status = 'empty';
+                    this.fetchLeaderboard();
+                } catch (e) { }
+            },
+            async proposeTeam() {
+                if (this.selectedTeam.length !== this.requiredTeamSize) {
+                    return alert(`本轮需要 ${this.requiredTeamSize} 人`);
+                }
+                try {
+                    await axios.post('/avalon/propose_team', {
+                        team: this.selectedTeam
+                    });
+                    this.selectedTeam = [];
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async submitTeamVote(vote) {
+                try {
+                    await axios.post('/avalon/vote_team', {
+                        player_name: this.myName,
+                        vote
+                    });
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async voteMission(action) {
+                try {
+                    await axios.post('/avalon/vote_mission', {
+                        player_name: this.myName,
+                        action
+                    });
+                    this.hasActed = true;
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async assassinate(target) {
+                if (!confirm(`确定刺杀 ${target}?`)) return;
+                try {
+                    await axios.post('/avalon/assassinate', {
+                        target
+                    });
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async inspectPlayer(target) {
+                if (!confirm(`确定查验 ${target}?`)) return;
+                try {
+                    const res = await axios.post('/avalon/lady_of_lake', {
+                        target
+                    });
+                    this.ladyResultData = {
+                        target,
+                        alignment: res.data.alignment
+                    };
+                    this.showLadyResult = true;
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async quickRestart() {
+                if (!confirm("确定重开？所有玩家将自动加入新局")) return;
+                try {
+                    await axios.post('/avalon/reset_game', {
+                        player_count: this.targetCount || this.playerCount,
+                        lancelot_enabled: this.lancelotEnabled,
+                        excalibur_enabled: this.excaliburEnabled,
+                        lady_of_lake_enabled: this.ladyOfLakeEnabled
+                    });
+                    this.step = 1;
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async endGame() {
+                if (!confirm("确定结束当前游戏？")) return;
+                try {
+                    await axios.post('/avalon/end_game');
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            isCurrentlyEvil() {
+                if (this.currentAlignment) {
+                    return this.currentAlignment === 'evil';
+                }
+                return this.isEvil(this.myRole);
+            },
+            isLancelotMustFail() {
+                // 当前处于邪恶阵营的兰斯洛特必须投失败
+                if ((this.myRole === 'Lancelot Good' || this.myRole === 'Lancelot Evil') && this
+                    .isCurrentlyEvil()) {
+                    return true;
+                }
+                return false;
+            },
+            canAssassinate() {
+                // 判断当前玩家是否可以执行刺杀
+                if (this.assassinRole === this.myRole) return true;
+                // 兼容：原始逻辑
+                if (!this.assassinRole && this.myRole === 'Assassin') return true;
+                return false;
+            },
+            getAssassinRoleName() {
+                if (this.assassinRole) {
+                    return this.roleMap[this.assassinRole] || this.assassinRole;
+                }
+                return '刺客';
+            },
+            async assignExcalibur(target) {
+                try {
+                    await axios.post('/avalon/assign_excalibur', {
+                        target
+                    });
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            async useExcalibur(target) {
+                if (target && !confirm(`确定对 ${target} 使用王者之剑？将替换其投票并查看结果`)) return;
+                try {
+                    const res = await axios.post('/avalon/use_excalibur', {
+                        target
+                    });
+                    if (res.data.excalibur_result) {
+                        this.excaliburResultData = res.data.excalibur_result;
+                        this.showExcaliburResult = true;
+                    }
+                } catch (e) {
+                    this.showError(e);
+                }
+            },
+            startPolling() {
+                setInterval(async () => {
+                    if (this.step === 1) {
+                        try {
+                            const res = await axios.get('/avalon/lobby');
+                            const d = res.data;
+                            this.status = d.status;
+                            this.currentCount = d.current_count;
+                            this.targetCount = d.target_count;
+                            this.allPlayers = d.players || [];
+                            if (d.status !== 'empty') {
+                                this.lancelotEnabled = d.lancelot_enabled || false;
+                                this.excaliburEnabled = d.excalibur_enabled || false;
+                                if (d.lady_of_lake_enabled !== undefined) {
+                                    this.ladyOfLakeEnabled = d.lady_of_lake_enabled;
+                                }
+                            }
+
+                            const prevPlayers = d.previous_players || [];
+                            if (this.myName && prevPlayers.includes(this.myName) && !d
+                                .players.includes(this.myName) && d.status === 'joining') {
+                                this.joinGame();
+                            }
+
+                            if (this.myName && d.players.includes(this.myName) && d
+                                .status === 'active') {
+                                this.step = 3;
+                            }
+                        } catch (e) { }
+                        return;
+                    }
+
+                    if (!this.myName) return;
+                    try {
+                        const res = await axios.get(`/avalon/status/${this.myName}`);
+                        const d = res.data;
+                        this.status = d.status;
+
+                        if (d.status === 'joining') {
+                            const prevPlayers = d.last_vote_snapshot ? [] : (d
+                                .previous_players || []);
+                            if (this.myName && !d.players_list.includes(this.myName)) {
+                                this.step = 1;
+                                this.joinGame();
+                            } else if (this.step > 2) {
+                                this.step = 2;
+                            }
+                        } else if (d.status === 'active' || d.status === 'assassin') {
+                            if (this.step === 2) this.step = 3;
+                        } else if (d.status === 'ended') {
+                            this.revealedPlayers = d.revealed_players;
+                            this.gameWinner = d.game_winner;
+                            this.assassinTarget = d.assassin_target;
+                        } else if (d.status === 'empty') {
+                            this.step = 1;
+                            this.gameWinner = null;
+                            this.assassinTarget = null;
+                            this.revealedPlayers = [];
+                        }
+
+                        this.currentCount = d.current_count;
+                        this.targetCount = d.target_count;
+                        this.allPlayers = d.players_list;
+
+                        if (d.status === 'active' || d.status === 'assassin') {
+                            this.myRole = d.your_role;
+                            this.visionData = d.vision || [];
+                            this.missionHistory = d.mission_history || [];
+                            this.voteFailCount = d.vote_fail_count;
+                            this.missionActive = d.mission_active;
+                            this.missionTeam = d.mission_team || [];
+                            this.hasActed = d.has_acted;
+                            this.voteTeamActive = d.vote_team_active;
+                            this.teamVotes = d.team_votes || {};
+                            this.lastVoteResult = d.last_vote_result;
+                            this.lastVoteSnapshot = d.last_vote_snapshot || {};
+                            this.captain = d.captain;
+                            this.requiredTeamSize = d.required_team_size;
+
+                            // 湖中仙女
+                            this.ladyOfLakeHolder = d.lady_of_lake_holder;
+                            this.ladyOfLakeActive = d.lady_of_lake_active;
+                            this.ladyOfLakeResult = d.lady_of_lake_result;
+                            this.ladyOfLakeInspector = d.lady_of_lake_inspector || null;
+                            this.ladyOfLakeHistory = d.lady_of_lake_history || [];
+
+                            // 兰斯洛特
+                            this.lancelotEnabled = d.lancelot_enabled;
+                            this.lancelotSwapped = d.lancelot_swapped;
+                            this.lancelotSwapReveal = d.lancelot_swap_reveal || [];
+                            this.currentAlignment = d.current_alignment;
+
+                            // 刺杀角色
+                            this.assassinRole = d.assassin_role;
+
+                            // 王者之剑
+                            this.excaliburEnabled = d.excalibur_enabled;
+                            this.excaliburHolder = d.excalibur_holder;
+                            this.excaliburPhase = d.excalibur_phase || 'none';
+                            if (d.excalibur_result) {
+                                this.excaliburResult = d.excalibur_result;
+                            }
+                        }
+
+                    } catch (e) { }
+                }, 1000);
+            },
+            getMissionStatusClass(i) {
+                const r = this.missionHistory[i - 1];
+                return r ? (r.result === 'success' ? 'success' : 'fail') : '';
+            },
+            isEvil(role) {
+                return ['Morgana', 'Assassin', 'Mordred', 'Oberon', 'Minion', 'Lancelot Evil'].includes(
+                    role);
+            },
+            getRoleImage(role) {
+                if (!role) return '';
+                const map = {
+                    'Merlin': 'MERLIN.jpg',
+                    'Percival': 'PERCIVAL.jpg',
+                    'Loyal Servant': 'SERVANT.jpg',
+                    'Morgana': 'MORGANA.jpg',
+                    'Assassin': 'ASSASSIN.jpg',
+                    'Mordred': 'MORDRED.jpg',
+                    'Oberon': 'OBERON.jpg',
+                    'Minion': 'MINION.jpg',
+                    'Lancelot Good': 'LANCELOT(GOOD).png',
+                    'Lancelot Evil': 'LANCELOT(EVIL).png'
+                };
+                return '/avalon/assets/' + (map[role] || 'SERVANT.jpg');
+            },
+            showError(e) {
+                this.errorMsg = e.response?.data?.detail || "Error";
+                setTimeout(() => this.errorMsg = '', 3000);
+            },
+            async fetchLeaderboard() {
+                try {
+                    const res = await axios.get('/avalon/leaderboard');
+                    this.lbData = res.data.leaderboard || [];
+                } catch (e) { }
+            }
+        }
+    }).mount('#app');
+</script>
+</div>
+{% endraw %}
+{% endblock %}

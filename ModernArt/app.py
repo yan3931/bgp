@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import record_modernart_game, get_modernart_leaderboard
 
 app = FastAPI(title="Modern Art Game Helper")
-templates = Jinja2Templates(directory="ModernArt/templates")
+templates = Jinja2Templates(directory=["ModernArt/templates", "templates"])
 
 # Constants
 ARTISTS = ["Manuel Carvalho (Yellow)", "Sigrid Thaler (Blue)", "Daniel Melim (Red)", "Ramon Martins (Green)", "Rafael Silveira (Orange)"]

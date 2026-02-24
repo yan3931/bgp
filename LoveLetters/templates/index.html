@@ -1,582 +1,493 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>极简卡牌 · 逻辑盲猜</title>
-    <link href="/static/common.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            padding-bottom: 90px;
-        }
-
-        /* ---- Page Hero (Customized gradient) ---- */
-        .apple-hero h1 {
-            background: linear-gradient(135deg, #ff6b6b, #ee5253, #e84393);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-
-
-        .apple-hero .mode-label {
-            display: inline-block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--apple-blue);
-            background: rgba(0, 113, 227, 0.1);
-            padding: 4px 12px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-        }
-
-        .remaining-sub {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--apple-gray);
-            margin-top: 8px;
-        }
-
-        /* ---- Progress Ring ---- */
-        .progress-ring-wrap {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin: var(--space-md) 0;
-            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.06));
-        }
-
-        .progress-ring-wrap svg {
-            transform: rotate(-90deg);
-        }
-
-        .progress-ring-bg {
-            stroke: rgba(0, 0, 0, 0.06);
-        }
-
-        .progress-ring-fill {
-            stroke: var(--apple-blue);
-            transition: stroke-dashoffset 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-            stroke-linecap: round;
-        }
-
-        .ring-text {
-            position: absolute;
-            text-align: center;
-        }
-
-        .ring-text .ring-num {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: var(--apple-black);
-            line-height: 1;
-            letter-spacing: -0.02em;
-        }
-
-        .ring-text .ring-label {
-            font-size: 0.75rem;
-            color: var(--apple-gray);
-            font-weight: 600;
-            margin-top: 2px;
-        }
-
-        /* .apple-list styling is purely managed by common.css */
-
-        /* ---- Card Item ---- */
-        .card-item {
-            display: flex;
-            align-items: center;
-            padding: 16px var(--space-lg);
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-            transition: all var(--transition-fast);
-        }
-
-        .card-item:hover {
-            background: rgba(0, 0, 0, 0.02);
-        }
-
-        .card-item:last-child {
-            border-bottom: none;
-        }
-
-        .card-item:active {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .card-item.depleted {
-            opacity: 0.4;
-            filter: grayscale(100%);
-        }
-
-        /* Character Avatar */
-        .card-avatar {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            margin-right: 16px;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .card-item:hover .card-avatar {
-            transform: scale(1.05) rotate(-2deg);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-emoji {
-            font-size: 1.8rem;
-            line-height: 1;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-value {
-            position: absolute;
-            bottom: -6px;
-            right: -6px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--apple-white);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            font-size: 0.75rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--apple-black);
-            border: 2px solid rgba(255, 255, 255, 0.9);
-        }
-
-        /* Color coding by card value */
-        .card-num-0 {
-            background: rgba(142, 142, 147, 0.15);
-        }
-
-        .card-num-1 {
-            background: rgba(0, 113, 227, 0.12);
-        }
-
-        .card-num-2 {
-            background: rgba(52, 199, 89, 0.12);
-        }
-
-        .card-num-3 {
-            background: rgba(255, 149, 0, 0.12);
-        }
-
-        .card-num-4 {
-            background: rgba(175, 82, 222, 0.12);
-        }
-
-        .card-num-5 {
-            background: rgba(255, 59, 48, 0.12);
-        }
-
-        .card-num-6 {
-            background: rgba(255, 204, 0, 0.15);
-        }
-
-        .card-num-7 {
-            background: rgba(90, 200, 250, 0.15);
-        }
-
-        .card-num-8 {
-            background: rgba(255, 45, 85, 0.12);
-        }
-
-        .card-num-9 {
-            background: rgba(175, 82, 222, 0.15);
-        }
-
-        /* Card Middle Section */
-        .card-body {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .card-title-row {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .card-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--apple-black);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            letter-spacing: -0.01em;
-        }
-
-        .card-ability {
-            font-size: 0.8rem;
-            color: var(--apple-gray);
-            margin-top: 2px;
-            line-height: 1.3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-weight: 500;
-        }
-
-        .card-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 6px;
-        }
-
-        .card-count-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--apple-gray);
-        }
-
-        /* Mini remaining dots */
-        .dots-track {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--apple-blue);
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 1px 3px rgba(0, 113, 227, 0.3);
-        }
-
-        .dot.used {
-            background: rgba(0, 0, 0, 0.1);
-            box-shadow: none;
-            transform: scale(0.8);
-        }
-
-        .card-prob {
-            font-size: 0.9rem;
-            font-weight: 800;
-            min-width: 42px;
-            text-align: right;
-            letter-spacing: -0.01em;
-        }
-
-        .card-prob.hot {
-            color: var(--apple-red);
-            text-shadow: 0 2px 4px rgba(255, 59, 48, 0.2);
-        }
-
-        .card-prob.warm {
-            color: var(--apple-orange);
-        }
-
-        .card-prob.cold {
-            color: var(--apple-gray);
-        }
-
-        /* Card Actions */
-        .card-actions {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-            margin-left: 12px;
-        }
-
-        .act-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 22px;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-            font-family: var(--font-family);
-            font-size: 0.9rem;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .act-btn:active {
-            transform: scale(0.85);
-        }
-
-        .act-btn-minus {
-            background: rgba(0, 0, 0, 0.06);
-            color: var(--apple-gray);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
-            font-size: 0.8rem;
-        }
-
-        .act-btn-play {
-            background: var(--apple-blue);
-            color: white;
-            font-weight: 700;
-            font-size: 0.85rem;
-            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
-        }
-
-        .act-btn-play:active {
-            box-shadow: 0 2px 6px rgba(0, 113, 227, 0.2);
-        }
-
-        /* ---- Footer Reset ---- */
-        .reset-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(245, 245, 247, 0.75);
-            backdrop-filter: saturate(180%) blur(30px);
-            -webkit-backdrop-filter: saturate(180%) blur(30px);
-            border-top: 0.5px solid rgba(0, 0, 0, 0.08);
-            padding: 16px;
-            padding-bottom: max(16px, env(safe-area-inset-bottom));
-            display: flex;
-            justify-content: center;
-            z-index: 5000;
-        }
-
-        .reset-bar .apple-btn {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-            font-weight: 600;
-            padding: 0 24px;
-            border-radius: 20px;
-        }
-
-        /* Nav adjustments */
-        .ll-nav {
-            position: sticky;
-            top: 0;
-            z-index: 9999;
-            background: rgba(245, 245, 247, 0.6) !important;
-            backdrop-filter: saturate(180%) blur(30px) !important;
-            -webkit-backdrop-filter: saturate(180%) blur(30px) !important;
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08) !important;
-            padding: 12px var(--space-md);
-        }
-
-        .ll-nav-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            max-width: 680px;
-            margin: 0 auto;
-        }
-
-        .ll-back {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: var(--apple-blue);
-            font-size: 0.95rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: opacity var(--transition-fast);
-            flex-shrink: 0;
-        }
-
-        .ll-back:hover {
-            opacity: 0.7;
-            text-decoration: none;
-        }
-
-        .ll-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--apple-black);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: -0.01em;
-        }
-
-        .ll-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
-        .apple-segment {
-            background: rgba(0, 0, 0, 0.06);
-            padding: 3px;
-            border-radius: 10px;
-        }
-
-        .apple-segment-btn {
-            font-weight: 600;
-            font-size: 0.8rem;
-            padding: 4px 12px;
-            border-radius: 8px;
-            min-height: 44px;
-        }
-
-        .apple-segment-btn.active {
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- Nav -->
-    <nav class="ll-nav">
-        <div class="ll-nav-inner" style="min-height: 44px;">
-            <a href="/" class="ll-back" style="min-height: 44px;"><i class="fas fa-chevron-left"></i> 首页</a>
-            <span class="ll-title">
-                <i class="fas fa-heart" style="color: var(--apple-red);"></i> 情书
-            </span>
-            <div class="ll-right">
-                <span id="status-dot" class="apple-status-dot"></span>
-                <div class="apple-segment">
-                    <button id="btn-basic" class="apple-segment-btn" onclick="switchMode('basic')">2-4人</button>
-                    <button id="btn-ext" class="apple-segment-btn" onclick="switchMode('extension')">5-8人</button>
-                </div>
-            </div>
+{% extends "base.html" %}
+
+{% block title %}情书 - 极简卡牌 · 逻辑盲猜{% endblock %}
+
+{% block extra_head %}
+<script src="/socket.io/socket.io.js"></script>
+<style>
+    body {
+        padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    }
+
+    /* ---- Page Hero (Customized gradient) ---- */
+    .apple-hero h1 {
+        background: linear-gradient(135deg, #ff6b6b, #ee5253, #e84393);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .apple-hero .mode-label {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--apple-blue);
+        background: var(--apple-blue-light);
+        padding: 4px 12px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
+
+    .remaining-sub {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--apple-gray);
+        margin-top: 8px;
+    }
+
+    /* ---- Progress Ring ---- */
+    .progress-ring-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin: var(--space-md) 0;
+        filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.06));
+    }
+
+    .progress-ring-wrap svg {
+        transform: rotate(-90deg);
+    }
+
+    .progress-ring-bg {
+        stroke: rgba(0, 0, 0, 0.06);
+    }
+
+    .progress-ring-fill {
+        stroke: var(--apple-blue);
+        transition: stroke-dashoffset 0.8s cubic-bezier(0.25, 1, 0.5, 1), stroke 0.3s;
+        stroke-linecap: round;
+    }
+
+    .ring-text {
+        position: absolute;
+        text-align: center;
+    }
+
+    .ring-text .ring-num {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--apple-black);
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .ring-text .ring-label {
+        font-size: 0.75rem;
+        color: var(--apple-gray);
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
+    /* .apple-list styling is purely managed by common.css */
+
+    /* ---- Card Item ---- */
+    .card-item {
+        display: flex;
+        align-items: center;
+        padding: 16px var(--space-lg);
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+        transition: all var(--transition-fast);
+    }
+
+    .card-item:hover {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    .card-item:last-child {
+        border-bottom: none;
+    }
+
+    .card-item:active {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .card-item.depleted {
+        opacity: 0.4;
+        filter: grayscale(100%);
+    }
+
+    /* Character Avatar */
+    .card-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-right: 16px;
+        position: relative;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-item:hover .card-avatar {
+        transform: scale(1.05) rotate(-2deg);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-emoji {
+        font-size: 1.8rem;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-value {
+        position: absolute;
+        bottom: -6px;
+        right: -6px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--apple-white);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        font-size: 0.75rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--apple-black);
+        border: 2px solid rgba(255, 255, 255, 0.9);
+    }
+
+    /* Color coding by card value */
+    .card-num-0 {
+        background: rgba(142, 142, 147, 0.15);
+    }
+
+    .card-num-1 {
+        background: var(--apple-blue-light);
+    }
+
+    .card-num-2 {
+        background: rgba(52, 199, 89, 0.12);
+    }
+
+    .card-num-3 {
+        background: rgba(255, 149, 0, 0.12);
+    }
+
+    .card-num-4 {
+        background: rgba(175, 82, 222, 0.12);
+    }
+
+    .card-num-5 {
+        background: rgba(255, 59, 48, 0.12);
+    }
+
+    .card-num-6 {
+        background: rgba(255, 204, 0, 0.15);
+    }
+
+    .card-num-7 {
+        background: rgba(90, 200, 250, 0.15);
+    }
+
+    .card-num-8 {
+        background: rgba(255, 45, 85, 0.12);
+    }
+
+    .card-num-9 {
+        background: rgba(175, 82, 222, 0.15);
+    }
+
+    /* Card Middle Section */
+    .card-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .card-title-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .card-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--apple-black);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: -0.01em;
+    }
+
+    .card-ability {
+        font-size: 0.8rem;
+        color: var(--apple-gray);
+        margin-top: 2px;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 500;
+    }
+
+    .card-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .card-count-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--apple-gray);
+    }
+
+    /* Mini remaining dots */
+    .dots-track {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--apple-blue);
+        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        box-shadow: 0 1px 3px rgba(0, 113, 227, 0.3);
+    }
+
+    .dot.used {
+        background: rgba(0, 0, 0, 0.1);
+        box-shadow: none;
+        transform: scale(0.8);
+    }
+
+    .card-prob {
+        font-size: 0.9rem;
+        font-weight: 800;
+        min-width: 42px;
+        text-align: right;
+        letter-spacing: -0.01em;
+    }
+
+    .card-prob.hot {
+        color: var(--apple-red);
+        text-shadow: 0 2px 4px rgba(255, 59, 48, 0.2);
+    }
+
+    .card-prob.warm {
+        color: var(--apple-orange);
+    }
+
+    .card-prob.cold {
+        color: var(--apple-gray);
+    }
+
+    /* Card Actions */
+    .card-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+        margin-left: 12px;
+    }
+
+    .act-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 22px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+        font-family: var(--font-family);
+        font-size: 0.9rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .act-btn:active {
+        transform: scale(0.85);
+    }
+
+    .act-btn-minus {
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--apple-gray);
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+        font-size: 0.8rem;
+    }
+
+    .act-btn-play {
+        background: var(--apple-blue);
+        color: white;
+        font-weight: 700;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
+    }
+
+    .act-btn-play:active {
+        box-shadow: 0 2px 6px rgba(0, 113, 227, 0.2);
+    }
+
+    /* ---- Footer Reset ---- */
+    .reset-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(245, 245, 247, 0.75);
+        backdrop-filter: saturate(180%) blur(30px);
+        -webkit-backdrop-filter: saturate(180%) blur(30px);
+        border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+        padding: 16px;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        display: flex;
+        justify-content: center;
+        z-index: 5000;
+    }
+
+    .reset-bar .apple-btn {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        font-weight: 600;
+        padding: 0 24px;
+        border-radius: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block nav_title %}
+<i class="ph-fill ph-heart text-red" style="margin-right: 4px;"></i> 情书
+{% endblock %}
+
+{% block nav_right %}
+<span id="status-dot" class="apple-status-dot" style="margin-right: 12px;"></span>
+<div class="apple-segment">
+    <button id="btn-basic" class="apple-segment-btn" onclick="switchMode('basic')">2-4人</button>
+    <button id="btn-ext" class="apple-segment-btn" onclick="switchMode('extension')">5-8人</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="apple-hero" id="setup-section">
+    <span class="apple-hero-emoji">💌</span>
+    <h1>情书</h1>
+    <p>极简卡牌 · 逻辑盲猜</p>
+</div>
+
+<!-- Summary Hero -->
+<div class="apple-hero" style="padding-top: var(--space-xl); padding-bottom: 0;">
+    <div class="mode-label" id="mode-name">{{ data.mode_name }}</div>
+
+    <div class="progress-ring-wrap" id="ring-wrap">
+        <svg width="130" height="130">
+            <circle class="progress-ring-bg" cx="65" cy="65" r="54" fill="none" stroke-width="10"></circle>
+            <circle class="progress-ring-fill" id="ring-fill" cx="65" cy="65" r="54" fill="none" stroke-width="10"
+                stroke-dasharray="339.29" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="ring-text">
+            <div class="ring-num" id="total-count">{{ data.total_remaining }}</div>
+            <div class="ring-label">剩余</div>
         </div>
-    </nav>
-
-    <div class="apple-container">
-
-        <!-- Hero -->
-        <div class="apple-hero" id="setup-section">
-            <span class="apple-hero-emoji">💌</span>
-            <h1>情书</h1>
-            <p>极简卡牌 · 逻辑盲猜</p>
-        </div>
-
-        <!-- Summary Hero -->
-        <div class="apple-hero" style="padding-top: var(--space-xl); padding-bottom: 0;">
-            <div class="mode-label" id="mode-name">{{ data.mode_name }}</div>
-
-            <div class="progress-ring-wrap" id="ring-wrap">
-                <svg width="130" height="130">
-                    <circle class="progress-ring-bg" cx="65" cy="65" r="54" fill="none" stroke-width="10"></circle>
-                    <circle class="progress-ring-fill" id="ring-fill" cx="65" cy="65" r="54" fill="none"
-                        stroke-width="10" stroke-dasharray="339.29" stroke-dashoffset="0"></circle>
-                </svg>
-                <div class="ring-text">
-                    <div class="ring-num" id="total-count">{{ data.total_remaining }}</div>
-                    <div class="ring-label">剩余</div>
-                </div>
-            </div>
-
-            <div class="remaining-sub" id="played-info"></div>
-        </div>
-
-        <!-- Card List -->
-        <div class="apple-list" id="card-container">
-            {% include 'card_list_fragment.html' %}
-        </div>
-
-        <footer class="apple-footer">
-            <p>Love Letter © 2026</p>
-        </footer>
-
     </div>
 
-    <!-- Bottom Reset Bar -->
-    <div class="reset-bar">
-        <button class="apple-btn apple-btn-secondary apple-btn-sm" onclick="resetGame()" style="min-height: 44px;">
-            <i class="fas fa-undo" style="margin-right: 4px;"></i> 重置本局
-        </button>
-    </div>
+    <div class="remaining-sub" id="played-info"></div>
+</div>
 
-    <script>
-        var socket = io({
-            path: '/loveletters/socket.io'
+<!-- Card List -->
+<div class="apple-list" id="card-container">
+    {% include 'card_list_fragment.html' %}
+</div>
+
+<!-- Bottom Reset Bar -->
+<div class="reset-bar">
+    <button class="apple-btn apple-btn-secondary apple-btn-sm" onclick="resetGame()" style="min-height: 44px;">
+        <i class="ph ph-arrow-counter-clockwise" style="margin-right: 4px;"></i> 重置本局
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script>
+    // Namespace connection for global socket
+    var namespaceSocket = io('/loveletters', {
+        path: '/socket.io',
+        transports: ['websocket', 'polling']
+    });
+
+    // ring animation helper
+    var ringCircumference = 2 * Math.PI * 54; // r=54
+    function updateRing(remaining, total) {
+        var ring = document.getElementById('ring-fill');
+        if (!ring || total <= 0) return;
+        var ratio = remaining / total;
+        var offset = ringCircumference * (1 - ratio);
+        ring.style.strokeDashoffset = offset;
+
+        const rootStyles = getComputedStyle(document.documentElement);
+        // color shifts with smooth modern colors pulling from css vars to support dark mode
+        if (ratio > 0.5) {
+            ring.style.stroke = rootStyles.getPropertyValue('--apple-blue').trim();
+        } else if (ratio > 0.25) {
+            ring.style.stroke = rootStyles.getPropertyValue('--apple-orange').trim();
+        } else {
+            ring.style.stroke = rootStyles.getPropertyValue('--apple-red').trim();
+        }
+    }
+
+    // Initial ring setup
+    var initRemaining = parseInt("{{ data.total_remaining }}", 10) || 0;
+    var initTotalCards = parseInt("{{ data.total_cards }}", 10) || 0;
+    updateRing(initRemaining, initTotalCards);
+    document.getElementById('played-info').innerText = '已出 ' + (initTotalCards - initRemaining) + ' / ' +
+        initTotalCards + ' 张';
+
+    namespaceSocket.on('connect', function () {
+        document.getElementById('status-dot').classList.add('connected');
+    });
+
+    namespaceSocket.on('disconnect', function () {
+        document.getElementById('status-dot').classList.remove('connected');
+    });
+
+    namespaceSocket.on('update_game', function (data) {
+        document.getElementById('card-container').innerHTML = data.html;
+        document.getElementById('total-count').innerText = data.total;
+        document.getElementById('mode-name').innerText = data.mode_name;
+        updateModeButtons(data.current_mode);
+
+        // update ring
+        var totalCards = data.total_cards || 0;
+        updateRing(data.total, totalCards);
+        document.getElementById('played-info').innerText = '已出 ' + (totalCards - data.total) + ' / ' +
+            totalCards + ' 张';
+    });
+
+    function sendAction(actionType, cardName) {
+        namespaceSocket.emit('card_action', {
+            action: actionType,
+            card: cardName
         });
+    }
 
-        // ring animation helper
-        var ringCircumference = 2 * Math.PI * 54; // r=54
-        function updateRing(remaining, total) {
-            var ring = document.getElementById('ring-fill');
-            if (!ring || total <= 0) return;
-            var ratio = remaining / total;
-            var offset = ringCircumference * (1 - ratio);
-            ring.style.strokeDashoffset = offset;
+    function switchMode(mode) {
+        namespaceSocket.emit('switch_mode', mode);
+    }
 
-            // color shifts with smooth modern colors
-            if (ratio > 0.5) {
-                ring.style.stroke = '#0071e3'; // blue
-            } else if (ratio > 0.25) {
-                ring.style.stroke = '#ff9500'; // orange
-            } else {
-                ring.style.stroke = '#ff3b30'; // red
-            }
+    function resetGame() {
+        if (confirm('重置所有数据？')) {
+            namespaceSocket.emit('reset_game');
         }
+    }
 
-        // Initial ring setup
-        var initRemaining = parseInt("{{ data.total_remaining }}", 10) || 0;
-        var initTotalCards = parseInt("{{ data.total_cards }}", 10) || 0;
-        updateRing(initRemaining, initTotalCards);
-        document.getElementById('played-info').innerText = '已出 ' + (initTotalCards - initRemaining) + ' / ' +
-            initTotalCards + ' 张';
+    function updateModeButtons(mode) {
+        document.getElementById('btn-basic').className = mode === 'basic' ? 'apple-segment-btn active' :
+            'apple-segment-btn';
+        document.getElementById('btn-ext').className = mode === 'extension' ? 'apple-segment-btn active' :
+            'apple-segment-btn';
+    }
 
-        socket.on('connect', function () {
-            document.getElementById('status-dot').classList.add('connected');
-        });
-
-        socket.on('disconnect', function () {
-            document.getElementById('status-dot').classList.remove('connected');
-        });
-
-        socket.on('update_game', function (data) {
-            document.getElementById('card-container').innerHTML = data.html;
-            document.getElementById('total-count').innerText = data.total;
-            document.getElementById('mode-name').innerText = data.mode_name;
-            updateModeButtons(data.current_mode);
-
-            // update ring
-            var totalCards = data.total_cards || 0;
-            updateRing(data.total, totalCards);
-            document.getElementById('played-info').innerText = '已出 ' + (totalCards - data.total) + ' / ' +
-                totalCards + ' 张';
-        });
-
-        function sendAction(actionType, cardName) {
-            socket.emit('card_action', {
-                action: actionType,
-                card: cardName
-            });
-        }
-
-        function switchMode(mode) {
-            socket.emit('switch_mode', mode);
-        }
-
-        function resetGame() {
-            if (confirm('重置所有数据？')) {
-                socket.emit('reset_game');
-            }
-        }
-
-        function updateModeButtons(mode) {
-            document.getElementById('btn-basic').className = mode === 'basic' ? 'apple-segment-btn active' :
-                'apple-segment-btn';
-            document.getElementById('btn-ext').className = mode === 'extension' ? 'apple-segment-btn active' :
-                'apple-segment-btn';
-        }
-
-        updateModeButtons('{{ data.current_mode }}');
-    </script>
-</body>
-
-</html>
+    updateModeButtons('{{ data.current_mode }}');
+</script>
+{% endblock %}

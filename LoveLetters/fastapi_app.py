@@ -9,17 +9,11 @@ from fastapi.responses import HTMLResponse
 app = FastAPI()
 
 # Setup SocketIO
-# We will create the sio server here, but it needs to be mounted on the main app effectively 
-# or we can expose it to be mounted. 
-# However, for simplicity in unified app, we might want one SIO server for the whole project?
-# But to keep modularity, let's create a dedicated one or share it.
-# Easier: Create a standalone SIO server for this module and mount it in main.py using socketio.ASGIApp
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
-sio_app = socketio.ASGIApp(sio, other_asgi_app=app)
+from sio_server import sio
 
 # Templates
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+templates = Jinja2Templates(directory=[os.path.join(BASE_DIR, "templates"), "templates"])
 
 # --- Game Logic & State ---
 CONFIG_BASIC = {
@@ -97,7 +91,7 @@ async def broadcast_update():
         'total_cards': data['total_cards'],
         'mode_name': data['mode_name'],
         'current_mode': data['current_mode']
-    })
+    }, namespace='/loveletters')
 
 # --- Routes ---
 
@@ -108,7 +102,7 @@ async def index(request: Request):
 
 # --- SocketIO Events ---
 
-@sio.event
+@sio.on('connect', namespace='/loveletters')
 async def connect(sid, environ):
     # Send update on connect (unicast? or just broadcast to be safe/easy)
     # Ideally unicast, but for this simple app broadcast is fine or just emit to sid
@@ -123,9 +117,9 @@ async def connect(sid, environ):
         'total_cards': data['total_cards'],
         'mode_name': data['mode_name'],
         'current_mode': data['current_mode']
-    }, room=sid)
+    }, room=sid, namespace='/loveletters')
 
-@sio.event
+@sio.on('switch_mode', namespace='/loveletters')
 async def switch_mode(sid, mode):
     if mode == 'extension':
         state.current_mode = 'extension'
@@ -136,7 +130,7 @@ async def switch_mode(sid, mode):
     state.reset()
     await broadcast_update()
 
-@sio.event
+@sio.on('card_action', namespace='/loveletters')
 async def card_action(sid, payload):
     action = payload.get('action')
     card_name = payload.get('card')
@@ -150,7 +144,7 @@ async def card_action(sid, payload):
             
     await broadcast_update()
 
-@sio.event
+@sio.on('reset_game', namespace='/loveletters')
 async def reset_game(sid):
     state.reset()
     await broadcast_update()

@@ -180,6 +180,51 @@ def get_leaderboard() -> Dict[str, List[Dict]]:
     return leaderboard
 
 
+def get_global_leaderboard() -> List[Dict]:
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    
+    all_data = []
+    
+    try:
+        c.execute('SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END FROM game_results')
+        all_data.extend(c.fetchall())
+    except sqlite3.OperationalError: pass
+        
+    try:
+        c.execute('SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END FROM cabo_game_results')
+        all_data.extend(c.fetchall())
+    except sqlite3.OperationalError: pass
+        
+    try:
+        c.execute('SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END FROM flip7_game_results')
+        all_data.extend(c.fetchall())
+    except sqlite3.OperationalError: pass
+        
+    try:
+        c.execute('SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END FROM modernart_game_results')
+        all_data.extend(c.fetchall())
+    except sqlite3.OperationalError: pass
+        
+    try:
+        c.execute('SELECT player_name, 1, 0 FROM lasvegas_leaderboard')
+        all_data.extend(c.fetchall())
+    except sqlite3.OperationalError: pass
+    
+    conn.close()
+    
+    stats = {}
+    for p_name, games, wins in all_data:
+        if p_name not in stats:
+            stats[p_name] = {"name": p_name, "total_games": 0, "total_wins": 0}
+        stats[p_name]["total_games"] += games
+        stats[p_name]["total_wins"] += wins
+        
+    result = list(stats.values())
+    result.sort(key=lambda x: (-x["total_wins"], -x["total_games"]))
+    return result
+
+
 def record_lasvegas_game(player_name: str, game_amount: int, bill_count: int):
     """Record a single player's Las Vegas game result."""
     conn = sqlite3.connect(DB_NAME)

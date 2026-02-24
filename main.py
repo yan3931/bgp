@@ -1,92 +1,64 @@
 import uvicorn
 import os
+import importlib
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from contextlib import asynccontextmanager
+import socketio
+
 import database
+from sio_server import sio
 
-# Import sub-game apps
-# Standard pattern: try import, fallback to empty FastAPI if fail
-avalon_app = FastAPI()
-try:
-    from Avalon.main import app as avalon_app
-except ImportError as e:
-    print(f"Error importing Avalon: {e}")
+APPS_CONFIG = {
+    "avalon": "Avalon.main",
+    "cabo": "cabo.app",
+    "lasvegas": "lasvegas.app",
+    "loveletters": "LoveLetters.fastapi_app",
+    "flip7": "flip7.app",
+    "modernart": "ModernArt.app"
+}
 
-cabo_app = FastAPI()
-try:
-    from cabo.app import app as cabo_app
-except ImportError as e:
-    print(f"Error importing Cabo: {e}")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    database.init_db()
+    yield
 
-lasvegas_app = FastAPI()
-try:
-    from lasvegas.app import app as lasvegas_app
-except ImportError as e:
-    print(f"Error importing Las Vegas: {e}")
-
-flip7_app = FastAPI()
-try:
-    from flip7.app import app as flip7_app
-except ImportError as e:
-    print(f"Error importing flip7: {e}")
-
-modernart_app = FastAPI()
-try:
-    from ModernArt.app import app as modernart_app
-except ImportError as e:
-    print(f"Error importing ModernArt: {e}")
-
-# LoveLetters: import SIO server and FastAPI routes separately
-loveletters_fastapi_app = FastAPI()
-loveletters_sio = None
-try:
-    from LoveLetters.fastapi_app import app as loveletters_fastapi_app, sio as loveletters_sio
-except ImportError as e:
-    print(f"Error importing LoveLetters: {e}")
-
-
-app = FastAPI(title="Board Game Portal")
+app = FastAPI(title="Board Game Portal", lifespan=lifespan)
 
 # Mount Static Files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Mount Games
-app.mount("/avalon", avalon_app)
-app.mount("/cabo", cabo_app)
-app.mount("/lasvegas", lasvegas_app)
-app.mount("/loveletters", loveletters_fastapi_app)
-app.mount("/flip7", flip7_app)
-app.mount("/modernart", modernart_app)
+loaded_apps = []
+
+for mount_path, module_name in APPS_CONFIG.items():
+    try:
+        mod = importlib.import_module(module_name)
+        sub_app = getattr(mod, "app")
+        app.mount(f"/{mount_path}", sub_app)
+        loaded_apps.append(mount_path)
+    except Exception as e:
+        print(f"Error importing {mount_path}: {e}")
 
 # Templates for Landing Page
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    leaderboard = database.get_leaderboard()
-    return templates.TemplateResponse("index.html", {"request": request, "leaderboard": leaderboard})
+    leaderboard = database.get_global_leaderboard()
+    return templates.TemplateResponse("index.html", {"request": request, "leaderboard": leaderboard, "loaded_apps": loaded_apps})
 
 @app.get("/gamelist", response_class=HTMLResponse)
 async def gamelist(request: Request):
     return templates.TemplateResponse("gamelist.html", {"request": request})
 
-@app.on_event("startup")
-def startup_event():
-    database.init_db()
-
 @app.get("/api/leaderboard")
 async def get_leaderboard_api():
     return database.get_leaderboard()
 
-# Wrap the main FastAPI app with socketio ASGIApp so 
-# Socket.IO gets first crack at /loveletters/socket.io requests
-import socketio as _sio_module
-if loveletters_sio is not None:
-    final_app = _sio_module.ASGIApp(loveletters_sio, other_asgi_app=app, socketio_path='/loveletters/socket.io')
-else:
-    final_app = app
+# Wrap the main FastAPI app with socketio ASGIApp
+final_app = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path='/socket.io')
 
 if __name__ == "__main__":
     uvicorn.run("main:final_app", host="0.0.0.0", port=8000, reload=True)

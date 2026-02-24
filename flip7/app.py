@@ -3,8 +3,9 @@ import sys
 import os
 import uuid
 from typing import List, Dict, Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 # Add parent directory to path so we can import the shared database module
@@ -12,6 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import init_db, record_flip7_game, get_flip7_leaderboard
 
 app = FastAPI(title="7flip Score Tracker")
+base_dir = os.path.dirname(os.path.abspath(__file__))
+templates = Jinja2Templates(directory=[base_dir, "templates"])
 
 # Initialize DB tables on import
 init_db()
@@ -187,10 +190,5 @@ async def get_leaderboard():
     return {"leaderboard": get_flip7_leaderboard()}
 
 @app.get("/", response_class=HTMLResponse)
-async def read_root():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(base_dir, "index.html")
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>找不到 index.html</h1>"
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})

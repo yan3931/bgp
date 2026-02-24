@@ -2,8 +2,9 @@ import asyncio
 import random
 from typing import List, Dict, Optional
 from enum import Enum
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os
@@ -15,6 +16,8 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 assets_dir = os.path.join(base_dir, "assets")
 if os.path.exists(assets_dir):
     app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+templates = Jinja2Templates(directory=[base_dir, "templates"])
 
 # -----------------------------------------------------------------------------
 # 数据模型
@@ -702,14 +705,8 @@ async def get_avalon_leaderboard():
         return {"leaderboard": []}
 
 @app.get("/", response_class=HTMLResponse)
-async def read_root():
-    import os
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(base_dir, "index.html")
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>找不到 index.html</h1>"
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 if __name__ == "__main__":
     import uvicorn

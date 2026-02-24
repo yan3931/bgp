@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}桌游助手{% endblock %}</title>
+    <link href="/static/common.css" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <!-- Nav -->
+    <nav class="apple-nav">
+        <div class="apple-nav-content"
+            style="min-height: 44px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                {% block nav_left %}
+                <a href="/" class="apple-nav-back"
+                    style="position: static; min-height: 44px; align-items: center; display: flex;">
+                    <i class="ph ph-house" style="font-size: 1.2rem; margin-right: 4px;"></i> 首页
+                </a>
+                {% endblock %}
+            </div>
+
+            <span class="apple-nav-title" style="position: absolute; left: 50%; transform: translateX(-50%);">
+                {% block nav_title %}🎲 桌游助手{% endblock %}
+            </span>
+
+            <div class="apple-nav-action"
+                style="position: static; display: flex; align-items: center; min-height: 44px;">
+                {% block nav_right %}
+                <a href="/gamelist"
+                    style="color: var(--apple-gray); text-decoration: none; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; min-height: 44px;">
+                    <i class="ph ph-list-dashes" style="font-size: 1.2rem; margin-right: 4px;"></i> 游戏列表
+                </a>
+                {% endblock %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="apple-container">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block extra_body %}{% endblock %}
+</body>
+
+</html>

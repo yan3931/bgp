@@ -467,6 +467,45 @@ a:hover {
     margin-right: var(--space-md);
 }
 
+.rank-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    margin-right: var(--space-md);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rank-1 {
+    background: var(--apple-orange);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+}
+
+.rank-2 {
+    background: #a0aec0;
+    /* Silver */
+    color: white;
+}
+
+.rank-3 {
+    background: #cd7f32;
+    /* Bronze */
+    color: white;
+}
+
+.rank-other {
+    background: var(--apple-gray-light);
+    color: var(--apple-gray);
+    box-shadow: none;
+}
+
 .apple-list-item-icon {
     width: 44px;
     height: 44px;
@@ -1000,6 +1039,30 @@ input.apple-toggle-input:checked+.apple-toggle-btn {
 
 .text-orange {
     color: var(--apple-orange) !important;
+}
+
+.text-purple {
+    color: var(--apple-purple) !important;
+}
+
+.bg-blue-light {
+    background: rgba(0, 113, 227, 0.08) !important;
+}
+
+.bg-green-light {
+    background: rgba(52, 199, 89, 0.08) !important;
+}
+
+.bg-red-light {
+    background: rgba(255, 59, 48, 0.08) !important;
+}
+
+.bg-orange-light {
+    background: rgba(255, 149, 0, 0.08) !important;
+}
+
+.bg-purple-light {
+    background: rgba(175, 82, 222, 0.08) !important;
 }
 
 .text-sm {

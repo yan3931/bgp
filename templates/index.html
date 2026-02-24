@@ -1,245 +1,340 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>桌游助手</title>
-    <link href="/static/common.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .hero {
-            text-align: center;
-            padding: var(--space-3xl) 0 var(--space-xl);
-        }
+{% block title %}桌游助手{% endblock %}
 
-        .hero-emoji {
-            font-size: 4rem;
-            margin-bottom: var(--space-md);
-            display: block;
+{% block extra_head %}
+<style>
+    .hero {
+        text-align: center;
+        padding: var(--space-3xl) 0 var(--space-xl);
+    }
+
+    .hero-emoji {
+        font-size: 4rem;
+        margin-bottom: var(--space-md);
+        display: block;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        margin-bottom: var(--space-sm);
+    }
+
+    .hero p {
+        font-size: 1.15rem;
+        color: var(--apple-gray);
+        font-weight: 500;
+    }
+
+    .game-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        text-decoration: none;
+        color: inherit;
+        background: var(--apple-white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: var(--space-lg);
+        transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    }
+
+    .game-card.disabled {
+        opacity: 0.6;
+        filter: grayscale(100%);
+        cursor: not-allowed;
+    }
+
+    .game-card.disabled:hover {
+        transform: none;
+        box-shadow: var(--shadow-md);
+    }
+
+    .game-card:not(.disabled):hover {
+        transform: translateY(-4px) scale(1.015);
+        box-shadow: var(--shadow-lg);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .game-card:not(.disabled):active {
+        transform: scale(0.985);
+    }
+
+    .game-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .game-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
+    }
+
+    .game-card h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        letter-spacing: -0.02em;
+    }
+
+    .game-card h3 .status-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: var(--apple-gray-light);
+        color: var(--apple-gray);
+        font-weight: 600;
+        vertical-align: middle;
+        margin-left: 8px;
+    }
+
+    .game-card .desc {
+        font-size: 0.9rem;
+        color: var(--apple-gray);
+        margin-bottom: 8px;
+        font-weight: 500;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .game-card .desc span {
+        font-weight: 600;
+        color: var(--apple-black);
+        font-size: 0.85rem;
+    }
+
+    .game-card .cta {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--apple-blue);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .game-card .cta i {
+        font-size: 1.2rem;
+        margin-top: 2px;
+    }
+
+    .game-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 340px));
+        gap: var(--space-lg);
+        justify-content: center;
+    }
+
+    @media (max-width: 600px) {
+        .game-grid {
+            grid-template-columns: 1fr;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         .hero h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            letter-spacing: -0.04em;
-            margin-bottom: var(--space-sm);
-        }
-
-        .hero p {
-            font-size: 1.15rem;
-            color: var(--apple-gray);
-            font-weight: 500;
-        }
-
-        .game-card {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            text-decoration: none;
-            color: inherit;
-            background: var(--apple-white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: var(--space-lg);
-            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-        }
-
-        .game-card:hover {
-            transform: translateY(-4px) scale(1.015);
-            box-shadow: var(--shadow-lg);
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .game-card:active {
-            transform: scale(0.985);
-        }
-
-        .game-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 2rem;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         }
+    }
+</style>
+{% endblock %}
 
-        .game-info {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+{% block nav_left %}
+{% if False %}
+<a href="/" class="apple-nav-back" style="position: static; min-height: 44px; align-items: center; display: flex;">
+    <i class="ph ph-house" style="font-size: 1.2rem; margin-right: 4px;"></i> 首页
+</a>
+{% endif %}
+{% endblock %}
 
-        .game-card h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-            letter-spacing: -0.02em;
-        }
+{% block content %}
+<!-- Hero -->
+<div class="hero">
+    <span class="hero-emoji">🎲</span>
+    <h1>桌游助手</h1>
+    <p>你的桌游好搭子</p>
+</div>
 
-        .game-card .desc {
-            font-size: 0.9rem;
-            color: var(--apple-gray);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
+<div class="game-grid">
+    <!-- Avalon -->
+    {% if 'avalon' in loaded_apps %}
+    <a href="/avalon/" class="game-card">
+        {% else %}
+        <div class="game-card disabled">
+            {% endif %}
+            <div class="game-icon bg-blue-light text-blue">
+                <i class="ph-fill ph-shield-check"></i>
+            </div>
+            <div class="game-info">
+                <h3>阿瓦隆 {% if 'avalon' not in loaded_apps %}<span class="status-badge">维护中</span>{% endif %}</h3>
+                <div class="desc">
+                    <span>阵营推理 · 身份隐藏</span>
+                </div>
+                {% if 'avalon' in loaded_apps %}
+                <span class="cta">进入游戏 <i class="ph ph-caret-right"></i></span>
+                {% endif %}
+            </div>
+            {% if 'avalon' in loaded_apps %}
+    </a>{% else %}
+</div>{% endif %}
 
-        .game-card .cta {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--apple-blue);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .game-card .cta::after {
-            content: '›';
-            font-size: 1.4rem;
-            line-height: 1;
-            margin-top: -2px;
-        }
-
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 340px));
-            gap: var(--space-lg);
-            justify-content: center;
-        }
-
-        @media (max-width: 600px) {
-            .game-grid {
-                grid-template-columns: 1fr;
-                max-width: 400px;
-                margin: 0 auto;
-            }
-
-            .hero h1 {
-                font-size: 2rem;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- Nav -->
-    <nav class="apple-nav">
-        <div class="apple-nav-content" style="justify-content: space-between; min-height: 44px; padding: 0 16px;">
-            <a href="/"
-                style="text-decoration: none; color: inherit; display: flex; align-items: center; min-height: 44px;">
-                <span class="apple-nav-title">🎲 桌游助手</span>
-            </a>
-            <a href="/gamelist"
-                style="color: var(--apple-gray); text-decoration: none; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; min-height: 44px;">游戏列表</a>
+<!-- Las Vegas -->
+{% if 'lasvegas' in loaded_apps %}
+<a href="/lasvegas/" class="game-card">
+    {% else %}
+    <div class="game-card disabled">
+        {% endif %}
+        <div class="game-icon bg-green-light text-green">
+            <i class="ph-fill ph-dice-three"></i>
         </div>
-    </nav>
-
-    <div class="apple-container">
-
-        <!-- Hero -->
-        <div class="hero">
-            <span class="hero-emoji">🎲</span>
-            <h1>桌游助手</h1>
-            <p>你的桌游好搭子</p>
+        <div class="game-info">
+            <h3>拉斯维加斯 {% if 'lasvegas' not in loaded_apps %}<span class="status-badge">维护中</span>{% endif %}</h3>
+            <div class="desc">
+                <span>欢乐掷骰 · 区域争夺</span>
+            </div>
+            {% if 'lasvegas' in loaded_apps %}
+            <span class="cta">进入游戏 <i class="ph ph-caret-right"></i></span>
+            {% endif %}
         </div>
+        {% if 'lasvegas' in loaded_apps %}
+</a>{% else %}</div>{% endif %}
 
-        <div class="game-grid">
-
-            <a href="/avalon/" class="game-card">
-                <div class="game-icon" style="background: rgba(0, 113, 227, 0.08);">
-                    <i class="fas fa-shield-alt" style="color: var(--apple-blue);"></i>
-                </div>
-                <div class="game-info">
-                    <h3>阿瓦隆</h3>
-                    <div class="desc" style="display: flex; flex-direction: column; gap: 6px;">
-                        <span style="font-weight: 600; color: var(--apple-black); font-size: 0.85rem;">阵营推理 ·
-                            身份隐藏</span>
-                    </div>
-                    <span class="cta">进入游戏</span>
-                </div>
-            </a>
-
-            <a href="/lasvegas/" class="game-card">
-                <div class="game-icon" style="background: rgba(52, 199, 89, 0.08);">
-                    <i class="fas fa-dice" style="color: var(--apple-green);"></i>
-                </div>
-                <div class="game-info">
-                    <h3>拉斯维加斯</h3>
-                    <div class="desc" style="display: flex; flex-direction: column; gap: 6px;">
-                        <span style="font-weight: 600; color: var(--apple-black); font-size: 0.85rem;">欢乐掷骰 ·
-                            区域争夺</span>
-                    </div>
-                    <span class="cta">进入游戏</span>
-                </div>
-            </a>
-
-            <a href="/loveletters/" class="game-card">
-                <div class="game-icon" style="background: rgba(255, 59, 48, 0.08);">
-                    <i class="fas fa-heart" style="color: var(--apple-red);"></i>
-                </div>
-                <div class="game-info">
-                    <h3>情书</h3>
-                    <div class="desc" style="display: flex; flex-direction: column; gap: 6px;">
-                        <span style="font-weight: 600; color: var(--apple-black); font-size: 0.85rem;">极简卡牌 ·
-                            逻辑盲猜</span>
-                    </div>
-                    <span class="cta">进入游戏</span>
-                </div>
-            </a>
-
-            <a href="/cabo/" class="game-card">
-                <div class="game-icon" style="background: rgba(255, 149, 0, 0.08);">
-                    <i class="fas fa-hat-wizard" style="color: var(--apple-orange);"></i>
-                </div>
-                <div class="game-info">
-                    <h3>卡波</h3>
-                    <div class="desc" style="display: flex; flex-direction: column; gap: 6px;">
-                        <span style="font-weight: 600; color: var(--apple-black); font-size: 0.85rem;">记忆博弈 ·
-                            极限换牌</span>
-                    </div>
-                    <span class="cta">进入游戏</span>
-                </div>
-            </a>
-
-            <a href="/flip7/" class="game-card">
-                <div class="game-icon" style="background: rgba(175, 82, 222, 0.08);">
-                    <i class="fas fa-layer-group" style="color: var(--apple-purple);"></i>
-                </div>
-                <div class="game-info">
-                    <h3>7连翻</h3>
-                    <div class="desc" style="display: flex; flex-direction: column; gap: 6px;">
-                        <span style="font-weight: 600; color: var(--apple-black); font-size: 0.85rem;">拼手气 · 极限翻牌</span>
-                    </div>
-                    <span class="cta">进入计分器</span>
-                </div>
-            </a>
-
-            <a href="/modernart/" class="game-card">
-                <div class="game-icon" style="background: rgba(255, 149, 0, 0.08); ">
-                    <i class="fas fa-palette" style="color: var(--apple-orange);"></i>
-                </div>
-                <div class="game-info">
-                    <h3>现代艺术</h3>
-                    <div class="desc" style="display: flex; flex-direction: column; gap: 6px;">
-                        <span style="font-weight: 600; color: var(--apple-black); font-size: 0.85rem;">艺术品交易 ·
-                            竞拍博弈</span>
-                    </div>
-                    <span class="cta">进入计分器</span>
-                </div>
-            </a>
+<!-- Love Letters -->
+{% if 'loveletters' in loaded_apps %}
+<a href="/loveletters/" class="game-card">
+    {% else %}
+    <div class="game-card disabled">
+        {% endif %}
+        <div class="game-icon bg-red-light text-red">
+            <i class="ph-fill ph-heart"></i>
         </div>
+        <div class="game-info">
+            <h3>情书 {% if 'loveletters' not in loaded_apps %}<span class="status-badge">维护中</span>{% endif %}</h3>
+            <div class="desc">
+                <span>极简卡牌 · 逻辑盲猜</span>
+            </div>
+            {% if 'loveletters' in loaded_apps %}
+            <span class="cta">进入游戏 <i class="ph ph-caret-right"></i></span>
+            {% endif %}
+        </div>
+        {% if 'loveletters' in loaded_apps %}
+</a>{% else %}</div>{% endif %}
 
-        <footer class="apple-footer">
-            <p>Board Game Portal © 2026</p>
-        </footer>
+<!-- Cabo -->
+{% if 'cabo' in loaded_apps %}
+<a href="/cabo/" class="game-card">
+    {% else %}
+    <div class="game-card disabled">
+        {% endif %}
+        <div class="game-icon bg-orange-light text-orange">
+            <i class="ph-fill ph-magic-wand"></i>
+        </div>
+        <div class="game-info">
+            <h3>卡波 {% if 'cabo' not in loaded_apps %}<span class="status-badge">维护中</span>{% endif %}</h3>
+            <div class="desc">
+                <span>记忆博弈 · 极限换牌</span>
+            </div>
+            {% if 'cabo' in loaded_apps %}
+            <span class="cta">进入游戏 <i class="ph ph-caret-right"></i></span>
+            {% endif %}
+        </div>
+        {% if 'cabo' in loaded_apps %}
+</a>{% else %}</div>{% endif %}
 
+<!-- Flip7 -->
+{% if 'flip7' in loaded_apps %}
+<a href="/flip7/" class="game-card">
+    {% else %}
+    <div class="game-card disabled">
+        {% endif %}
+        <div class="game-icon bg-purple-light text-purple">
+            <i class="ph-fill ph-stack"></i>
+        </div>
+        <div class="game-info">
+            <h3>7连翻 {% if 'flip7' not in loaded_apps %}<span class="status-badge">维护中</span>{% endif %}</h3>
+            <div class="desc">
+                <span>拼手气 · 极限翻牌</span>
+            </div>
+            {% if 'flip7' in loaded_apps %}
+            <span class="cta">进入计分器 <i class="ph ph-caret-right"></i></span>
+            {% endif %}
+        </div>
+        {% if 'flip7' in loaded_apps %}
+</a>{% else %}</div>{% endif %}
+
+<!-- Modern Art -->
+{% if 'modernart' in loaded_apps %}
+<a href="/modernart/" class="game-card">
+    {% else %}
+    <div class="game-card disabled">
+        {% endif %}
+        <div class="game-icon bg-orange-light text-orange">
+            <i class="ph-fill ph-palette"></i>
+        </div>
+        <div class="game-info">
+            <h3>现代艺术 {% if 'modernart' not in loaded_apps %}<span class="status-badge">维护中</span>{% endif %}</h3>
+            <div class="desc">
+                <span>艺术品交易 · 竞拍博弈</span>
+            </div>
+            {% if 'modernart' in loaded_apps %}
+            <span class="cta">进入计分器 <i class="ph ph-caret-right"></i></span>
+            {% endif %}
+        </div>
+        {% if 'modernart' in loaded_apps %}
+</a>{% else %}</div>{% endif %}
+</div>
+
+<!-- Global Leaderboard -->
+{% if leaderboard %}
+<div class="section-title"
+    style="margin-top: var(--space-xl); margin-bottom: var(--space-md); font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+    🏆 全局成就榜
+</div>
+<div class="lb-card" style="margin-bottom: var(--space-xl);">
+    <div class="apple-table-wrap">
+        <table class="apple-table">
+            <thead>
+                <tr>
+                    <th>玩家</th>
+                    <th>总胜场</th>
+                    <th>游玩总局数</th>
+                    <th>综合胜率</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in leaderboard %}
+                <tr>
+                    <td style="font-weight: 600;">{{ player.name }}</td>
+                    <td class="text-blue fw-700">{{ player.total_wins }}</td>
+                    <td>{{ player.total_games }}</td>
+                    <td>
+                        {% if player.total_games > 0 %}
+                        {{ ((player.total_wins / player.total_games) * 100) | round(1) }}%
+                        {% else %}
+                        0%
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+</div>
+{% endif %}
 
-</body>
-
-</html>
+<footer class="apple-footer">
+    <p>Board Game Portal © 2026</p>
+</footer>
+{% endblock %}

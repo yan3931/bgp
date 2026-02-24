@@ -1,780 +1,676 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>记忆博弈 · 极限换牌</title>
-    <link href="/static/common.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            padding-bottom: 100px;
-        }
+{% block title %}卡波 - 记忆博弈 · 极限换牌{% endblock %}
 
-        /* ---- Page Hero ---- */
-        .lv-hero {
-            text-align: center;
-            padding: var(--space-2xl) 0 var(--space-lg);
-        }
+{% block extra_head %}
+<style>
+    body {
+        padding-bottom: 100px;
+    }
 
-        .lv-hero-emoji {
-            font-size: 4rem;
-            display: block;
-            margin-bottom: var(--space-md);
-        }
+    /* ---- Page Hero ---- */
+    .lv-hero {
+        text-align: center;
+        padding: var(--space-2xl) 0 var(--space-lg);
+    }
 
-        .lv-hero h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            letter-spacing: -0.04em;
-            background: linear-gradient(135deg, #00b894, #00cec9, #0984e3);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+    .lv-hero-emoji {
+        font-size: 4rem;
+        display: block;
+        margin-bottom: var(--space-md);
+    }
 
-        .lv-hero p {
-            font-size: 1.05rem;
-            color: var(--apple-gray);
-            font-weight: 500;
-            margin-top: 4px;
-        }
+    .lv-hero h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        background: linear-gradient(135deg, #00b894, #00cec9, #0984e3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-        .score-badge {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--apple-black);
-            line-height: 1;
-            letter-spacing: -0.04em;
-        }
+    .lv-hero p {
+        font-size: 1.05rem;
+        color: var(--apple-gray);
+        font-weight: 500;
+        margin-top: 4px;
+    }
 
-        .score-badge.danger {
-            color: var(--apple-red);
-        }
+    .score-badge {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--apple-black);
+        line-height: 1;
+        letter-spacing: -0.04em;
+    }
 
-        .bust-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--apple-red);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-top: 2px;
-        }
+    .score-badge.danger {
+        color: var(--apple-red);
+    }
 
-        .history-trail {
-            font-size: 0.8rem;
-            color: var(--apple-gray);
-            margin-top: 4px;
-            font-weight: 500;
-        }
+    .bust-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--apple-red);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 2px;
+    }
 
-        .rank-num {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: white;
-            flex-shrink: 0;
-            margin-right: var(--space-md);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
+    .history-trail {
+        font-size: 0.8rem;
+        color: var(--apple-gray);
+        margin-top: 4px;
+        font-weight: 500;
+    }
 
-        .rank-1 {
-            background: var(--apple-orange);
-            color: white;
-            box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
-        }
+    .rank-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+        margin-right: var(--space-md);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-        .rank-other {
-            background: var(--apple-gray-light);
-            color: var(--apple-gray);
-            box-shadow: none;
-        }
+    .rank-1 {
+        background: var(--apple-orange);
+        color: white;
+        box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+    }
 
-        .apple-sheet {
-            background: var(--apple-bg);
-            border-top-left-radius: var(--radius-xl);
-            border-top-right-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-        }
+    .rank-other {
+        background: var(--apple-gray-light);
+        color: var(--apple-gray);
+        box-shadow: none;
+    }
 
-        .sheet-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-lg);
-        }
+    .apple-sheet {
+        background: var(--apple-bg);
+        border-top-left-radius: var(--radius-xl);
+        border-top-right-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+    }
 
-        .sheet-header h4 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
+    .sheet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-lg);
+    }
 
-        .sheet-close {
-            width: 44px;
-            height: 44px;
-            border-radius: 22px;
-            background: rgba(0, 0, 0, 0.06);
-            border: none;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--apple-gray);
-            font-family: var(--font-family);
-            transition: background 0.2s;
-        }
+    .sheet-header h4 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
 
-        .sheet-close:hover {
-            background: rgba(0, 0, 0, 0.1);
-        }
+    .sheet-close {
+        width: 44px;
+        height: 44px;
+        border-radius: 22px;
+        background: rgba(0, 0, 0, 0.06);
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--apple-gray);
+        font-family: var(--font-family);
+        transition: background 0.2s;
+    }
 
-        .score-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px var(--space-md);
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-            background: var(--apple-white);
-            margin-bottom: 8px;
-            border-radius: 16px;
-        }
+    .sheet-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
 
-        .score-row:last-child {
-            border-bottom: none;
-        }
+    .score-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px var(--space-md);
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+        background: var(--apple-white);
+        margin-bottom: 8px;
+        border-radius: 16px;
+    }
 
-        .score-row label {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
+    .score-row:last-child {
+        border-bottom: none;
+    }
 
-        .score-row input {
-            width: 100px;
-            text-align: center;
-            font-size: 1.1rem;
-            font-weight: 600;
-            background: var(--apple-bg);
-            border: 1px solid var(--apple-gray-light);
-            border-radius: 12px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
-        }
+    .score-row label {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
 
-        .score-row input:focus {
-            background: #fff;
-            border-color: var(--apple-blue);
-            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
-        }
+    .score-row input {
+        width: 100px;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        background: var(--apple-bg);
+        border: 1px solid var(--apple-gray-light);
+        border-radius: 12px;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
 
-        .cabo-picker {
-            background: var(--apple-white);
-            border-radius: var(--radius-md);
-            padding: var(--space-lg);
-            margin-top: var(--space-lg);
-            border: 1px solid var(--apple-gray-light);
-        }
+    .score-row input:focus {
+        background: #fff;
+        border-color: var(--apple-blue);
+        box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+    }
 
-        .cabo-picker-label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: var(--space-sm);
-            display: block;
-            color: var(--apple-gray);
-        }
+    .cabo-picker {
+        background: var(--apple-white);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        margin-top: var(--space-lg);
+        border: 1px solid var(--apple-gray-light);
+    }
 
-        .cabo-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+    .cabo-picker-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: var(--space-sm);
+        display: block;
+        color: var(--apple-gray);
+    }
 
-        .cabo-chip {
-            font-family: var(--font-family);
-            padding: 10px 18px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            background: rgba(255, 255, 255, 0.8);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            color: var(--apple-black);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        }
+    .cabo-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 
-        .cabo-chip:active {
-            transform: scale(0.95);
-        }
+    .cabo-chip {
+        font-family: var(--font-family);
+        padding: 10px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.8);
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        color: var(--apple-black);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
 
-        .cabo-chip.active {
-            background: var(--apple-orange);
-            border-color: var(--apple-orange);
-            color: white;
-            box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
-            transform: translateY(-2px);
-        }
+    .cabo-chip:active {
+        transform: scale(0.95);
+    }
 
-        .cabo-chip.none-active {
-            background: var(--apple-gray);
-            border-color: var(--apple-gray);
-            color: white;
-            box-shadow: 0 4px 12px rgba(134, 134, 139, 0.3);
-            transform: translateY(-2px);
-        }
+    .cabo-chip.active {
+        background: var(--apple-orange);
+        border-color: var(--apple-orange);
+        color: white;
+        box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+        transform: translateY(-2px);
+    }
 
-        .cabo-chip.kamikaze-active {
-            background: var(--apple-red);
-            border-color: var(--apple-red);
-            color: white;
-            box-shadow: 0 4px 16px rgba(255, 59, 48, 0.4);
-            transform: translateY(-2px);
-        }
+    .cabo-chip.none-active {
+        background: var(--apple-gray);
+        border-color: var(--apple-gray);
+        color: white;
+        box-shadow: 0 4px 12px rgba(134, 134, 139, 0.3);
+        transform: translateY(-2px);
+    }
 
-        /* Game Over Overlay */
-        .gameover-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 20000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: var(--space-lg);
-        }
+    .cabo-chip.kamikaze-active {
+        background: var(--apple-red);
+        border-color: var(--apple-red);
+        color: white;
+        box-shadow: 0 4px 16px rgba(255, 59, 48, 0.4);
+        transform: translateY(-2px);
+    }
 
-        .gameover-card {
-            background: var(--apple-white);
-            border-radius: var(--radius-xl);
-            padding: var(--space-xl);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: var(--shadow-lg);
-            animation: popIn 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+    /* Game Over Overlay */
+    .gameover-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 20000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-lg);
+    }
 
-        @keyframes popIn {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
-            }
+    .gameover-card {
+        background: var(--apple-white);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: var(--shadow-lg);
+        animation: popIn 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .gameover-emoji {
-            font-size: 4rem;
-            margin-bottom: var(--space-md);
-            display: block;
-        }
-
-        .gameover-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin-bottom: var(--space-xs);
-        }
-
-        .gameover-subtitle {
-            font-size: 1rem;
-            color: var(--apple-gray);
-            font-weight: 500;
-            margin-bottom: var(--space-lg);
-        }
-
-        .gameover-results {
-            text-align: left;
-            margin-bottom: var(--space-lg);
-        }
-
-        .gameover-player {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            border-radius: 14px;
-            margin-bottom: 6px;
-            background: rgba(0, 0, 0, 0.03);
-        }
-
-        .gameover-player.winner {
-            background: rgba(255, 149, 0, 0.1);
-            border: 1px solid rgba(255, 149, 0, 0.2);
-        }
-
-        .gameover-player-name {
-            font-weight: 600;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .gameover-player-score {
-            font-weight: 800;
-            font-size: 1.2rem;
-            letter-spacing: -0.02em;
-        }
-
-        .gameover-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        /* Leaderboard section */
-        .section-title {
-            font-size: 1.4rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin-bottom: var(--space-md);
-            margin-top: var(--space-xl);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .lb-empty {
-            text-align: center;
-            padding: var(--space-xl);
-            color: var(--apple-gray);
-        }
-
-        .lb-empty-icon {
-            font-size: 2.5rem;
-            margin-bottom: var(--space-sm);
-            opacity: 0.3;
-        }
-
-        .lb-item {
-            display: flex;
-            align-items: center;
-            padding: 16px var(--space-lg);
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .lb-item:last-child {
-            border-bottom: none;
-        }
-
-        .lb-rank {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 700;
-            flex-shrink: 0;
-            margin-right: var(--space-md);
-        }
-
-        .lb-rank-1 {
-            background: var(--apple-orange);
-            color: white;
-            box-shadow: 0 3px 10px rgba(255, 170, 0, 0.3);
-        }
-
-        .lb-rank-2 {
-            background: #a0aec0;
-            color: white;
-        }
-
-        .lb-rank-3 {
-            background: var(--apple-brown);
-            color: white;
-        }
-
-        .lb-rank-default {
-            background: rgba(0, 0, 0, 0.05);
-            color: var(--apple-gray);
-        }
-
-        .lb-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .lb-name {
-            font-weight: 600;
-            font-size: 1rem;
-            color: var(--apple-black);
-        }
-
-        .lb-meta {
-            font-size: 0.78rem;
-            color: var(--apple-gray);
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        .lb-scores {
-            text-align: right;
-            flex-shrink: 0;
-            margin-left: var(--space-md);
-        }
-
-        .lb-avg {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--apple-blue);
-            letter-spacing: -0.03em;
-            line-height: 1;
-        }
-
-        .lb-last {
-            font-size: 0.75rem;
-            color: var(--apple-gray);
-            font-weight: 500;
-            margin-top: 3px;
-        }
-
-        /* Vue Transitions */
-        .slide-up-enter-active,
-        .slide-up-leave-active {
-            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .slide-up-enter-from,
-        .slide-up-leave-to {
-            opacity: 0;
-            transform: translateY(100%);
-        }
-
-        .fade-enter-active,
-        .fade-leave-active {
-            transition: opacity 0.35s ease;
-        }
-
-        .fade-enter-from,
-        .fade-leave-to {
+    @keyframes popIn {
+        from {
+            transform: scale(0.8);
             opacity: 0;
         }
-    </style>
-</head>
 
-<body>
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
 
-    <div id="app" v-cloak>
+    .gameover-emoji {
+        font-size: 4rem;
+        margin-bottom: var(--space-md);
+        display: block;
+    }
 
-        <!-- Nav -->
-        <nav class="apple-nav">
-            <div class="apple-nav-content" style="min-height: 44px;">
-                <a href="/" class="apple-nav-back" style="min-height: 44px;"><i class="fas fa-chevron-left"></i> 首页</a>
-                <span class="apple-nav-title"><i class="fas fa-hat-wizard" style="color: var(--apple-orange);"></i>
-                    Cabo</span>
-                <div class="apple-nav-action">
-                    <button class="apple-btn apple-btn-sm apple-btn-secondary" style="min-height: 44px;"
-                        @click="resetGame">重置</button>
-                </div>
-            </div>
-        </nav>
+    .gameover-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: var(--space-xs);
+    }
 
-        <div class="apple-container" style="padding-top: var(--space-md);">
+    .gameover-subtitle {
+        font-size: 1rem;
+        color: var(--apple-gray);
+        font-weight: 500;
+        margin-bottom: var(--space-lg);
+    }
 
-            <!-- Hero -->
-            <div class="lv-hero">
-                <span class="lv-hero-emoji">🦄</span>
-                <h1>卡波</h1>
-                <p>记忆博弈 · 极限换牌</p>
-            </div>
+    .gameover-results {
+        text-align: left;
+        margin-bottom: var(--space-lg);
+    }
 
-            <!-- Add Player -->
-            <div class="apple-card mb-md">
-                <div class="apple-input-group">
-                    <input v-model="newPlayerName" class="apple-input" placeholder="输入玩家名字" @keyup.enter="addPlayer">
-                    <button class="apple-btn apple-btn-primary" @click="addPlayer"><i class="fas fa-plus"></i></button>
-                </div>
-            </div>
+    .gameover-player {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-radius: 14px;
+        margin-bottom: 6px;
+        background: rgba(0, 0, 0, 0.03);
+    }
 
-            <!-- Players List -->
-            <div class="apple-list mb-md">
-                <div class="apple-list-header d-flex justify-between">
-                    <span>排行榜 ({{ roundCount }} 轮)</span>
-                    <span v-if="gameStatus === 'active'">Round {{ roundCount + 1 }}</span>
-                    <span v-else class="text-red fw-700">已结束</span>
-                </div>
+    .gameover-player.winner {
+        background: rgba(255, 149, 0, 0.1);
+        border: 1px solid rgba(255, 149, 0, 0.2);
+    }
 
-                <div v-if="players.length === 0" class="text-center text-muted" style="padding: var(--space-xl);">
-                    请添加玩家开始计分
-                </div>
+    .gameover-player-name {
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-                <div v-for="(p, idx) in players" :key="p.name" class="apple-list-item"
-                    :style="!p.is_safe ? 'opacity: 0.45;' : ''">
-                    <div class="rank-num" :class="idx===0 && roundCount>0 ? 'rank-1' : 'rank-other'">{{ idx+1 }}</div>
-                    <div class="apple-list-item-content">
-                        <div class="apple-list-item-title">{{ p.name }}</div>
-                        <div class="history-trail">{{ p.history.join(' + ') }}</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div class="score-badge" :class="{'danger': p.total_score > 100}">{{ p.total_score }}</div>
-                        <div v-if="!p.is_safe" class="bust-label">爆!</div>
-                    </div>
-                </div>
-            </div>
+    .gameover-player-score {
+        font-weight: 800;
+        font-size: 1.2rem;
+        letter-spacing: -0.02em;
+    }
 
-            <!-- FAB: Score Button -->
-            <div class="apple-fab" v-if="gameStatus === 'active'">
-                <button class="apple-btn apple-btn-primary apple-btn-lg"
-                    style="width: 260px; box-shadow: 0 8px 24px rgba(0,113,227,0.3); border-radius: 30px;"
-                    @click="showInput=true" :disabled="players.length<2">
-                    <i class="fas fa-pen" style="margin-right:8px;"></i> 记分
-                </button>
-            </div>
+    .gameover-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-            <!-- ===== LEADERBOARD SECTION (inline below game) ===== -->
-            <div id="inline-leaderboard-section">
-                <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
-                </div>
-                <div class="hist-lb-card">
-                    <div id="histLeaderboard">
-                        <div v-if="leaderboard.length === 0" class="empty-state">
-                            <span class="empty-icon">👻</span>
-                            还没人玩过呢，快去开一局！
-                        </div>
-                        <div v-else>
-                            <div class="hist-lb-header">
-                                <span>#</span>
-                                <span>玩家</span>
-                                <span style="text-align:right">统计</span>
-                                <span style="text-align:right">均分</span>
-                                <span style="text-align:right">上局</span>
-                            </div>
-                            <div v-for="(item, idx) in leaderboard" :key="item.name" class="hist-lb-row">
-                                <span class="lb-rank" :class="{gold: idx===0, silver: idx===1, bronze: idx===2}">{{ idx
-                                    === 0 ? '👑' : (idx===1 ? '2' : (idx===2 ? '3' : idx+1)) }}</span>
-                                <span class="lb-name">{{ item.name }}</span>
-                                <span
-                                    style="text-align:right; font-weight:700; color:var(--apple-gray); font-size: 0.95rem;">{{
-                                    item.total_games }}局 · 胜率{{ item.win_rate }}%</span>
-                                <span class="lb-amount" style="color:var(--apple-green);">{{ item.avg_score }}</span>
-                                <span class="lb-bills" style="font-weight:700; color:var(--apple-gray);">{{
-                                    item.last_score !== null ? item.last_score : '--' }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    /* Leaderboard section */
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: var(--space-md);
+        margin-top: var(--space-xl);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-            <!-- Input Sheet -->
-            <transition name="slide-up">
-                <div v-if="showInput" class="apple-sheet" style="animation: none;">
-                    <div class="apple-sheet-handle"></div>
 
-                    <div class="sheet-header">
-                        <h4 style="margin:0;">录入分数 · 第 {{ roundCount+1 }} 轮</h4>
-                        <button class="sheet-close" @click="showInput=false">✕</button>
-                    </div>
 
-                    <div style="flex: 1; overflow-y: auto;">
-                        <!-- Kamikaze Picker (at top) -->
-                        <div class="cabo-picker" style="margin-top: 0;">
-                            <span class="cabo-picker-label">神风特攻队</span>
-                            <div class="cabo-chips">
-                                <button class="cabo-chip" :class="{'none-active': kamikazePlayer === null}"
-                                    @click="clearKamikaze">无</button>
-                                <button v-for="p in players" class="cabo-chip"
-                                    :class="{'kamikaze-active': kamikazePlayer===p.name}"
-                                    @click="setKamikaze(p.name)">💀 {{ p.name }}</button>
-                            </div>
-                        </div>
+    /* Vue Transitions */
+    .slide-up-enter-active,
+    .slide-up-leave-active {
+        transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-                        <!-- Kamikaze active hint -->
-                        <div v-if="kamikazePlayer" class="apple-alert apple-alert-danger"
-                            style="margin-top: var(--space-md); border-radius: 14px;">
-                            💀 <strong>{{ kamikazePlayer }}</strong> 触发神风特攻队！得 0 分，其他人各 +50 分
-                        </div>
+    .slide-up-enter-from,
+    .slide-up-leave-to {
+        opacity: 0;
+        transform: translateY(100%);
+    }
 
-                        <!-- Score inputs (hidden when kamikaze) -->
-                        <template v-if="kamikazePlayer === null">
-                            <div v-for="p in players" :key="'in-'+p.name" class="score-row">
-                                <label>{{ p.name }}</label>
-                                <input type="number" v-model.number="inputs[p.name]" class="apple-input"
-                                    style="width: 100px; text-align: center; padding: 12px;" placeholder="0">
-                            </div>
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 0.35s ease;
+    }
 
-                            <!-- Cabo Picker -->
-                            <div class="cabo-picker">
-                                <span class="cabo-picker-label">谁喊了 Cabo?</span>
-                                <div class="cabo-chips">
-                                    <button class="cabo-chip" :class="{'none-active': caboCaller===null}"
-                                        @click="caboCaller=null">无 / 摸牌结束</button>
-                                    <button v-for="p in players" class="cabo-chip"
-                                        :class="{'active': caboCaller===p.name}" @click="caboCaller=p.name">{{ p.name
-                                        }}</button>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
+    }
+</style>
+{% endblock %}
 
-                    <div class="mt-lg">
-                        <button class="apple-btn apple-btn-success apple-btn-block apple-btn-lg"
-                            style="box-shadow: 0 8px 24px rgba(52,199,89,0.3); border-radius: 20px;"
-                            @click="submitRound">确认提交</button>
-                    </div>
-                </div>
-            </transition>
+{% block nav_title %}
+<i class="ph-fill ph-magic-wand text-orange" style="margin-right: 4px;"></i> 卡波
+{% endblock %}
 
-            <!-- Game Over Overlay -->
-            <transition name="fade">
-                <div v-if="showGameOver" class="gameover-overlay" @click.self="showGameOver=false">
-                    <div class="gameover-card">
-                        <span class="gameover-emoji">🏆</span>
-                        <div class="gameover-title">游戏结束!</div>
-                        <div class="gameover-subtitle">恭喜 <strong>{{ gameOverWinner }}</strong> 获胜</div>
+{% block nav_right %}
+<button class="apple-btn apple-btn-sm apple-btn-secondary" style="min-height: 44px;" @click="resetGame">重置</button>
+{% endblock %}
 
-                        <div class="gameover-results">
-                            <div v-for="(p, idx) in players" :key="'go-'+p.name" class="gameover-player"
-                                :class="{'winner': p.name === gameOverWinner}">
-                                <div class="gameover-player-name">
-                                    <span v-if="p.name === gameOverWinner">👑</span>
-                                    <span>{{ p.name }}</span>
-                                </div>
-                                <div class="gameover-player-score"
-                                    :style="p.name === gameOverWinner ? 'color: var(--apple-orange)' : (!p.is_safe ? 'color: var(--apple-red)' : '')">
-                                    {{ p.total_score }}
-                                </div>
-                            </div>
-                        </div>
+{% block content %}
+{% raw %}
+<div id="app" v-cloak>
+    <!-- Hero -->
+    <div class="lv-hero">
+        <span class="lv-hero-emoji">🦄</span>
+        <h1>卡波</h1>
+        <p>记忆博弈 · 极限换牌</p>
+    </div>
 
-                        <div class="gameover-actions">
-                            <button class="apple-btn apple-btn-primary apple-btn-block apple-btn-lg"
-                                style="border-radius: 16px;" @click="showGameOver=false;">
-                                <i class="fas fa-check" style="margin-right: 6px;"></i> 确认
-                            </button>
-                            <button class="apple-btn apple-btn-secondary apple-btn-block apple-btn-lg"
-                                style="border-radius: 16px;" @click="resetGame(); showGameOver=false;">
-                                <i class="fas fa-redo" style="margin-right: 6px;"></i> 新游戏
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </transition>
-
-            <footer class="apple-footer">
-                <p>Cabo © 2026</p>
-            </footer>
+    <!-- Add Player -->
+    <div class="apple-card mb-md">
+        <div class="apple-input-group">
+            <input v-model="newPlayerName" class="apple-input" placeholder="输入玩家名字" @keyup.enter="addPlayer">
+            <button class="apple-btn apple-btn-primary" @click="addPlayer"><i class="ph-bold ph-plus"></i></button>
         </div>
     </div>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script>
-        const {
-            createApp
-        } = Vue;
-        createApp({
-            data() {
-                return {
-                    players: [],
-                    roundCount: 0,
-                    gameStatus: 'active',
-                    newPlayerName: '',
-                    showInput: false,
-                    inputs: {},
-                    caboCaller: null,
-                    kamikazePlayer: null,
-                    leaderboard: [],
-                    showGameOver: false,
-                    gameOverWinner: ''
+    <!-- Players List -->
+    <div class="apple-list mb-md">
+        <div class="apple-list-header d-flex justify-between">
+            <span>排行榜 ({{ roundCount }} 轮)</span>
+            <span v-if="gameStatus === 'active'">Round {{ roundCount + 1 }}</span>
+            <span v-else class="text-red fw-700">已结束</span>
+        </div>
+
+        <div v-if="players.length === 0" class="text-center text-muted" style="padding: var(--space-xl);">
+            请添加玩家开始计分
+        </div>
+
+        <div v-for="(p, idx) in players" :key="p.name" class="apple-list-item"
+            :style="!p.is_safe ? 'opacity: 0.45;' : ''">
+            <div class="rank-num" :class="idx===0 && roundCount>0 ? 'rank-1' : 'rank-other'">{{ idx+1 }}</div>
+            <div class="apple-list-item-content">
+                <div class="apple-list-item-title">{{ p.name }}</div>
+                <div class="history-trail">{{ p.history.join(' + ') }}</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="score-badge" :class="{'danger': p.total_score > 100}">{{ p.total_score }}</div>
+                <div v-if="!p.is_safe" class="bust-label">爆!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAB: Score Button -->
+    <div class="apple-fab" v-if="gameStatus === 'active'">
+        <button class="apple-btn apple-btn-primary apple-btn-lg"
+            style="width: 260px; box-shadow: 0 8px 24px rgba(0,113,227,0.3); border-radius: 30px;"
+            @click="showInput=true" :disabled="players.length<2">
+            <i class="ph-bold ph-pencil-simple" style="margin-right:8px;"></i> 记分
+        </button>
+    </div>
+
+    <!-- ===== LEADERBOARD SECTION (inline below game) ===== -->
+    <div id="inline-leaderboard-section">
+        <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
+        </div>
+        <div class="apple-list mb-xl">
+            <div v-if="leaderboard.length === 0" class="text-center text-muted" style="padding: var(--space-xl);">
+                <div class="empty-state">
+                    <span class="empty-icon">👻</span>
+                    还没人玩过呢，快去开一局！
+                </div>
+            </div>
+            <div v-else>
+                <div v-for="(item, idx) in leaderboard" :key="item.name" class="apple-list-item">
+                    <div class="rank-num"
+                        :class="idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : 'rank-other'))">
+                        {{ idx === 0 ? '👑' : idx + 1 }}
+                    </div>
+
+                    <div class="apple-list-item-content">
+                        <div class="apple-list-item-title">{{ item.name }}</div>
+                        <div class="history-trail">{{ item.total_games }}局 · 胜率{{ item.win_rate }}%</div>
+                    </div>
+
+                    <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
+                        <div style="text-align: right;">
+                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">均分</div>
+                            <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);">{{
+                                item.avg_score }}</div>
+                        </div>
+                        <div style="text-align: right; width: 40px;">
+                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">上局</div>
+                            <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">{{
+                                item.last_score !== null ? item.last_score : '--' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Sheet -->
+    <transition name="slide-up">
+        <div v-if="showInput" class="apple-sheet" style="animation: none;">
+            <div class="apple-sheet-handle"></div>
+
+            <div class="sheet-header">
+                <h4 style="margin:0;">录入分数 · 第 {{ roundCount+1 }} 轮</h4>
+                <button class="sheet-close" @click="showInput=false">✕</button>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto;">
+                <!-- Kamikaze Picker (at top) -->
+                <div class="cabo-picker" style="margin-top: 0;">
+                    <span class="cabo-picker-label">神风特攻队</span>
+                    <div class="cabo-chips">
+                        <button class="cabo-chip" :class="{'none-active': kamikazePlayer === null}"
+                            @click="clearKamikaze">无</button>
+                        <button v-for="p in players" class="cabo-chip"
+                            :class="{'kamikaze-active': kamikazePlayer===p.name}" @click="setKamikaze(p.name)">💀 {{
+                            p.name }}</button>
+                    </div>
+                </div>
+
+                <!-- Kamikaze active hint -->
+                <div v-if="kamikazePlayer" class="apple-alert apple-alert-danger"
+                    style="margin-top: var(--space-md); border-radius: 14px;">
+                    💀 <strong>{{ kamikazePlayer }}</strong> 触发神风特攻队！得 0 分，其他人各 +50 分
+                </div>
+
+                <!-- Score inputs (hidden when kamikaze) -->
+                <template v-if="kamikazePlayer === null">
+                    <div v-for="p in players" :key="'in-'+p.name" class="score-row">
+                        <label>{{ p.name }}</label>
+                        <input type="number" v-model.number="inputs[p.name]" class="apple-input"
+                            style="width: 100px; text-align: center; padding: 12px;" placeholder="0">
+                    </div>
+
+                    <!-- Cabo Picker -->
+                    <div class="cabo-picker">
+                        <span class="cabo-picker-label">谁喊了 Cabo?</span>
+                        <div class="cabo-chips">
+                            <button class="cabo-chip" :class="{'none-active': caboCaller===null}"
+                                @click="caboCaller=null">无 / 摸牌结束</button>
+                            <button v-for="p in players" class="cabo-chip" :class="{'active': caboCaller===p.name}"
+                                @click="caboCaller=p.name">{{ p.name
+                                }}</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="mt-lg">
+                <button class="apple-btn apple-btn-success apple-btn-block apple-btn-lg"
+                    style="box-shadow: 0 8px 24px rgba(52,199,89,0.3); border-radius: 20px;"
+                    @click="submitRound">确认提交</button>
+            </div>
+        </div>
+    </transition>
+
+    <!-- Game Over Overlay -->
+    <transition name="fade">
+        <div v-if="showGameOver" class="gameover-overlay" @click.self="showGameOver=false">
+            <div class="gameover-card">
+                <span class="gameover-emoji">🏆</span>
+                <div class="gameover-title">游戏结束!</div>
+                <div class="gameover-subtitle">恭喜 <strong>{{ gameOverWinner }}</strong> 获胜</div>
+
+                <div class="gameover-results">
+                    <div v-for="(p, idx) in players" :key="'go-'+p.name" class="gameover-player"
+                        :class="{'winner': p.name === gameOverWinner}">
+                        <div class="gameover-player-name">
+                            <span v-if="p.name === gameOverWinner">👑</span>
+                            <span>{{ p.name }}</span>
+                        </div>
+                        <div class="gameover-player-score"
+                            :style="p.name === gameOverWinner ? 'color: var(--apple-orange)' : (!p.is_safe ? 'color: var(--apple-red)' : '')">
+                            {{ p.total_score }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gameover-actions">
+                    <button class="apple-btn apple-btn-primary apple-btn-block apple-btn-lg"
+                        style="border-radius: 16px;" @click="showGameOver=false;">
+                        <i class="ph-bold ph-check" style="margin-right: 6px;"></i> 确认
+                    </button>
+                    <button class="apple-btn apple-btn-secondary apple-btn-block apple-btn-lg"
+                        style="border-radius: 16px;" @click="resetGame(); showGameOver=false;">
+                        <i class="ph-bold ph-arrow-clockwise" style="margin-right: 6px;"></i> 新游戏
+                    </button>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+</div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const {
+        createApp
+    } = Vue;
+    createApp({
+        data() {
+            return {
+                players: [],
+                roundCount: 0,
+                gameStatus: 'active',
+                newPlayerName: '',
+                showInput: false,
+                inputs: {},
+                caboCaller: null,
+                kamikazePlayer: null,
+                leaderboard: [],
+                showGameOver: false,
+                gameOverWinner: ''
+            }
+        },
+        mounted() {
+            this.refresh();
+            this.fetchLeaderboard();
+        },
+        methods: {
+            async refresh() {
+                try {
+                    const res = await axios.get('/cabo/api/status');
+                    this.players = res.data.players;
+                    this.roundCount = res.data.round_count;
+                    this.gameStatus = res.data.game_status || 'active';
+                } catch (e) { }
+            },
+            async fetchLeaderboard() {
+                try {
+                    const res = await axios.get('/cabo/api/leaderboard');
+                    this.leaderboard = res.data;
+                } catch (e) { }
+            },
+            async addPlayer() {
+                if (!this.newPlayerName.trim()) return;
+                try {
+                    await axios.post('/cabo/api/add_player', {
+                        name: this.newPlayerName
+                    });
+                    this.newPlayerName = '';
+                    this.refresh();
+                } catch (e) {
+                    alert("添加失败");
                 }
             },
-            mounted() {
-                this.refresh();
-                this.fetchLeaderboard();
+            async resetGame() {
+                if (!confirm("清空重置？")) return;
+                try {
+                    await axios.post('/cabo/api/reset');
+                    this.gameStatus = 'active';
+                    this.showGameOver = false;
+                    this.refresh();
+                } catch (e) { }
             },
-            methods: {
-                async refresh() {
-                    try {
-                        const res = await axios.get('/cabo/api/status');
-                        this.players = res.data.players;
-                        this.roundCount = res.data.round_count;
-                        this.gameStatus = res.data.game_status || 'active';
-                    } catch (e) { }
-                },
-                async fetchLeaderboard() {
-                    try {
-                        const res = await axios.get('/cabo/api/leaderboard');
-                        this.leaderboard = res.data;
-                    } catch (e) { }
-                },
-                async addPlayer() {
-                    if (!this.newPlayerName.trim()) return;
-                    try {
-                        await axios.post('/cabo/api/add_player', {
-                            name: this.newPlayerName
-                        });
-                        this.newPlayerName = '';
-                        this.refresh();
-                    } catch (e) {
-                        alert("添加失败");
-                    }
-                },
-                async resetGame() {
-                    if (!confirm("清空重置？")) return;
-                    try {
-                        await axios.post('/cabo/api/reset');
-                        this.gameStatus = 'active';
-                        this.showGameOver = false;
-                        this.refresh();
-                    } catch (e) { }
-                },
-                setKamikaze(name) {
-                    this.kamikazePlayer = name;
+            setKamikaze(name) {
+                this.kamikazePlayer = name;
+                this.caboCaller = null;
+            },
+            clearKamikaze() {
+                this.kamikazePlayer = null;
+            },
+            async submitRound() {
+                // Fill missing inputs (only needed for normal scoring)
+                if (!this.kamikazePlayer) {
+                    this.players.forEach(p => {
+                        if (this.inputs[p.name] === undefined) this.inputs[p.name] = 0;
+                    });
+                }
+
+                const payload = {
+                    raw_scores: this.kamikazePlayer ? {} : this.inputs,
+                    cabo_caller: this.kamikazePlayer ? null : this.caboCaller,
+                    kamikaze_player: this.kamikazePlayer || null
+                };
+
+                try {
+                    const res = await axios.post('/cabo/api/submit_round', payload);
+                    this.showInput = false;
+                    this.inputs = {};
                     this.caboCaller = null;
-                },
-                clearKamikaze() {
                     this.kamikazePlayer = null;
-                },
-                async submitRound() {
-                    // Fill missing inputs (only needed for normal scoring)
-                    if (!this.kamikazePlayer) {
-                        this.players.forEach(p => {
-                            if (this.inputs[p.name] === undefined) this.inputs[p.name] = 0;
-                        });
+
+                    if (res.data.status === 'game_over') {
+                        this.gameOverWinner = res.data.winner;
+                        await this.refresh();
+                        await this.fetchLeaderboard();
+                        this.showGameOver = true;
+                    } else {
+                        this.refresh();
                     }
-
-                    const payload = {
-                        raw_scores: this.kamikazePlayer ? {} : this.inputs,
-                        cabo_caller: this.kamikazePlayer ? null : this.caboCaller,
-                        kamikaze_player: this.kamikazePlayer || null
-                    };
-
-                    try {
-                        const res = await axios.post('/cabo/api/submit_round', payload);
-                        this.showInput = false;
-                        this.inputs = {};
-                        this.caboCaller = null;
-                        this.kamikazePlayer = null;
-
-                        if (res.data.status === 'game_over') {
-                            this.gameOverWinner = res.data.winner;
-                            await this.refresh();
-                            await this.fetchLeaderboard();
-                            this.showGameOver = true;
-                        } else {
-                            this.refresh();
-                        }
-                    } catch (e) {
-                        alert("提交失败");
-                    }
+                } catch (e) {
+                    alert("提交失败");
                 }
             }
-        }).mount('#app');
-    </script>
-</body>
-
-</html>
+        }
+    }).mount('#app');
+</script>
+{% endraw %}
+{% endblock %}

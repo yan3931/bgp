@@ -1,995 +1,966 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Modern Art 助手</title>
-    <link href="/static/common.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --ma-yellow: var(--apple-yellow, #FFCC00);
-            /* Manuel Carvalho */
-            --ma-blue: var(--apple-blue, #007AFF);
-            /* Sigrid Thaler */
-            --ma-red: var(--apple-red, #FF3B30);
-            /* Daniel Melim */
-            --ma-green: var(--apple-green, #34C759);
-            /* Ramon Martins */
-            --ma-orange: var(--apple-orange, #FF9500);
-            /* Rafael Silveira */
-            --ma-bg: var(--apple-bg, #F2F2F7);
-        }
+{% block title %}现代艺术 - 助手{% endblock %}
 
-        body {
-            background-color: var(--ma-bg);
-            padding-bottom: 80px;
-        }
+{% block extra_head %}
+<style>
+    :root {
+        --ma-yellow: var(--apple-yellow, #FFCC00);
+        /* Manuel Carvalho */
+        --ma-blue: var(--apple-blue, #007AFF);
+        /* Sigrid Thaler */
+        --ma-red: var(--apple-red, #FF3B30);
+        /* Daniel Melim */
+        --ma-green: var(--apple-green, #34C759);
+        /* Ramon Martins */
+        --ma-orange: var(--apple-orange, #FF9500);
+        /* Rafael Silveira */
+        --ma-bg: var(--apple-bg, #F2F2F7);
+    }
 
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: var(--space-md);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    body {
+        background-color: var(--ma-bg);
+        padding-bottom: 80px;
+    }
 
-        .round-display {
-            background: rgba(142, 142, 147, 0.1);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: var(--apple-gray);
-            font-weight: 600;
-            margin-left: auto;
-        }
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: var(--space-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-        /* Setup Screen */
-        #setup-screen {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+    .round-display {
+        background: rgba(142, 142, 147, 0.1);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: var(--apple-gray);
+        font-weight: 600;
+        margin-left: auto;
+    }
+
+    /* Setup Screen */
+    #setup-screen {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
 
 
 
-        /* ---- Section Titles ---- */
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--apple-black);
-            margin-bottom: var(--space-md);
-            letter-spacing: -0.02em;
-        }
+    /* ---- Section Titles ---- */
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--apple-black);
+        margin-bottom: var(--space-md);
+        letter-spacing: -0.02em;
+    }
 
-        /* ---- Historical Leaderboard (Las Vegas Style) ---- */
-        .hist-lb-card {
-            background: var(--apple-white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card);
-            overflow: hidden;
-            margin-bottom: var(--space-lg);
-            transition: all var(--transition-normal);
-        }
+    /* ---- Historical Leaderboard (Las Vegas Style) ---- */
+    .hist-lb-card {
+        background: var(--apple-white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        margin-bottom: var(--space-lg);
+        transition: all var(--transition-normal);
+    }
 
-        .hist-lb-header {
-            display: grid;
-            padding: 12px var(--space-lg);
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--apple-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            background: var(--apple-bg);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            grid-template-columns: 40px 1fr 60px 80px 80px;
-        }
+    .hist-lb-header {
+        display: grid;
+        padding: 12px var(--space-lg);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--apple-gray);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: var(--apple-bg);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        grid-template-columns: 40px 1fr 60px 80px 80px;
+    }
 
-        .hist-lb-row {
-            display: grid;
-            align-items: center;
-            padding: 16px var(--space-lg);
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-            transition: background var(--transition-fast);
-            grid-template-columns: 40px 1fr 60px 80px 80px;
-        }
+    .hist-lb-row {
+        display: grid;
+        align-items: center;
+        padding: 16px var(--space-lg);
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+        transition: background var(--transition-fast);
+        grid-template-columns: 40px 1fr 60px 80px 80px;
+    }
 
-        .hist-lb-row:last-child {
-            border-bottom: none;
-        }
+    .hist-lb-row:last-child {
+        border-bottom: none;
+    }
 
-        .hist-lb-row:hover {
-            background: rgba(0, 0, 0, 0.02);
-        }
+    .hist-lb-row:hover {
+        background: rgba(0, 0, 0, 0.02);
+    }
 
-        .lb-rank {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--apple-gray);
-        }
+    .lb-rank {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--apple-gray);
+    }
 
-        .lb-rank.gold {
-            color: var(--apple-orange);
-            font-size: 1.15rem;
-        }
+    .lb-rank.gold {
+        color: var(--apple-orange);
+        font-size: 1.15rem;
+    }
 
-        .lb-rank.silver {
-            color: #a0aec0;
-            font-size: 1.15rem;
-        }
+    .lb-rank.silver {
+        color: #a0aec0;
+        font-size: 1.15rem;
+    }
 
-        .lb-rank.bronze {
-            color: var(--apple-brown);
-            font-size: 1.15rem;
-        }
+    .lb-rank.bronze {
+        color: var(--apple-brown);
+        font-size: 1.15rem;
+    }
 
-        .lb-name {
-            font-weight: 700;
-            font-size: 1.05rem;
-        }
+    .lb-name {
+        font-weight: 700;
+        font-size: 1.05rem;
+    }
 
-        .lb-amount {
-            font-weight: 700;
-            font-size: 1.15rem;
-            color: var(--apple-blue);
-            text-align: right;
-        }
+    .lb-amount {
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--apple-blue);
+        text-align: right;
+    }
 
-        .lb-bills {
-            text-align: right;
-            font-size: 0.9rem;
-        }
+    .lb-bills {
+        text-align: right;
+        font-size: 0.9rem;
+    }
 
-        /* Game Screen */
-        #game-screen {
-            display: none;
-        }
+    /* Game Screen */
+    #game-screen {
+        display: none;
+    }
 
-        /* Player Grid */
-        .player-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-            margin-bottom: var(--space-xl);
-        }
+    /* Player Grid */
+    .player-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: var(--space-xl);
+    }
 
-        .player-card {
-            background: var(--apple-white);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            box-shadow: var(--shadow-sm);
-            border: 2px solid transparent;
-            transition: all 0.2s;
-        }
+    .player-card {
+        background: var(--apple-white);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        box-shadow: var(--shadow-sm);
+        border: 2px solid transparent;
+        transition: all 0.2s;
+    }
 
-        .player-card.active-seller {
-            border-color: var(--apple-blue);
-            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
-        }
+    .player-card.active-seller {
+        border-color: var(--apple-blue);
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+    }
 
-        .player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
+    .player-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
 
-        .player-name {
-            font-weight: 700;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .player-name {
+        font-weight: 700;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-        .player-money {
-            font-weight: 800;
-            font-size: 1.25rem;
-            color: var(--apple-green);
-            background: rgba(52, 199, 89, 0.1);
-            padding: 4px 10px;
-            border-radius: 8px;
-        }
+    .player-money {
+        font-weight: 800;
+        font-size: 1.25rem;
+        color: var(--apple-green);
+        background: rgba(52, 199, 89, 0.1);
+        padding: 4px 10px;
+        border-radius: 8px;
+    }
 
-        .portfolio-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+    .portfolio-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 
-        .portfolio-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 6px;
-            color: white;
-            min-width: 40px;
-            justify-content: center;
-        }
+    .portfolio-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 6px;
+        color: white;
+        min-width: 40px;
+        justify-content: center;
+    }
 
-        /* Artist Colors */
-        .artist-yellow {
-            background-color: var(--ma-yellow);
-            color: rgba(0, 0, 0, 0.8);
-            /* Ensures contrast on yellow regardless of theme */
-        }
+    /* Artist Colors */
+    .artist-yellow {
+        background-color: var(--ma-yellow);
+        color: rgba(0, 0, 0, 0.8);
+        /* Ensures contrast on yellow regardless of theme */
+    }
 
-        .artist-blue {
-            background-color: var(--ma-blue);
-        }
+    .artist-blue {
+        background-color: var(--ma-blue);
+    }
 
-        .artist-red {
-            background-color: var(--ma-red);
-        }
+    .artist-red {
+        background-color: var(--ma-red);
+    }
 
-        .artist-green {
-            background-color: var(--ma-green);
-        }
+    .artist-green {
+        background-color: var(--ma-green);
+    }
 
-        .artist-orange {
-            background-color: var(--ma-orange);
-        }
+    .artist-orange {
+        background-color: var(--ma-orange);
+    }
 
-        /* Market Section */
+    /* Market Section */
+    .market-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+        margin-bottom: var(--space-xl);
+    }
+
+    .artist-card {
+        background: var(--apple-white);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    @media (max-width: 600px) {
         .market-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 16px;
-            margin-bottom: var(--space-xl);
+            grid-template-columns: repeat(2, 1fr);
         }
 
-        .artist-card {
-            background: var(--apple-white);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            text-align: center;
-            box-shadow: var(--shadow-sm);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .artist-card:last-child {
+            grid-column: span 2;
         }
+    }
 
-        @media (max-width: 600px) {
-            .market-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+    .artist-color-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+    }
 
-            .artist-card:last-child {
-                grid-column: span 2;
-            }
-        }
+    .artist-name {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--apple-gray);
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
-        .artist-color-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 6px;
-        }
+    .artist-count {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
 
-        .artist-name {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--apple-gray);
-            margin-top: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+    .artist-history {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+        flex-wrap: wrap;
+        min-height: 20px;
+    }
 
-        .artist-count {
-            font-size: 2rem;
-            font-weight: 800;
-            line-height: 1;
-        }
+    .history-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
+        background: var(--apple-gray);
+        padding: 2px 6px;
+        border-radius: 4px;
+        opacity: 0.8;
+    }
 
-        .artist-history {
-            display: flex;
-            gap: 4px;
-            justify-content: center;
-            flex-wrap: wrap;
-            min-height: 20px;
-        }
+    .history-badge.val-30 {
+        background: #FFD700;
+        color: rgba(0, 0, 0, 0.8);
+    }
 
-        .history-badge {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: white;
-            background: var(--apple-gray);
-            padding: 2px 6px;
-            border-radius: 4px;
-            opacity: 0.8;
-        }
+    .history-badge.val-20 {
+        background: #C0C0C0;
+        color: rgba(0, 0, 0, 0.8);
+    }
 
-        .history-badge.val-30 {
-            background: #FFD700;
-            color: rgba(0, 0, 0, 0.8);
-        }
+    .history-badge.val-10 {
+        background: #CD7F32;
+        color: rgba(0, 0, 0, 0.8);
+    }
 
-        .history-badge.val-20 {
-            background: #C0C0C0;
-            color: rgba(0, 0, 0, 0.8);
-        }
+    /* Transaction Form */
+    .tx-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
 
-        .history-badge.val-10 {
-            background: #CD7F32;
-            color: rgba(0, 0, 0, 0.8);
-        }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-        /* Transaction Form */
-        .tx-form {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+    .form-label {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--apple-gray);
+    }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+    .color-selector {
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+    }
 
-        .form-label {
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--apple-gray);
-        }
+    .color-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 25px;
+        border: 3px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
 
-        .color-selector {
-            display: flex;
-            gap: 16px;
-            justify-content: space-between;
-        }
+    .color-btn.artist-yellow {
+        color: rgba(0, 0, 0, 0.8);
+    }
 
-        .color-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
-            border: 3px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+    .color-btn.selected {
+        border-color: var(--apple-black);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
 
-        .color-btn.artist-yellow {
-            color: rgba(0, 0, 0, 0.8);
-        }
+    .color-btn i {
+        display: none;
+    }
 
-        .color-btn.selected {
-            border-color: var(--apple-black);
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
+    .color-btn.selected i {
+        display: block;
+    }
 
-        .color-btn i {
-            display: none;
-        }
+    select.player-select {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1em;
+    }
 
-        .color-btn.selected i {
-            display: block;
-        }
+    .tx-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+</style>
+{% endblock %}
 
-        select.player-select {
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1em;
-        }
+{% block nav_title %}
+<i class="ph-fill ph-palette text-orange" style="margin-right: 4px;"></i> 现代艺术
+{% endblock %}
 
-        .tx-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
+{% block content %}
+<div class="apple-hero">
+    <span class="apple-hero-emoji">🎨</span>
+    <h1>现代艺术</h1>
+    <p>拍卖交易 · 画作估值</p>
+</div>
 
-        /* ---- Empty State ---- */
-        .empty-state {
-            text-align: center;
-            padding: var(--space-2xl) var(--space-md);
-            color: var(--apple-gray);
-            font-size: 1rem;
-            font-weight: 500;
-        }
+<!-- Setup Screen -->
+<div id="setup-screen" class="apple-card">
+    <h2 class="card-title"><i class="ph-bold ph-users"></i> 加入游戏</h2>
 
-        .empty-state .empty-icon {
-            font-size: 3rem;
-            margin-bottom: var(--space-md);
-            display: block;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-        }
-    </style>
-</head>
+    <div class="form-group" style="margin-bottom: 16px;">
+        <label class="form-label">你的名字</label>
+        <input type="text" id="my-name-input" class="apple-input" placeholder="输入你的名字">
+    </div>
 
-<body>
-    <nav class="apple-nav">
-        <div class="apple-nav-content" style="justify-content: space-between; min-height: 44px; padding: 0 16px;">
-            <a href="/"
-                style="text-decoration: none; color: inherit; display: flex; align-items: center; min-height: 44px;">
-                <span class="apple-nav-title">🎲 桌游助手</span>
-            </a>
-            <a href="/gamelist"
-                style="color: var(--apple-blue); text-decoration: none; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; min-height: 44px;">游戏列表</a>
+    <div style="display: flex; gap: 16px; flex-direction: column;">
+        <button class="apple-btn apple-btn-primary apple-btn-block" onclick="joinGame()">
+            <i class="ph-bold ph-sign-in"></i> 进入大厅
+        </button>
+    </div>
+</div>
+
+<!-- Lobby Screen -->
+<div id="lobby-screen" class="apple-card" style="display: none;">
+    <h2 class="card-title"><i class="ph-bold ph-door-open"></i> 全局游戏大厅</h2>
+    <h3 style="font-size: 1.1rem; margin-bottom: 16px;">已加入的玩家</h3>
+    <ul id="lobby-players-list" style="list-style: none; padding: 0; margin-bottom: 24px;">
+        <!-- Populated via JS -->
+    </ul>
+    <div style="display: flex; gap: 16px; flex-direction: column;">
+        <button class="apple-btn apple-btn-primary apple-btn-block" onclick="startGame()" id="start-game-btn">
+            <i class="ph-fill ph-play"></i> 所有人准备就绪，开始游戏
+        </button>
+        <div style="display: flex; gap: 16px;">
+            <button class="apple-btn apple-btn-secondary" onclick="resetGame()" style="flex: 1;">
+                <i class="ph-bold ph-trash"></i> 清空大厅
+            </button>
         </div>
-    </nav>
+    </div>
+</div>
 
-    <div class="apple-container">
-        <div class="apple-hero">
-            <span class="apple-hero-emoji">🎨</span>
-            <h1>现代艺术</h1>
-            <p>拍卖交易 · 画作估值</p>
+<!-- Game Screen -->
+<div id="game-screen">
+
+    <div class="apple-card">
+        <div class="card-title">
+            <i class="ph-bold ph-storefront"></i> 市场行情
+            <span class="round-display" id="round-number">第 1 回合</span>
         </div>
-
-        <!-- Setup Screen -->
-        <div id="setup-screen" class="apple-card">
-            <h2 class="card-title"><i class="fas fa-users"></i> 加入游戏</h2>
-
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label class="form-label">你的名字</label>
-                <input type="text" id="my-name-input" class="apple-input" placeholder="输入你的名字">
-            </div>
-
-            <div style="display: flex; gap: 16px; flex-direction: column;">
-                <button class="apple-btn apple-btn-primary apple-btn-block" onclick="joinGame()">
-                    <i class="fas fa-sign-in-alt"></i> 进入大厅
-                </button>
-            </div>
-        </div>
-
-        <!-- Lobby Screen -->
-        <div id="lobby-screen" class="apple-card" style="display: none;">
-            <h2 class="card-title"><i class="fas fa-door-open"></i> 全局游戏大厅</h2>
-            <h3 style="font-size: 1.1rem; margin-bottom: 16px;">已加入的玩家</h3>
-            <ul id="lobby-players-list" style="list-style: none; padding: 0; margin-bottom: 24px;">
-                <!-- Populated via JS -->
-            </ul>
-            <div style="display: flex; gap: 16px; flex-direction: column;">
-                <button class="apple-btn apple-btn-primary apple-btn-block" onclick="startGame()" id="start-game-btn">
-                    <i class="fas fa-play"></i> 所有人准备就绪，开始游戏
-                </button>
-                <div style="display: flex; gap: 16px;">
-                    <button class="apple-btn apple-btn-secondary" onclick="resetGame()" style="flex: 1;">
-                        <i class="fas fa-trash-alt"></i> 清空大厅
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Game Screen -->
-        <div id="game-screen">
-
-            <div class="apple-card">
-                <div class="card-title">
-                    <i class="fas fa-store"></i> 市场行情
-                    <span class="round-display" id="round-number">第 1 回合</span>
-                </div>
-                <div class="market-grid" id="market-grid">
-                    <!-- Configured via JS -->
-                </div>
-            </div>
-
-            <div class="apple-card">
-                <div class="card-title"><i class="fas fa-gavel"></i> 记录交易</div>
-                <div class="tx-form">
-                    <div class="form-group">
-                        <label class="form-label">被拍卖的画作 (艺术家)</label>
-                        <div class="color-selector">
-                            <div class="color-btn artist-yellow" data-color="yellow" onclick="selectColor('yellow')"><i
-                                    class="fas fa-check"></i></div>
-                            <div class="color-btn artist-blue" data-color="blue" onclick="selectColor('blue')"><i
-                                    class="fas fa-check"></i></div>
-                            <div class="color-btn artist-red" data-color="red" onclick="selectColor('red')"><i
-                                    class="fas fa-check"></i></div>
-                            <div class="color-btn artist-green" data-color="green" onclick="selectColor('green')"><i
-                                    class="fas fa-check"></i></div>
-                            <div class="color-btn artist-orange" data-color="orange" onclick="selectColor('orange')"><i
-                                    class="fas fa-check"></i></div>
-                        </div>
-                    </div>
-
-                    <div class="tx-grid">
-                        <div class="form-group">
-                            <label class="form-label">得标人 (买家)</label>
-                            <select class="player-select apple-input" id="buyer-select">
-                                <option value="" disabled selected>选择买家...</option>
-                                <option value="Bank">🏦 银行 (没卖出去)</option>
-                                <!-- Populated via JS -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">成交金额 ($)</label>
-                            <input type="number" class="price-input apple-input" id="price-input" placeholder="输入金额..."
-                                min="0">
-                        </div>
-                    </div>
-
-                    <button class="apple-btn apple-btn-primary apple-btn-block" onclick="submitTransaction()"
-                        style="margin-top: 8px;">
-                        <i class="fas fa-handshake"></i> 确认交易 (你作为卖家)
-                    </button>
-                </div>
-            </div>
-
-            <h2 class="card-title" style="margin-left: 8px;"><i class="fas fa-users"></i> 玩家大亨</h2>
-            <div class="player-grid" id="player-grid">
-                <!-- Configured via JS -->
-            </div>
-
-            <h2 class="card-title" style="margin-top: 32px; margin-left: 8px;"><i class="fas fa-history"></i> 操作记录
-            </h2>
-            <div class="apple-card" style="background: var(--apple-white); padding: 16px; margin-bottom: 32px;">
-                <div id="history-log"
-                    style="max-height: 200px; overflow-y: auto; font-size: 0.9rem; color: var(--apple-gray); line-height: 1.5;">
-                    <!-- Populated via JS -->
-                </div>
-            </div>
-
-            <!-- End of Game Screen Buttons -->
-            <div id="game-over-actions" style="display: none; flex-direction: column; gap: 16px; margin-bottom: 32px;">
-                <button class="apple-btn apple-btn-primary apple-btn-block" onclick="playAgain()">
-                    <i class="fas fa-redo"></i> 🎲 原班人马再来一局
-                </button>
-                <button class="apple-btn apple-btn-secondary apple-btn-block" onclick="resetGame()">
-                    <i class="fas fa-trash-alt"></i> 🗑️ 结束并清空大厅
-                </button>
-            </div>
-        </div>
-
-        <!-- Inline Leaderboard (Visible in Setup and Lobby) -->
-        <div id="inline-leaderboard-section">
-            <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
-            </div>
-            <div class="hist-lb-card">
-                <div id="histLeaderboard">
-                    <div class="empty-state">
-                        <span class="empty-icon">👻</span>
-                        还没人玩过呢，快去开一局！
-                    </div>
-                </div>
-            </div>
+        <div class="market-grid" id="market-grid">
+            <!-- Configured via JS -->
         </div>
     </div>
 
-    <script>
-        const API_BASE = '/modernart/api';
-        const ARTISTS = [{
-                id: 'yellow',
-                name: 'Manuel Carvalho (黄)',
-                class: 'artist-yellow'
-            },
-            {
-                id: 'blue',
-                name: 'Sigrid Thaler (蓝)',
-                class: 'artist-blue'
-            },
-            {
-                id: 'red',
-                name: 'Daniel Melim (红)',
-                class: 'artist-red'
-            },
-            {
-                id: 'green',
-                name: 'Ramon Martins (绿)',
-                class: 'artist-green'
-            },
-            {
-                id: 'orange',
-                name: 'Rafael Silveira (橙)',
-                class: 'artist-orange'
-            }
-        ];
+    <div class="apple-card">
+        <div class="card-title"><i class="ph-bold ph-scales"></i> 记录交易</div>
+        <div class="tx-form">
+            <div class="form-group">
+                <label class="form-label">被拍卖的画作 (艺术家)</label>
+                <div class="color-selector">
+                    <div class="color-btn artist-yellow" data-color="yellow" onclick="selectColor('yellow')"><i
+                            class="ph-bold ph-check"></i></div>
+                    <div class="color-btn artist-blue" data-color="blue" onclick="selectColor('blue')"><i
+                            class="ph-bold ph-check"></i></div>
+                    <div class="color-btn artist-red" data-color="red" onclick="selectColor('red')"><i
+                            class="ph-bold ph-check"></i></div>
+                    <div class="color-btn artist-green" data-color="green" onclick="selectColor('green')"><i
+                            class="ph-bold ph-check"></i></div>
+                    <div class="color-btn artist-orange" data-color="orange" onclick="selectColor('orange')"><i
+                            class="ph-bold ph-check"></i></div>
+                </div>
+            </div>
 
-        let currentState = null;
-        let selectedColor = null;
+            <div class="tx-grid">
+                <div class="form-group">
+                    <label class="form-label">得标人 (买家)</label>
+                    <select class="player-select apple-input" id="buyer-select">
+                        <option value="" disabled selected>选择买家...</option>
+                        <option value="Bank">🏦 银行 (没卖出去)</option>
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">成交金额 ($)</label>
+                    <input type="number" class="price-input apple-input" id="price-input" placeholder="输入金额..." min="0">
+                </div>
+            </div>
 
-        // UI Helpers
-        let myPlayerName = null;
-        let pollingInterval = null;
+            <button class="apple-btn apple-btn-primary apple-btn-block" onclick="submitTransaction()"
+                style="margin-top: 8px;">
+                <i class="ph-bold ph-handshake"></i> 确认交易 (你作为卖家)
+            </button>
+        </div>
+    </div>
 
-        function selectColor(colorId) {
-            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
-            document.querySelector(`.color-btn[data-color="${colorId}"]`).classList.add('selected');
-            selectedColor = colorId;
-        }
+    <h2 class="card-title" style="margin-left: 8px;"><i class="ph-bold ph-users"></i> 玩家大亨</h2>
+    <div class="player-grid" id="player-grid">
+        <!-- Configured via JS -->
+    </div>
 
-        async function joinGame() {
-            const name = document.getElementById('my-name-input').value.trim();
-            if (!name) return alert("请输入你的名字！");
+    <h2 class="card-title" style="margin-top: 32px; margin-left: 8px;"><i
+            class="ph-bold ph-clock-counter-clockwise"></i> 操作记录
+    </h2>
+    <div class="apple-card" style="background: var(--apple-white); padding: 16px; margin-bottom: 32px;">
+        <div id="history-log"
+            style="max-height: 200px; overflow-y: auto; font-size: 0.9rem; color: var(--apple-gray); line-height: 1.5;">
+            <!-- Populated via JS -->
+        </div>
+    </div>
 
-            try {
-                const res = await fetch(API_BASE + '/join', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        player_name: name
-                    })
-                });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    myPlayerName = name;
-                    if (data.state.started) {
-                        document.getElementById('setup-screen').style.display = 'none';
-                        document.getElementById('lobby-screen').style.display = 'none';
-                        document.getElementById('game-screen').style.display = 'block';
-                        updateUI(data.state);
-                    } else {
-                        showLobby(data.state);
-                    }
-                    startPolling();
+    <!-- End of Game Screen Buttons -->
+    <div id="game-over-actions" style="display: none; flex-direction: column; gap: 16px; margin-bottom: 32px;">
+        <button class="apple-btn apple-btn-primary apple-btn-block" onclick="playAgain()">
+            <i class="ph-bold ph-arrow-clockwise"></i> 🎲 原班人马再来一局
+        </button>
+        <button class="apple-btn apple-btn-secondary apple-btn-block" onclick="resetGame()">
+            <i class="ph-bold ph-trash"></i> 🗑️ 结束并清空大厅
+        </button>
+    </div>
+</div>
+
+<!-- Inline Leaderboard (Visible in Setup and Lobby) -->
+<div id="inline-leaderboard-section">
+    <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
+    </div>
+    <div id="histLeaderboard">
+        <div class="apple-list mb-xl">
+            <div class="empty-state">
+                <span class="empty-icon">👻</span>
+                还没人玩过呢，快去开一局！
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script>
+    const API_BASE = '/modernart/api';
+    const ARTISTS = [{
+        id: 'yellow',
+        name: 'Manuel Carvalho (黄)',
+        class: 'artist-yellow'
+    },
+    {
+        id: 'blue',
+        name: 'Sigrid Thaler (蓝)',
+        class: 'artist-blue'
+    },
+    {
+        id: 'red',
+        name: 'Daniel Melim (红)',
+        class: 'artist-red'
+    },
+    {
+        id: 'green',
+        name: 'Ramon Martins (绿)',
+        class: 'artist-green'
+    },
+    {
+        id: 'orange',
+        name: 'Rafael Silveira (橙)',
+        class: 'artist-orange'
+    }
+    ];
+
+    let currentState = null;
+    let selectedColor = null;
+
+    // UI Helpers
+    let myPlayerName = null;
+    let pollingInterval = null;
+
+    function selectColor(colorId) {
+        document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+        document.querySelector(`.color-btn[data-color="${colorId}"]`).classList.add('selected');
+        selectedColor = colorId;
+    }
+
+    async function joinGame() {
+        const name = document.getElementById('my-name-input').value.trim();
+        if (!name) return alert("请输入你的名字！");
+
+        try {
+            const res = await fetch(API_BASE + '/join', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    player_name: name
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                myPlayerName = name;
+                if (data.state.started) {
+                    document.getElementById('setup-screen').style.display = 'none';
+                    document.getElementById('lobby-screen').style.display = 'none';
+                    document.getElementById('game-screen').style.display = 'block';
+                    updateUI(data.state);
                 } else {
-                    alert("加入失败: " + JSON.stringify(data));
+                    showLobby(data.state);
                 }
-            } catch (e) {
-                alert("加入失败: " + e);
+                startPolling();
+            } else {
+                alert("加入失败: " + JSON.stringify(data));
             }
+        } catch (e) {
+            alert("加入失败: " + e);
         }
+    }
 
-        async function resetGame() {
-            if (!confirm("确定要清空大厅并重新开始吗？")) return;
-            try {
-                const res = await fetch(API_BASE + '/reset', {
-                    method: 'POST'
-                });
-                if (res.ok) {
+    async function resetGame() {
+        if (!confirm("确定要清空大厅并重新开始吗？")) return;
+        try {
+            const res = await fetch(API_BASE + '/reset', {
+                method: 'POST'
+            });
+            if (res.ok) {
+                location.reload();
+            }
+        } catch (e) { }
+    }
+
+    async function playAgain() {
+        try {
+            await fetch(API_BASE + '/play_again', {
+                method: 'POST'
+            });
+        } catch (e) {
+            console.error("play_again error:", e);
+        }
+    }
+
+    function showLobby(state) {
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('lobby-screen').style.display = 'block';
+        updateLobby(state);
+    }
+
+    function updateLobby(state) {
+        const list = document.getElementById('lobby-players-list');
+        list.innerHTML = '';
+        const players = Object.keys(state.players);
+        players.forEach(p => {
+            const li = document.createElement('li');
+            li.style.padding = '12px 16px';
+            li.style.background = 'var(--apple-white)';
+            li.style.border = '1px solid rgba(0,0,0,0.05)';
+            li.style.borderRadius = 'var(--radius-md)';
+            li.style.marginBottom = '8px';
+            li.style.fontWeight = '600';
+            li.innerHTML =
+                '<i class="ph-bold ph-check-circle" style="color: var(--apple-green); margin-right: 8px;"></i> ' +
+                p;
+            list.appendChild(li);
+        });
+
+        const btn = document.getElementById('start-game-btn');
+        if (players.length >= 3) {
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+            btn.innerText = '所有人准备就绪，开始游戏';
+        } else {
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+            btn.innerText = `需要至少3人 (当前 ${players.length} 人)`;
+        }
+    }
+
+    async function startGame() {
+        try {
+            const res = await fetch(API_BASE + '/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    player_name: myPlayerName
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                updateUI(data.state);
+            } else {
+                alert("错误: " + JSON.stringify(data));
+            }
+        } catch (e) {
+            alert("开始失败: " + e);
+        }
+    }
+
+    function startPolling() {
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = setInterval(fetchState, 2000);
+    }
+
+    async function fetchState() {
+        if (!myPlayerName) return;
+        try {
+            const res = await fetch(API_BASE + `/state?player_name=${encodeURIComponent(myPlayerName)}`);
+            const state = await res.json();
+
+            if (state.started && document.getElementById('lobby-screen').style.display === 'block') {
+                document.getElementById('lobby-screen').style.display = 'none';
+                document.getElementById('inline-leaderboard-section').style.display = 'none';
+                document.getElementById('game-screen').style.display = 'block';
+            }
+
+            if (!state.started && document.getElementById('lobby-screen').style.display === 'block') {
+                updateLobby(state);
+                document.getElementById('inline-leaderboard-section').style.display = 'block';
+            } else if (state.started) {
+                updateUI(state);
+            } else if (!state.started && document.getElementById('game-screen').style.display === 'block') {
+                // Game was reset or play again
+                if (state.players && state.players[myPlayerName]) {
+                    document.getElementById('game-screen').style.display = 'none';
+                    showLobby(state);
+                    document.getElementById('inline-leaderboard-section').style.display = 'block';
+                } else {
                     location.reload();
                 }
-            } catch (e) {}
-        }
-
-        async function playAgain() {
-            try {
-                await fetch(API_BASE + '/play_again', {
-                    method: 'POST'
-                });
-            } catch (e) {
-                console.error("play_again error:", e);
             }
+        } catch (e) {
+            console.error("Failed to fetch state", e);
+        }
+    }
+
+    async function submitTransaction() {
+        if (!selectedColor) {
+            alert("请选择被拍卖画作的艺术家！");
+            return;
+        }
+        const buyer = document.getElementById('buyer-select').value;
+        const price = parseInt(document.getElementById('price-input').value) || 0;
+
+        if (!buyer) {
+            alert("请选择得标人！");
+            return;
         }
 
-        function showLobby(state) {
-            document.getElementById('setup-screen').style.display = 'none';
-            document.getElementById('lobby-screen').style.display = 'block';
-            updateLobby(state);
-        }
-
-        function updateLobby(state) {
-            const list = document.getElementById('lobby-players-list');
-            list.innerHTML = '';
-            const players = Object.keys(state.players);
-            players.forEach(p => {
-                const li = document.createElement('li');
-                li.style.padding = '12px 16px';
-                li.style.background = 'var(--apple-white)';
-                li.style.border = '1px solid rgba(0,0,0,0.05)';
-                li.style.borderRadius = 'var(--radius-md)';
-                li.style.marginBottom = '8px';
-                li.style.fontWeight = '600';
-                li.innerHTML =
-                    '<i class="fas fa-check-circle" style="color: var(--apple-green); margin-right: 8px;"></i> ' +
-                    p;
-                list.appendChild(li);
+        try {
+            const res = await fetch(API_BASE + '/transaction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    player_name: myPlayerName,
+                    buyer,
+                    artist: selectedColor,
+                    price
+                })
             });
-
-            const btn = document.getElementById('start-game-btn');
-            if (players.length >= 3) {
-                btn.style.opacity = '1';
-                btn.style.pointerEvents = 'auto';
-                btn.innerText = '所有人准备就绪，开始游戏';
+            const data = await res.json();
+            if (data.status === 'success') {
+                document.getElementById('price-input').value = '';
+                document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+                selectedColor = null;
+                updateUI(data.state);
             } else {
-                btn.style.opacity = '0.5';
-                btn.style.pointerEvents = 'none';
-                btn.innerText = `需要至少3人 (当前 ${players.length} 人)`;
+                alert("错误: " + JSON.stringify(data));
             }
+        } catch (e) {
+            alert("交易提交失败: " + e);
         }
+    }
 
-        async function startGame() {
-            try {
-                const res = await fetch(API_BASE + '/start', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        player_name: myPlayerName
-                    })
-                });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    updateUI(data.state);
-                } else {
-                    alert("错误: " + JSON.stringify(data));
-                }
-            } catch (e) {
-                alert("开始失败: " + e);
-            }
-        }
-
-        function startPolling() {
-            if (pollingInterval) clearInterval(pollingInterval);
-            pollingInterval = setInterval(fetchState, 2000);
-        }
-
-        async function fetchState() {
-            if (!myPlayerName) return;
-            try {
-                const res = await fetch(API_BASE + `/state?player_name=${encodeURIComponent(myPlayerName)}`);
-                const state = await res.json();
-
-                if (state.started && document.getElementById('lobby-screen').style.display === 'block') {
-                    document.getElementById('lobby-screen').style.display = 'none';
-                    document.getElementById('inline-leaderboard-section').style.display = 'none';
-                    document.getElementById('game-screen').style.display = 'block';
-                }
-
-                if (!state.started && document.getElementById('lobby-screen').style.display === 'block') {
-                    updateLobby(state);
-                    document.getElementById('inline-leaderboard-section').style.display = 'block';
-                } else if (state.started) {
-                    updateUI(state);
-                } else if (!state.started && document.getElementById('game-screen').style.display === 'block') {
-                    // Game was reset or play again
-                    if (state.players && state.players[myPlayerName]) {
-                        document.getElementById('game-screen').style.display = 'none';
-                        showLobby(state);
-                        document.getElementById('inline-leaderboard-section').style.display = 'block';
-                    } else {
-                        location.reload();
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to fetch state", e);
-            }
-        }
-
-        async function submitTransaction() {
-            if (!selectedColor) {
-                alert("请选择被拍卖画作的艺术家！");
-                return;
-            }
-            const buyer = document.getElementById('buyer-select').value;
-            const price = parseInt(document.getElementById('price-input').value) || 0;
-
-            if (!buyer) {
-                alert("请选择得标人！");
-                return;
-            }
-
-            try {
-                const res = await fetch(API_BASE + '/transaction', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        player_name: myPlayerName,
-                        buyer,
-                        artist: selectedColor,
-                        price
-                    })
-                });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    document.getElementById('price-input').value = '';
-                    document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
-                    selectedColor = null;
-                    updateUI(data.state);
-                } else {
-                    alert("错误: " + JSON.stringify(data));
-                }
-            } catch (e) {
-                alert("交易提交失败: " + e);
-            }
-        }
-
-        async function loadLeaderboard() {
-            document.getElementById('histLeaderboard').innerHTML = `
+    async function loadLeaderboard() {
+        document.getElementById('histLeaderboard').innerHTML = `
                     <div class="empty-state">
                         <span class="empty-icon">🏆</span>
                         跑去查大名册了...
                     </div>`;
 
-            try {
-                const res = await fetch(API_BASE + '/leaderboard');
-                const data = await res.json();
+        try {
+            const res = await fetch(API_BASE + '/leaderboard');
+            const data = await res.json();
 
-                if (data.status === 'success' && data.leaderboard) {
-                    if (data.leaderboard.length === 0) {
-                        document.getElementById('histLeaderboard').innerHTML = `
-                                <div class="empty-state">
-                                    <span class="empty-icon">👻</span>
-                                    还没人玩过呢，快去开一局！
+            if (data.status === 'success' && data.leaderboard) {
+                if (data.leaderboard.length === 0) {
+                    document.getElementById('histLeaderboard').innerHTML = `
+                                <div class="apple-list mb-xl">
+                                    <div class="empty-state">
+                                        <span class="empty-icon">👻</span>
+                                        还没人玩过呢，快去开一局！
+                                    </div>
                                 </div>`;
-                        return;
-                    }
+                    return;
+                }
 
-                    let html = `
-                                <div class="hist-lb-header">
-                                    <span>#</span>
-                                    <span>玩家</span>
-                                    <span style="text-align:right">胜率</span>
-                                    <span style="text-align:right">均资</span>
-                                    <span style="text-align:right">上局</span>
+                let html = '<div class="apple-list mb-xl">';
+
+                data.leaderboard.forEach((player, idx) => {
+                    const rank = idx + 1;
+                    let rankClass = rank === 1 ? 'rank-1' : (rank === 2 ? 'rank-2' : (rank === 3 ? 'rank-3' : 'rank-other'));
+                    let rankIcon = rank === 1 ? '👑' : rank;
+
+                    const lastMoneyText = player.last_money !== null ? `$${player.last_money}` : '--';
+
+                    html += `
+                            <div class="apple-list-item">
+                                <div class="rank-num ${rankClass}">${rankIcon}</div>
+                                
+                                <div class="apple-list-item-content">
+                                    <div class="apple-list-item-title">${player.name}</div>
                                 </div>
-                        `;
-
-                    data.leaderboard.forEach((player, idx) => {
-                        const rank = idx + 1;
-                        let rankClass = '';
-                        let rankIcon = rank;
-                        if (rank === 1) {
-                            rankClass = 'gold';
-                            rankIcon = '👑';
-                        } else if (rank === 2) {
-                            rankClass = 'silver';
-                            rankIcon = '2';
-                        } else if (rank === 3) {
-                            rankClass = 'bronze';
-                            rankIcon = '3';
-                        }
-
-                        const lastMoneyText = player.last_money !== null ? `$${player.last_money}` :
-                            '--';
-
-                        html += `
-                                <div class="hist-lb-row">
-                                    <span class="lb-rank ${rankClass}">${rankIcon}</span>
-                                    <span class="lb-name">${player.name}</span>
-                                    <span style="text-align:right; font-weight:700; color:var(--apple-gray); font-size: 0.95rem;">${player.win_rate}%</span>
-                                    <span class="lb-amount" style="color:var(--apple-green);">$${player.avg_money}</span>
-                                    <span class="lb-bills" style="font-weight:700; color:var(--apple-gray);">${lastMoneyText}</span>
+                                
+                                <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
+                                    <div style="text-align: right; width: 60px;">
+                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">胜率</div>
+                                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">${player.win_rate}%</div>
+                                    </div>
+                                    <div style="text-align: right; width: 60px;">
+                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">均资</div>
+                                        <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-green);">$${player.avg_money}</div>
+                                    </div>
+                                    <div style="text-align: right; width: 60px;">
+                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">上局</div>
+                                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">${lastMoneyText}</div>
+                                    </div>
                                 </div>
+                            </div>
                             `;
-                    });
+                });
+                html += '</div>';
 
-                    document.getElementById('histLeaderboard').innerHTML = html;
-                } else {
-                    document.getElementById('histLeaderboard').innerHTML =
-                        '<div class="empty-state">加载失败</div>';
-                }
-            } catch (e) {
+                document.getElementById('histLeaderboard').innerHTML = html;
+            } else {
                 document.getElementById('histLeaderboard').innerHTML =
-                    `<div class="empty-state">网络出错: ${e}</div>`;
+                    '<div class="empty-state">加载失败</div>';
             }
+        } catch (e) {
+            document.getElementById('histLeaderboard').innerHTML =
+                `<div class="empty-state">网络出错: ${e}</div>`;
+        }
+    }
+
+    function closeLeaderboard() {
+        document.getElementById('lb-modal').classList.remove('show');
+    }
+
+    function updateUI(state) {
+        currentState = state;
+
+        document.getElementById('inline-leaderboard-section').style.display = 'none';
+        const gameOverActions = document.getElementById('game-over-actions');
+        if (state.current_round > 4) {
+            document.getElementById('round-number').innerText = "游戏结束";
+            document.querySelector('.tx-form').style.display = 'none';
+            if (gameOverActions) gameOverActions.style.display = 'flex';
+        } else {
+            document.getElementById('round-number').innerText = `第 ${state.current_round} 回合`;
+            document.querySelector('.tx-form').style.display = 'flex';
+            if (gameOverActions) gameOverActions.style.display = 'none';
         }
 
-        function closeLeaderboard() {
-            document.getElementById('lb-modal').classList.remove('show');
+        const marketGrid = document.getElementById('market-grid');
+        marketGrid.innerHTML = '';
+        let maxPaintings = 0;
+
+        ARTISTS.forEach(artist => {
+            const count = state.round_paintings[artist.id];
+            const history = state.artist_values_history[artist.id] || [];
+            if (count > maxPaintings) maxPaintings = count;
+
+            let historyHtml = history.map(val => {
+                let badgeClass = '';
+                if (val === 30) badgeClass = 'val-30';
+                else if (val === 20) badgeClass = 'val-20';
+                else if (val === 10) badgeClass = 'val-10';
+                return '<span class="history-badge ' + badgeClass + '">' + val + '</span>';
+            }).join('');
+            if (historyHtml === '') historyHtml =
+                '<span style="color:var(--apple-gray);font-size:0.75rem;">-</span>';
+
+            const card = document.createElement('div');
+            card.className = 'artist-card';
+            card.innerHTML =
+                '<div class="artist-color-bar ' + artist.class + '"></div>' +
+                '<div class="artist-count" style="color: ' + (count >= 4 ? 'var(--apple-red)' :
+                    'inherit') + '">' + count + '</div>' +
+                '<div class="artist-name">' + artist.name.split(' ')[0] + '</div>' +
+                '<div class="artist-history">' + historyHtml + '</div>';
+            marketGrid.appendChild(card);
+        });
+
+        const buyerSelect = document.getElementById('buyer-select');
+
+        // Only rebuild options if player count changes to prevent interrupting UI inputs during polling
+        if (buyerSelect.options.length - 2 !== Object.keys(state.players).length) {
+            const currentBuyer = buyerSelect.value;
+            buyerSelect.innerHTML =
+                '<option value="" disabled selected>选择买家...</option><option value="Bank">🏦 银行 (没卖出去)</option>';
+
+            const playerNames = Object.keys(state.players);
+            playerNames.forEach(pName => {
+                const bOpt = new Option(pName, pName);
+                if (pName === currentBuyer) bOpt.selected = true;
+                buyerSelect.add(bOpt);
+            });
         }
 
-        function updateUI(state) {
-            currentState = state;
+        const playerGrid = document.getElementById('player-grid');
+        playerGrid.innerHTML = '';
 
-            document.getElementById('inline-leaderboard-section').style.display = 'none';
-            const gameOverActions = document.getElementById('game-over-actions');
-            if (state.current_round > 4) {
-                document.getElementById('round-number').innerText = "游戏结束";
-                document.querySelector('.tx-form').style.display = 'none';
-                if (gameOverActions) gameOverActions.style.display = 'flex';
-            } else {
-                document.getElementById('round-number').innerText = `第 ${state.current_round} 回合`;
-                document.querySelector('.tx-form').style.display = 'flex';
-                if (gameOverActions) gameOverActions.style.display = 'none';
+        const sortedPlayers = Object.entries(state.players).sort((a, b) => {
+            if (a[0] === myPlayerName) return -1;
+            if (b[0] === myPlayerName) return 1;
+            return a[0].localeCompare(b[0]);
+        });
+
+        sortedPlayers.forEach(([pName, pData]) => {
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            if (pName === myPlayerName) {
+                card.style.borderColor = 'var(--apple-blue)';
+                card.style.background = 'rgba(0, 122, 255, 0.02)';
             }
 
-            const marketGrid = document.getElementById('market-grid');
-            marketGrid.innerHTML = '';
-            let maxPaintings = 0;
-
+            let portfolioHtml = '';
             ARTISTS.forEach(artist => {
-                const count = state.round_paintings[artist.id];
-                const history = state.artist_values_history[artist.id] || [];
-                if (count > maxPaintings) maxPaintings = count;
-
-                let historyHtml = history.map(val => {
-                    let badgeClass = '';
-                    if (val === 30) badgeClass = 'val-30';
-                    else if (val === 20) badgeClass = 'val-20';
-                    else if (val === 10) badgeClass = 'val-10';
-                    return '<span class="history-badge ' + badgeClass + '">' + val + '</span>';
-                }).join('');
-                if (historyHtml === '') historyHtml =
-                    '<span style="color:var(--apple-gray);font-size:0.75rem;">-</span>';
-
-                const card = document.createElement('div');
-                card.className = 'artist-card';
-                card.innerHTML =
-                    '<div class="artist-color-bar ' + artist.class + '"></div>' +
-                    '<div class="artist-count" style="color: ' + (count >= 4 ? 'var(--apple-red)' :
-                        'inherit') + '">' + count + '</div>' +
-                    '<div class="artist-name">' + artist.name.split(' ')[0] + '</div>' +
-                    '<div class="artist-history">' + historyHtml + '</div>';
-                marketGrid.appendChild(card);
+                const count = pData.portfolio[artist.id];
+                if (count > 0) {
+                    portfolioHtml += '<div class="portfolio-item ' + artist.class + '">' +
+                        count + '</div>';
+                }
             });
 
-            const buyerSelect = document.getElementById('buyer-select');
-
-            // Only rebuild options if player count changes to prevent interrupting UI inputs during polling
-            if (buyerSelect.options.length - 2 !== Object.keys(state.players).length) {
-                const currentBuyer = buyerSelect.value;
-                buyerSelect.innerHTML =
-                    '<option value="" disabled selected>选择买家...</option><option value="Bank">🏦 银行 (没卖出去)</option>';
-
-                const playerNames = Object.keys(state.players);
-                playerNames.forEach(pName => {
-                    const bOpt = new Option(pName, pName);
-                    if (pName === currentBuyer) bOpt.selected = true;
-                    buyerSelect.add(bOpt);
-                });
+            if (portfolioHtml === '') {
+                portfolioHtml = '<span style="color:var(--apple-gray);font-size:0.9rem;">空</span>';
             }
 
-            const playerGrid = document.getElementById('player-grid');
-            playerGrid.innerHTML = '';
+            let moneyDisplay = pData.money === "???" ? "???" : "$" + pData.money;
 
-            const sortedPlayers = Object.entries(state.players).sort((a, b) => {
-                if (a[0] === myPlayerName) return -1;
-                if (b[0] === myPlayerName) return 1;
-                return a[0].localeCompare(b[0]);
-            });
+            card.innerHTML =
+                '<div class="player-header">' +
+                '<div class="player-name">' +
+                '<i class="' + (pName === myPlayerName ? 'ph-fill ph-user' : 'ph-fill ph-user-circle') +
+                '" style="color: var(--apple-gray);"></i> ' + pName +
+                (pName === myPlayerName ? ' (你)' : '') +
+                '</div>' +
+                '<div class="player-money">' + moneyDisplay + '</div>' +
+                '</div>' +
+                '<div style="font-size: 0.85rem; color: var(--apple-gray); margin-bottom: 4px; font-weight: 600;">当前画作:</div>' +
+                '<div class="portfolio-list">' +
+                portfolioHtml +
+                '</div>';
+            playerGrid.appendChild(card);
+        });
 
-            sortedPlayers.forEach(([pName, pData]) => {
-                const card = document.createElement('div');
-                card.className = 'player-card';
-                if (pName === myPlayerName) {
-                    card.style.borderColor = 'var(--apple-blue)';
-                    card.style.background = 'rgba(0, 122, 255, 0.02)';
-                }
-
-                let portfolioHtml = '';
-                ARTISTS.forEach(artist => {
-                    const count = pData.portfolio[artist.id];
-                    if (count > 0) {
-                        portfolioHtml += '<div class="portfolio-item ' + artist.class + '">' +
-                            count + '</div>';
-                    }
-                });
-
-                if (portfolioHtml === '') {
-                    portfolioHtml = '<span style="color:var(--apple-gray);font-size:0.9rem;">空</span>';
-                }
-
-                let moneyDisplay = pData.money === "???" ? "???" : "$" + pData.money;
-
-                card.innerHTML =
-                    '<div class="player-header">' +
-                    '<div class="player-name">' +
-                    '<i class="fas ' + (pName === myPlayerName ? 'fa-user' : 'fa-user-circle') +
-                    '" style="color: var(--apple-gray);"></i> ' + pName +
-                    (pName === myPlayerName ? ' (你)' : '') +
-                    '</div>' +
-                    '<div class="player-money">' + moneyDisplay + '</div>' +
-                    '</div>' +
-                    '<div style="font-size: 0.85rem; color: var(--apple-gray); margin-bottom: 4px; font-weight: 600;">当前画作:</div>' +
-                    '<div class="portfolio-list">' +
-                    portfolioHtml +
-                    '</div>';
-                playerGrid.appendChild(card);
-            });
-
-            const historyLog = document.getElementById('history-log');
-            if (state.history_log && state.history_log.length > 0) {
-                historyLog.innerHTML = state.history_log.map(log => `<div>${log}</div>`).join('');
-                historyLog.scrollTop = historyLog.scrollHeight;
-            } else {
-                historyLog.innerHTML = '<div>暂无操作</div>';
-            }
+        const historyLog = document.getElementById('history-log');
+        if (state.history_log && state.history_log.length > 0) {
+            historyLog.innerHTML = state.history_log.map(log => `<div>${log}</div>`).join('');
+            historyLog.scrollTop = historyLog.scrollHeight;
+        } else {
+            historyLog.innerHTML = '<div>暂无操作</div>';
         }
-        loadLeaderboard();
-    </script>
-</body>
-
-</html>
+    }
+    loadLeaderboard();
+</script>
+{% endblock %}

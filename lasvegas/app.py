@@ -1,8 +1,9 @@
 import asyncio
 import sys
 from typing import List, Dict, Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import os
 import uuid
@@ -12,6 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import init_db, record_lasvegas_game, get_lasvegas_leaderboard
 
 app = FastAPI(title="Las Vegas Money Calculator")
+base_dir = os.path.dirname(os.path.abspath(__file__))
+templates = Jinja2Templates(directory=[base_dir, "templates"])
 
 # Valid denominations (in 万 units)
 VALID_DENOMINATIONS = [30, 40, 50, 60, 70, 80, 90, 100]
@@ -164,10 +167,5 @@ async def get_leaderboard():
     return {"leaderboard": get_lasvegas_leaderboard()}
 
 @app.get("/", response_class=HTMLResponse)
-async def read_root():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(base_dir, "index.html")
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>找不到 index.html</h1>"
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
