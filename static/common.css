@@ -1217,3 +1217,15 @@ input[type="number"] {
     display: block;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
+
+/* ---- Leaderboard & Cards common styling ---- */
+.lb-card,
+.player-card,
+.hist-lb-card {
+    background: var(--apple-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: var(--space-lg);
+    transition: all var(--transition-normal);
+}
