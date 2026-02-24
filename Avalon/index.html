@@ -558,7 +558,7 @@
 
             <!-- 兰斯洛特开关 (10人和12人局) -->
             <div v-if="playerCount === 10 || playerCount === 12" class="lancelot-toggle">
-                <span>⚔️ 启用兰斯洛特变体</span>
+                <span>⚔️ 启用兰斯洛特</span>
                 <div class="toggle-switch" :style="playerCount === 12 ? 'opacity: 0.6; pointer-events: none;' : ''">
                     <input type="checkbox" id="lancelot-toggle-input" v-model="lancelotEnabled"
                         :disabled="playerCount === 12">
@@ -1110,6 +1110,9 @@
                 }
                 if (this.excaliburEnabled && this.playerCount >= 8) {
                     extraProps.push('<span style="color:var(--apple-orange)">🗡️ 王者之剑</span>');
+                }
+                if (this.lancelotEnabled && this.playerCount >= 10) {
+                    extraProps.push('<span style="color:var(--apple-red)">⚔️ 兰斯洛特</span>');
                 }
                 if (extraProps.length > 0) {
                     preview +=

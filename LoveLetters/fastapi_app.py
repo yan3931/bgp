@@ -98,7 +98,7 @@ async def broadcast_update():
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     data = calculate_data()
-    return templates.TemplateResponse("index.html", {"request": request, "data": data})
+    return templates.TemplateResponse("index.html", {"request": request, "data": data, "stats": data['stats']})
 
 # --- SocketIO Events ---
 
