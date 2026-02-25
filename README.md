@@ -21,19 +21,14 @@
 {% block title %}游戏名称 - 一句口号或特色描述{% endblock %}
 
 {% block extra_head %}
-<style>
-    /* 此处仅编写该游戏独有或覆盖性的样式。禁止反复定义通用工具类！ */
-    .hero-h1 {
-        background: linear-gradient(135deg, #FF9500, #FFCC00);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-</style>
+<!-- 优先使用 common.css 中已有的全局类，如 .apple-hero, .apple-list 等，尽量少写私有样式 -->
 {% endblock %}
 
 {% block content %}
+<!-- 全局应用 .apple-hero -->
 <div class="apple-hero mb-xl text-center">
-    <h1 class="hero-h1 mb-sm"><span style="font-size: 1.2em;">🎲</span> 游戏名称</h1>
+    <span class="apple-hero-emoji">🎲</span>
+    <h1 class="mb-sm">游戏名称</h1>
     <p class="text-muted" style="font-size: 1.05rem; font-weight: 500;">辅助描述/标语</p>
 </div>
 
@@ -46,17 +41,14 @@
 <!-- 强制推荐使用 inline leaderboard 的方式引入历史排行榜 -->
 <div id="inline-leaderboard-section">
     <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜</div>
-    <div id="histLeaderboard">
-        <!-- JS将动态生成内容覆盖此处 -->
+    <div id="histLeaderboard" class="apple-list">
+        <!-- JS将动态生成 .apple-list-item 内容覆盖此处 -->
     </div>
 </div>
 {% endblock %}
 
 {% block extra_body %}
-<!-- 提示框组件 -->
-<div id="toast" class="toast"></div>
-
-<!-- 游戏的专用 JS 脚本和 Vue 初始化逻辑放在此处 -->
+<!-- 游戏的专用 JS 脚本和 Vue 初始化逻辑放在此处，系统已内置 window.showToast() -->
 <script>
     // ...
 </script>
@@ -85,6 +77,7 @@
   - 必须同时包含基础类 `.apple-btn` 及变体类，如 `.apple-btn-primary` (蓝色主操作), `.apple-btn-success` (绿色确认), `.apple-btn-secondary` (灰色/次要操作), `.apple-btn-danger` (红危险操作)。
   - 需要独占一行时附加 `.apple-btn-block`，大型按钮附加 `.apple-btn-lg`。
 - **输入框 (`.apple-input`)**: 圆角、聚焦态符合系统规范。
+  - **移动端数字键盘**：当需要录入纯数字（如分数）时，务必加上 `inputmode="numeric" pattern="\d*"` 唤起 iOS/Android 纯九宫格数字键盘，而不是依靠 `type="number"`。
 - **开关 (`.apple-switch`)**: 支持双状态布尔切换的界面组件。
 - **图标 (Icons)**: 统一使用 Phosphor Icons (`<i class="ph-bold ph-{name}"></i>` 优先用加粗线性图标，或 `<i class="ph-fill ph-{name}"></i>` 充实形体图标)。
 
@@ -153,7 +146,8 @@ data.leaderboard.forEach((p, idx) => {
 1. **暗色模式陷阱**：遇到白底黑字在暗色模式下不可见的 Bug 时，一般是开发者误写了内联样式 `style="background: white; color: black;"`，应全部替换为 `background: var(--apple-white); color: var(--apple-black)`！
 2. **样式重复**：如果发现一个元素的 CSS 书写了繁琐的圆角、阴影配置（如 `border-radius: 12px; box-shadow: ...`），第一时间考虑它是不是属于全局的 `.apple-card` 或 `.apple-list`，应该通过公用类重构。
 3. **安全注入**：在原生 JS 通过 `innerHTML` 渲染列表时，涉及到玩家昵称 `p.name` 必须经过 `escHtml()` 等函数转义，避免 XSS。如果使用 Vue.js (`{{ p.name }}`) 则自动转义，无需操心。
-4. **弹窗（Modal）**：全站禁止使用浏览器自带原生的 `alert()` 或 `confirm()` 阻断页面操作（除非特意声明），推荐调用全站封装好的 `Toast` 提示功能，亦可自己编写叠加层的 `.apple-modal` 风格弹窗进行询问操作。
+4. **弹窗（Modal/Toast）**：全站禁止使用浏览器自带原生的 `alert()` 或 `confirm()` 阻断页面操作（除非特意声明危急情况）。**强烈建议调用全局已封装的 `window.showToast(message, type)` 进行轻量提示**，亦可自己编写叠加层的 `.apple-modal` 风格弹窗进行二次确认询问。
+5. **禁用状态（Disabled）**：表示不可用、维护中的游戏卡片或按钮等，建议通过降低透明度（如 `.disabled` 类的 `opacity: 0.5` 与浅色背景融合）来实现，并且一定要移除悬浮放大和投影交互（`box-shadow: none`, `cursor: not-allowed`）。避免使用高强度的全局 `filter: grayscale(100%)` ，否则视觉上容易产生生硬的“系统故障感”。
 
 ---
 

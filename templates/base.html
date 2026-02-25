@@ -45,6 +45,31 @@
     </div>
 
     {% block extra_body %}{% endblock %}
+    
+    <!-- Global UI Utilities -->
+    <script>
+        window.showToast = function(message, type = 'info') {
+            // Remove existing toast if any to prevent clutter
+            const existingToast = document.querySelector('.apple-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `apple-toast ${type !== 'info' ? 'apple-toast-' + type : ''}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // Trigger reflow to ensure the transition runs
+            toast.offsetHeight;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+    </script>
 </body>
 
 </html>

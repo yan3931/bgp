@@ -16,11 +16,18 @@
     --apple-blue-hover: #0077ed;
     --apple-blue-light: rgba(0, 113, 227, 0.08);
     --apple-red: #ff3b30;
+    --apple-red-light: rgba(255, 59, 48, 0.08);
     --apple-green: #34c759;
+    --apple-green-light: rgba(52, 199, 89, 0.08);
     --apple-orange: #ff9500;
+    --apple-orange-light: rgba(255, 149, 0, 0.08);
     --apple-yellow: #ffcc00;
     --apple-purple: #af52de;
+    --apple-purple-light: rgba(175, 82, 222, 0.08);
     --apple-teal: #5ac8fa;
+    --apple-teal-light: rgba(90, 200, 250, 0.08);
+
+    --hero-gradient-cabo: linear-gradient(135deg, #00b894, #00cec9, #0984e3);
 
     /* Typography */
     --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
@@ -1046,23 +1053,23 @@ input.apple-toggle-input:checked+.apple-toggle-btn {
 }
 
 .bg-blue-light {
-    background: rgba(0, 113, 227, 0.08) !important;
+    background: var(--apple-blue-light) !important;
 }
 
 .bg-green-light {
-    background: rgba(52, 199, 89, 0.08) !important;
+    background: var(--apple-green-light) !important;
 }
 
 .bg-red-light {
-    background: rgba(255, 59, 48, 0.08) !important;
+    background: var(--apple-red-light) !important;
 }
 
 .bg-orange-light {
-    background: rgba(255, 149, 0, 0.08) !important;
+    background: var(--apple-orange-light) !important;
 }
 
 .bg-purple-light {
-    background: rgba(175, 82, 222, 0.08) !important;
+    background: var(--apple-purple-light) !important;
 }
 
 .text-sm {
@@ -1262,6 +1269,15 @@ input[type="number"] {
         --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
         --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
         --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4);
+
+        --apple-blue-light: rgba(10, 132, 255, 0.15);
+        --apple-green-light: rgba(48, 209, 88, 0.15);
+        --apple-red-light: rgba(255, 69, 58, 0.15);
+        --apple-orange-light: rgba(255, 159, 10, 0.15);
+        --apple-purple-light: rgba(191, 90, 242, 0.15);
+        --apple-teal-light: rgba(100, 210, 255, 0.15);
+
+        --hero-gradient-cabo: linear-gradient(135deg, #55efc4, #81ecec, #74b9ff);
     }
 }
 
@@ -1291,4 +1307,49 @@ input[type="number"] {
     overflow: hidden;
     margin-bottom: var(--space-lg);
     transition: all var(--transition-normal);
+}
+
+/* ---- Toast Component ---- */
+.apple-toast {
+    position: fixed;
+    top: max(20px, env(safe-area-inset-top, 20px));
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(245, 245, 247, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 12px 24px;
+    border-radius: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 20001;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--apple-black);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    pointer-events: none;
+    text-align: center;
+    white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+    .apple-toast {
+        background: rgba(44, 44, 46, 0.9);
+        color: var(--apple-white);
+    }
+}
+
+.apple-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.apple-toast-error {
+    background: rgba(255, 59, 48, 0.9);
+    color: white;
+}
+
+.apple-toast-success {
+    background: rgba(52, 199, 89, 0.9);
+    color: white;
 }

@@ -5,36 +5,18 @@
 {% block extra_head %}
 <style>
     body {
-        padding-bottom: 100px;
+        /* standard body */
     }
 
-    /* ---- Page Hero ---- */
-    .lv-hero {
-        text-align: center;
-        padding: var(--space-2xl) 0 var(--space-lg);
-    }
-
-    .lv-hero-emoji {
-        font-size: 4rem;
-        display: block;
-        margin-bottom: var(--space-md);
-    }
-
-    .lv-hero h1 {
+    .cabo-title {
         font-size: 2.2rem;
         font-weight: 800;
         letter-spacing: -0.04em;
-        background: linear-gradient(135deg, #00b894, #00cec9, #0984e3);
+        background: var(--hero-gradient-cabo);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-    }
-
-    .lv-hero p {
-        font-size: 1.05rem;
-        color: var(--apple-gray);
-        font-weight: 500;
-        margin-top: 4px;
+        margin-bottom: var(--space-xs);
     }
 
     .score-badge {
@@ -380,17 +362,20 @@
 {% raw %}
 <div id="app" v-cloak>
     <!-- Hero -->
-    <div class="lv-hero">
-        <span class="lv-hero-emoji">🦄</span>
-        <h1>卡波</h1>
+    <div class="apple-hero">
+        <span class="apple-hero-emoji">🦄</span>
+        <h1 class="cabo-title">卡波</h1>
         <p>记忆博弈 · 极限换牌</p>
     </div>
 
     <!-- Add Player -->
     <div class="apple-card mb-md">
         <div class="apple-input-group">
-            <input v-model="newPlayerName" class="apple-input" placeholder="输入玩家名字" @keyup.enter="addPlayer">
-            <button class="apple-btn apple-btn-primary" @click="addPlayer"><i class="ph-bold ph-plus"></i></button>
+            <input v-model="newPlayerName" class="apple-input" placeholder="输入玩家名字" @keyup.enter="addPlayer" :disabled="isLoading">
+            <button class="apple-btn apple-btn-primary" @click="addPlayer" :disabled="isLoading">
+                <i v-if="!isLoading" class="ph-bold ph-plus"></i>
+                <div v-else class="apple-spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
+            </button>
         </div>
     </div>
 
@@ -423,7 +408,7 @@
     <!-- FAB: Score Button -->
     <div class="apple-fab" v-if="gameStatus === 'active'">
         <button class="apple-btn apple-btn-primary apple-btn-lg"
-            style="width: 260px; box-shadow: 0 8px 24px rgba(0,113,227,0.3); border-radius: 30px;"
+            style="width: 260px; box-shadow: 0 8px 24px rgba(0,113,227,0.3); border-radius: 30px; background: rgba(0, 113, 227, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);"
             @click="showInput=true" :disabled="players.length<2">
             <i class="ph-bold ph-pencil-simple" style="margin-right:8px;"></i> 记分
         </button>
@@ -467,6 +452,9 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Bottom Spacer to prevent FAB clipping -->
+        <div style="height: 120px; width: 100%;"></div>
     </div>
 
     <!-- Input Sheet -->
@@ -502,7 +490,7 @@
                 <template v-if="kamikazePlayer === null">
                     <div v-for="p in players" :key="'in-'+p.name" class="score-row">
                         <label>{{ p.name }}</label>
-                        <input type="number" v-model.number="inputs[p.name]" class="apple-input"
+                        <input type="number" inputmode="numeric" pattern="\d*" v-model.number="inputs[p.name]" class="apple-input"
                             style="width: 100px; text-align: center; padding: 12px;" placeholder="0">
                     </div>
 
@@ -523,7 +511,10 @@
             <div class="mt-lg">
                 <button class="apple-btn apple-btn-success apple-btn-block apple-btn-lg"
                     style="box-shadow: 0 8px 24px rgba(52,199,89,0.3); border-radius: 20px;"
-                    @click="submitRound">确认提交</button>
+                    @click="submitRound" :disabled="isLoading">
+                    <span v-if="!isLoading">确认提交</span>
+                    <div v-else class="apple-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto;"></div>
+                </button>
             </div>
         </div>
     </transition>
@@ -586,7 +577,8 @@
                 kamikazePlayer: null,
                 leaderboard: [],
                 showGameOver: false,
-                gameOverWinner: ''
+                gameOverWinner: '',
+                isLoading: false
             }
         },
         mounted() {
@@ -610,14 +602,17 @@
             },
             async addPlayer() {
                 if (!this.newPlayerName.trim()) return;
+                this.isLoading = true;
                 try {
                     await axios.post('/cabo/api/add_player', {
                         name: this.newPlayerName
                     });
                     this.newPlayerName = '';
-                    this.refresh();
+                    await this.refresh();
                 } catch (e) {
-                    alert("添加失败");
+                    showToast("添加失败", "error");
+                } finally {
+                    this.isLoading = false;
                 }
             },
             async resetGame() {
@@ -650,6 +645,7 @@
                     kamikaze_player: this.kamikazePlayer || null
                 };
 
+                this.isLoading = true;
                 try {
                     const res = await axios.post('/cabo/api/submit_round', payload);
                     this.showInput = false;
@@ -663,10 +659,12 @@
                         await this.fetchLeaderboard();
                         this.showGameOver = true;
                     } else {
-                        this.refresh();
+                        await this.refresh();
                     }
                 } catch (e) {
-                    alert("提交失败");
+                    showToast("提交失败", "error");
+                } finally {
+                    this.isLoading = false;
                 }
             }
         }

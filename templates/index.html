@@ -4,29 +4,7 @@
 
 {% block extra_head %}
 <style>
-    .hero {
-        text-align: center;
-        padding: var(--space-3xl) 0 var(--space-xl);
-    }
 
-    .hero-emoji {
-        font-size: 4rem;
-        margin-bottom: var(--space-md);
-        display: block;
-    }
-
-    .hero h1 {
-        font-size: 2.5rem;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        margin-bottom: var(--space-sm);
-    }
-
-    .hero p {
-        font-size: 1.15rem;
-        color: var(--apple-gray);
-        font-weight: 500;
-    }
 
     .game-card {
         display: flex;
@@ -42,9 +20,16 @@
     }
 
     .game-card.disabled {
-        opacity: 0.6;
-        filter: grayscale(100%);
+        opacity: 0.5;
+        background: rgba(0, 0, 0, 0.02);
+        box-shadow: none;
         cursor: not-allowed;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .game-card.disabled {
+            background: rgba(255, 255, 255, 0.02);
+        }
     }
 
     .game-card.disabled:hover {
@@ -144,7 +129,7 @@
             margin: 0 auto;
         }
 
-        .hero h1 {
+        .apple-hero h1 {
             font-size: 2rem;
         }
     }
@@ -159,8 +144,8 @@
 
 {% block content %}
 <!-- Hero -->
-<div class="hero">
-    <span class="hero-emoji">🎲</span>
+<div class="apple-hero">
+    <span class="apple-hero-emoji">🎲</span>
     <h1>桌游助手</h1>
     <p>你的桌游好搭子</p>
 </div>
@@ -300,35 +285,19 @@
     style="margin-top: var(--space-xl); margin-bottom: var(--space-md); font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
     🏆 全局成就榜
 </div>
-<div class="lb-card" style="margin-bottom: var(--space-xl);">
-    <div class="apple-table-wrap">
-        <table class="apple-table">
-            <thead>
-                <tr>
-                    <th>玩家</th>
-                    <th>总胜场</th>
-                    <th>游玩总局数</th>
-                    <th>综合胜率</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for player in leaderboard %}
-                <tr>
-                    <td style="font-weight: 600;">{{ player.name }}</td>
-                    <td class="text-blue fw-700">{{ player.total_wins }}</td>
-                    <td>{{ player.total_games }}</td>
-                    <td>
-                        {% if player.total_games > 0 %}
-                        {{ ((player.total_wins / player.total_games) * 100) | round(1) }}%
-                        {% else %}
-                        0%
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="apple-list mb-xl">
+    {% for player in leaderboard %}
+    <div class="apple-list-item">
+        <div class="rank-num {% if loop.index0 == 0 %}rank-1{% elif loop.index0 == 1 %}rank-2{% elif loop.index0 == 2 %}rank-3{% else %}rank-other{% endif %}">
+            {% if loop.index0 == 0 %}👑{% else %}{{ loop.index0 + 1 }}{% endif %}
+        </div>
+        <div class="apple-list-item-content">
+            <div class="apple-list-item-title">{{ player.name }}</div>
+            <div class="apple-list-item-subtitle">总局数: {{ player.total_games }} · 胜率 {% if player.total_games > 0 %}{{ ((player.total_wins / player.total_games) * 100) | round(1) }}%{% else %}0%{% endif %}</div>
+        </div>
+        <div class="apple-list-item-trailing text-blue fw-700">胜 {{ player.total_wins }}</div>
     </div>
+    {% endfor %}
 </div>
 {% endif %}
 
