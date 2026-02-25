@@ -330,29 +330,6 @@
         box-shadow: 0 2px 6px rgba(0, 113, 227, 0.2);
     }
 
-    /* ---- Footer Reset ---- */
-    .reset-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(245, 245, 247, 0.75);
-        backdrop-filter: saturate(180%) blur(30px);
-        -webkit-backdrop-filter: saturate(180%) blur(30px);
-        border-top: 0.5px solid rgba(0, 0, 0, 0.08);
-        padding: 16px;
-        padding-bottom: max(16px, env(safe-area-inset-bottom));
-        display: flex;
-        justify-content: center;
-        z-index: 5000;
-    }
-
-    .reset-bar .apple-btn {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-        font-weight: 600;
-        padding: 0 24px;
-        border-radius: 20px;
-    }
 </style>
 {% endblock %}
 
@@ -361,19 +338,23 @@
 {% endblock %}
 
 {% block nav_right %}
-<span id="status-dot" class="apple-status-dot" style="margin-right: 12px;"></span>
-<div class="apple-segment">
-    <button id="btn-basic" class="apple-segment-btn" onclick="switchMode('basic')">2-4人</button>
-    <button id="btn-ext" class="apple-segment-btn" onclick="switchMode('extension')">5-8人</button>
+<div style="display: flex; align-items: center;">
+    <button onclick="resetGame()" style="background: none; border: none; color: var(--apple-blue); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; cursor: pointer; padding: 0;">
+        <i class="ph-bold ph-arrow-counter-clockwise" style="font-size: 1.2rem; margin-right: 4px;"></i> 重置
+    </button>
 </div>
 {% endblock %}
 
 {% block content %}
 <!-- Hero -->
-<div class="apple-hero" id="setup-section">
+<div class="apple-hero" id="setup-section" style="padding-bottom: 0;">
     <span class="apple-hero-emoji">💌</span>
     <h1>情书</h1>
-    <p>极简卡牌 · 逻辑盲猜</p>
+    <p style="margin-bottom: 24px;">极简卡牌 · 逻辑盲猜</p>
+    <div class="apple-segment" style="margin: 0 auto; display: inline-flex;">
+        <button id="btn-basic" class="apple-segment-btn" onclick="switchMode('basic')" style="min-width: 80px;">2-4人</button>
+        <button id="btn-ext" class="apple-segment-btn" onclick="switchMode('extension')" style="min-width: 80px;">5-8人</button>
+    </div>
 </div>
 
 <!-- Summary Hero -->
@@ -400,12 +381,6 @@
     {% include 'card_list_fragment.html' %}
 </div>
 
-<!-- Bottom Reset Bar -->
-<div class="reset-bar">
-    <button class="apple-btn apple-btn-secondary apple-btn-sm" onclick="resetGame()" style="min-height: 44px;">
-        <i class="ph ph-arrow-counter-clockwise" style="margin-right: 4px;"></i> 重置本局
-    </button>
-</div>
 {% endblock %}
 
 {% block extra_body %}
@@ -442,14 +417,6 @@
     updateRing(initRemaining, initTotalCards);
     document.getElementById('played-info').innerText = '已出 ' + (initTotalCards - initRemaining) + ' / ' +
         initTotalCards + ' 张';
-
-    namespaceSocket.on('connect', function () {
-        document.getElementById('status-dot').classList.add('connected');
-    });
-
-    namespaceSocket.on('disconnect', function () {
-        document.getElementById('status-dot').classList.remove('connected');
-    });
 
     namespaceSocket.on('update_game', function (data) {
         document.getElementById('card-container').innerHTML = data.html;
