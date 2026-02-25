@@ -152,11 +152,9 @@
 {% endblock %}
 
 {% block nav_left %}
-{% if False %}
 <a href="/" class="apple-nav-back" style="position: static; min-height: 44px; align-items: center; display: flex;">
     <i class="ph ph-house" style="font-size: 1.2rem; margin-right: 4px;"></i> 首页
 </a>
-{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -268,7 +266,7 @@
                 <span>刺激翻牌 · 见好就收</span>
             </div>
             {% if 'flip7' in loaded_apps %}
-            <span class="cta">进入计分器 <i class="ph ph-caret-right"></i></span>
+            <span class="cta">进入游戏 <i class="ph ph-caret-right"></i></span>
             {% endif %}
         </div>
         {% if 'flip7' in loaded_apps %}
@@ -289,7 +287,7 @@
                 <span>艺术拍卖 · 价值炒作</span>
             </div>
             {% if 'modernart' in loaded_apps %}
-            <span class="cta">进入计分器 <i class="ph ph-caret-right"></i></span>
+            <span class="cta">进入游戏 <i class="ph ph-caret-right"></i></span>
             {% endif %}
         </div>
         {% if 'modernart' in loaded_apps %}

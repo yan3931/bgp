@@ -22,7 +22,7 @@ APPS_CONFIG = {
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    database.init_db()
+    await database.init_db()
     yield
 
 app = FastAPI(title="Board Game Portal", lifespan=lifespan)
@@ -35,8 +35,14 @@ loaded_apps = []
 for mount_path, module_name in APPS_CONFIG.items():
     try:
         mod = importlib.import_module(module_name)
-        sub_app = getattr(mod, "app")
-        app.mount(f"/{mount_path}", sub_app)
+        sub_router = getattr(mod, "router")
+        app.include_router(sub_router)
+        if mount_path == "avalon":
+            app.mount(
+                "/avalon/assets",
+                StaticFiles(directory=os.path.join("Avalon", "assets")),
+                name="avalon-assets",
+            )
         loaded_apps.append(mount_path)
     except Exception as e:
         print(f"Error importing {mount_path}: {e}")
@@ -46,7 +52,7 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    leaderboard = database.get_global_leaderboard()
+    leaderboard = await database.get_global_leaderboard()
     return templates.TemplateResponse("index.html", {"request": request, "leaderboard": leaderboard, "loaded_apps": loaded_apps})
 
 @app.get("/gamelist", response_class=HTMLResponse)
@@ -55,7 +61,7 @@ async def gamelist(request: Request):
 
 @app.get("/api/leaderboard")
 async def get_leaderboard_api():
-    return database.get_leaderboard()
+    return await database.get_leaderboard()
 
 # Wrap the main FastAPI app with socketio ASGIApp
 final_app = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path='/socket.io')

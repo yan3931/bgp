@@ -1,12 +1,10 @@
 import os
 import socketio
-from fastapi import FastAPI, Request
+from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
-# Create inner FastAPI app for LoveLetters
-app = FastAPI()
+router = APIRouter(prefix="/loveletters", tags=["LoveLetters"])
 
 # Setup SocketIO
 from sio_server import sio
@@ -95,7 +93,7 @@ async def broadcast_update():
 
 # --- Routes ---
 
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     data = calculate_data()
     return templates.TemplateResponse("index.html", {"request": request, "data": data, "stats": data['stats']})

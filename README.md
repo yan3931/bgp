@@ -154,3 +154,50 @@ data.leaderboard.forEach((p, idx) => {
 2. **样式重复**：如果发现一个元素的 CSS 书写了繁琐的圆角、阴影配置（如 `border-radius: 12px; box-shadow: ...`），第一时间考虑它是不是属于全局的 `.apple-card` 或 `.apple-list`，应该通过公用类重构。
 3. **安全注入**：在原生 JS 通过 `innerHTML` 渲染列表时，涉及到玩家昵称 `p.name` 必须经过 `escHtml()` 等函数转义，避免 XSS。如果使用 Vue.js (`{{ p.name }}`) 则自动转义，无需操心。
 4. **弹窗（Modal）**：全站禁止使用浏览器自带原生的 `alert()` 或 `confirm()` 阻断页面操作（除非特意声明），推荐调用全站封装好的 `Toast` 提示功能，亦可自己编写叠加层的 `.apple-modal` 风格弹窗进行询问操作。
+
+---
+
+## 6. 新游戏接入检查清单
+
+本项目现已全面采用 `APIRouter + include_router + 异步数据库 (aiosqlite)` 架构。在添加新游戏时，请遵循以下检查清单。
+
+**1. 路由模式 (Router pattern)**
+
+* 在游戏模块中，使用 `router = APIRouter(prefix="/yourgame", tags=["YourGame"])`。
+* 不要为游戏模块创建子 `FastAPI()` 应用。
+* 导出的变量名必须是 `router`（供 `main.py` 的动态加载器使用）。
+
+**2. 在主应用中注册 (Register in main app)**
+
+* 在 `APPS_CONFIG` 中添加映射，例如：`"yourgame": "yourgame.app"`。
+* 主应用应使用 `app.include_router(sub_router)`。
+* 不要使用 `app.mount(..., sub_app)` 来挂载游戏 API。
+* 如果需要静态文件，请在 `main.py` 中显式挂载到最终的带前缀的路径上。
+
+**3. 数据库规范（仅限异步）**
+
+* `database.py` 中的 API 均为异步函数；所有调用都必须使用 `await`。
+* 不要在异步路由中使用阻塞式的 `sqlite3.connect(...)`。
+* 新增的数据库辅助函数应使用 `async def` 定义，并保持返回的数据结构与现有的排行榜 API 结构一致。
+
+**4. 生命周期与初始化 (Lifecycle and init)**
+
+* 不要在游戏模块导入时（import time）调用 `init_db()`。
+* 数据库的初始化已集中在应用的生命周期 (lifespan) 中处理：`await database.init_db()`。
+
+**5. 导入规范 (Import rules)**
+
+* 不要使用 `sys.path.insert(...)` 或 `sys.path.append(...)` 这种 Hack 写法。
+* 使用标准的导入方式：`import database` 或 `from database import ...`。
+
+**6. 前端 API 基础路径 (Frontend API base path)**
+
+* 在前端代码中使用带有前缀的 API 基础路径，例如 `const API_BASE = '/yourgame/api'`。
+* 保持页面路由和 API 前缀对齐（例如页面为 `/yourgame/`，API 为 `/yourgame/api/...`）。
+
+**7. 合并前的快速检查 (Pre-merge quick checks)**
+
+* 运行 `python -m compileall .` 能够顺利通过。
+* 在主应用的 `/docs` (Swagger UI) 中可以正常看到新游戏的接口。
+* 核心 API（如 `/api/status`、`/api/leaderboard` 以及写入接口）测试正常。
+* 已经在首页和游戏列表中为新游戏添加了入口。

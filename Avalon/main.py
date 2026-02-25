@@ -2,21 +2,16 @@ import asyncio
 import random
 from typing import List, Dict, Optional
 from enum import Enum
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import os
 
-app = FastAPI(title="Avalon Simple Server")
+router = APIRouter(prefix="/avalon", tags=["Avalon"])
 
-# Mount assets
+# Static assets are mounted by the main app at /avalon/assets.
 base_dir = os.path.dirname(os.path.abspath(__file__))
-assets_dir = os.path.join(base_dir, "assets")
-if os.path.exists(assets_dir):
-    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-
 templates = Jinja2Templates(directory=[base_dir, "templates"])
 
 # -----------------------------------------------------------------------------
@@ -264,7 +259,7 @@ def get_assassin_player() -> Optional[Player]:
     morgana = next((p for p in game_state.players if p.role == RoleType.MORGANA), None)
     return morgana
 
-def check_game_end():
+async def check_game_end():
     """检查游戏是否结束"""
     success_count = sum(1 for m in game_state.missions if m.result == 'success')
     fail_count = sum(1 for m in game_state.missions if m.result == 'fail')
@@ -275,22 +270,22 @@ def check_game_end():
     if fail_count >= 3:
         game_state.status = "ended"
         game_state.game_winner = "evil"
-        record_db_results("evil")
+        await record_db_results("evil")
         return True
     if game_state.vote_fail_count >= 5:
         game_state.status = "ended"
         game_state.game_winner = "evil"
-        record_db_results("evil")
+        await record_db_results("evil")
         return True
     return False
 
-def record_db_results(winner_team: str):
+async def record_db_results(winner_team: str):
     try:
         import database
         for p in game_state.players:
             is_evil_role = is_currently_evil(p)
             won = (winner_team == "evil" and is_evil_role) or (winner_team == "good" and not is_evil_role)
-            database.record_result("Avalon", p.name, won, 0)
+            await database.record_result("Avalon", p.name, won, 0)
     except Exception as e:
         print(f"Error recording Avalon results: {e}")
 
@@ -298,7 +293,7 @@ def record_db_results(winner_team: str):
 # API
 # -----------------------------------------------------------------------------
 
-@app.post("/reset_game")
+@router.post("/reset_game")
 async def reset_game(req: CreateRequest):
     async with global_lock:
         previous_names = [p.name for p in game_state.players]
@@ -311,7 +306,7 @@ async def reset_game(req: CreateRequest):
         game_state.previous_players = previous_names
     return {"status": "ok", "previous_players": previous_names}
 
-@app.get("/lobby")
+@router.get("/lobby")
 async def get_lobby():
     return {
         "status": game_state.status,
@@ -324,13 +319,13 @@ async def get_lobby():
         "lady_of_lake_enabled": game_state.lady_of_lake_enabled,
     }
 
-@app.post("/end_game")
+@router.post("/end_game")
 async def end_game():
     async with global_lock:
         game_state.status = "ended"
     return {"status": "ok"}
 
-@app.post("/clear_game")
+@router.post("/clear_game")
 async def clear_game():
     """清空游戏，返回empty状态"""
     async with global_lock:
@@ -339,7 +334,7 @@ async def clear_game():
         game_state.previous_players = previous_names
     return {"status": "ok"}
 
-@app.post("/join")
+@router.post("/join")
 async def join_game(req: JoinRequest):
     async with global_lock:
         exists = next((p for p in game_state.players if p.name == req.player_name), None)
@@ -369,7 +364,7 @@ async def join_game(req: JoinRequest):
 
     return {"status": "joined"}
 
-@app.post("/propose_team")
+@router.post("/propose_team")
 async def propose_team(req: StartMissionRequest):
     async with global_lock:
         required_size = get_current_mission_size()
@@ -382,7 +377,7 @@ async def propose_team(req: StartMissionRequest):
         game_state.last_vote_result = None
     return {"status": "ok", "required_size": required_size}
 
-@app.post("/vote_team")
+@router.post("/vote_team")
 async def vote_team(req: TeamVoteRequest):
     async with global_lock:
         if not game_state.vote_team_active:
@@ -416,15 +411,15 @@ async def vote_team(req: TeamVoteRequest):
                 game_state.vote_fail_count += 1
                 game_state.last_vote_result = 'rejected'
                 advance_captain()
-                check_game_end()
+                await check_game_end()
 
     return {"status": "ok"}
 
-@app.post("/start_mission")
+@router.post("/start_mission")
 async def start_mission(req: StartMissionRequest):
     return await propose_team(req)
 
-@app.post("/vote_mission")
+@router.post("/vote_mission")
 async def vote_mission(req: MissionVoteRequest):
     async with global_lock:
         if not game_state.mission_active:
@@ -454,11 +449,11 @@ async def vote_mission(req: MissionVoteRequest):
                 game_state.mission_active = False  # 暂停任务
                 return {"status": "ok"}
 
-            _resolve_mission()
+            await _resolve_mission()
 
     return {"status": "ok"}
 
-def _resolve_mission():
+async def _resolve_mission():
     """结算任务结果（从 vote_mission 和 excalibur 共用）"""
     fail_count = game_state.mission_votes.count('fail')
     round_idx = len(game_state.missions)
@@ -490,15 +485,15 @@ def _resolve_mission():
     completed_rounds = len(game_state.missions)
     if (game_state.lady_of_lake_enabled
             and completed_rounds in (2, 3, 4)
-            and not check_game_end()):
+            and not await check_game_end()):
         game_state.lady_of_lake_active = True
         game_state.lady_of_lake_result = None
         game_state.lady_of_lake_inspector = None
     else:
         advance_captain()
-        check_game_end()
+        await check_game_end()
 
-@app.post("/assign_excalibur")
+@router.post("/assign_excalibur")
 async def assign_excalibur(req: ExcaliburAssignRequest):
     """队长将王者之剑分配给队伍中一名非自己的队员"""
     async with global_lock:
@@ -516,7 +511,7 @@ async def assign_excalibur(req: ExcaliburAssignRequest):
         game_state.mission_voted_players = []
     return {"status": "ok"}
 
-@app.post("/use_excalibur")
+@router.post("/use_excalibur")
 async def use_excalibur(req: ExcaliburUseRequest):
     """持剑者使用或跳过王者之剑"""
     async with global_lock:
@@ -537,11 +532,11 @@ async def use_excalibur(req: ExcaliburUseRequest):
 
         # 结算任务
         game_state.excalibur_phase = "done"
-        _resolve_mission()
+        await _resolve_mission()
 
     return {"status": "ok", "excalibur_result": game_state.excalibur_result}
 
-@app.post("/lady_of_lake")
+@router.post("/lady_of_lake")
 async def lady_of_lake(req: LadyOfLakeRequest):
     """湖中仙女查验"""
     async with global_lock:
@@ -576,11 +571,11 @@ async def lady_of_lake(req: LadyOfLakeRequest):
 
         # 仙女查验完毕，继续正常流程
         advance_captain()
-        check_game_end()
+        await check_game_end()
 
     return {"status": "ok", "alignment": alignment}
 
-@app.post("/assassinate")
+@router.post("/assassinate")
 async def assassinate(req: AssassinRequest):
     async with global_lock:
         if game_state.status != "assassin":
@@ -595,16 +590,16 @@ async def assassinate(req: AssassinRequest):
             game_state.game_winner = "good"
 
         game_state.status = "ended"
-        record_db_results(game_state.game_winner)
+        await record_db_results(game_state.game_winner)
     return {"status": "ok", "winner": game_state.game_winner}
 
-@app.post("/record_vote_fail")
+@router.post("/record_vote_fail")
 async def record_vote_fail():
     async with global_lock:
         game_state.vote_fail_count += 1
     return {"status": "ok"}
 
-@app.get("/status/{player_name}")
+@router.get("/status/{player_name}")
 async def get_status(player_name: str):
     if game_state.status == "empty":
         return {
@@ -695,19 +690,15 @@ async def get_status(player_name: str):
 
     return resp
 
-@app.get("/leaderboard")
+@router.get("/leaderboard")
 async def get_avalon_leaderboard():
     try:
         import database
-        lb = database.get_leaderboard()
+        lb = await database.get_leaderboard()
         return {"leaderboard": lb.get("Avalon", [])}
     except Exception:
         return {"leaderboard": []}
 
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

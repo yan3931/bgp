@@ -1,18 +1,14 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import copy
 import uuid
-import sys
-import os
 
-# Ensure database is accessible
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import record_modernart_game, get_modernart_leaderboard
 
-app = FastAPI(title="Modern Art Game Helper")
+router = APIRouter(prefix="/modernart", tags=["ModernArt"])
 templates = Jinja2Templates(directory=["ModernArt/templates", "templates"])
 
 # Constants
@@ -62,11 +58,11 @@ class TransactionRequest(BaseModel):
 class EndRoundRequest(BaseModel):
     player_name: str
 
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.post("/api/join")
+@router.post("/api/join")
 async def join_game(req: JoinRoomRequest):
     if req.player_name and req.player_name in global_state.players:
         return {"status": "success", "state": get_state_for_player(req.player_name)}
@@ -81,7 +77,7 @@ async def join_game(req: JoinRoomRequest):
         global_state.add_log(f"{req.player_name} 加入了游戏")
     return {"status": "success", "state": get_state_for_player(req.player_name)}
 
-@app.post("/api/start")
+@router.post("/api/start")
 async def start_game(req: StartGameRequest):
     if len(global_state.players) < 3:
         raise HTTPException(status_code=400, detail="Need at least 3 players")
@@ -89,13 +85,13 @@ async def start_game(req: StartGameRequest):
     global_state.add_log(f"{req.player_name} 开始了游戏！第 1 回合")
     return {"status": "success", "state": get_state_for_player(req.player_name)}
 
-@app.post("/api/reset")
+@router.post("/api/reset")
 async def reset_game():
     global global_state
     global_state = GameState()
     return {"status": "success"}
 
-@app.post("/api/play_again")
+@router.post("/api/play_again")
 async def play_again():
     if global_state.started:
         for player in global_state.players.values():
@@ -124,11 +120,11 @@ def get_state_for_player(current_player: str):
         "history_log": global_state.history_log
     }
 
-@app.get("/api/state")
+@router.get("/api/state")
 async def get_state_endpoint(player_name: str = ""):
     return get_state_for_player(player_name)
 
-@app.post("/api/transaction")
+@router.post("/api/transaction")
 async def transaction(req: TransactionRequest):
     if not global_state.started:
         raise HTTPException(status_code=400, detail="Game not started")
@@ -176,11 +172,11 @@ async def transaction(req: TransactionRequest):
         global_state.add_log(f"{seller} 以 ${price} 卖给 {buyer} 一张 {COLOR_MAP[req.artist]} 画作")
 
     if global_state.round_paintings[req.artist] >= 5:
-        _trigger_end_round()
+        await _trigger_end_round()
 
     return {"status": "success", "state": get_state_for_player(req.player_name)}
 
-def _trigger_end_round():
+async def _trigger_end_round():
     if global_state.current_round > 4:
         return
 
@@ -253,27 +249,27 @@ def _trigger_end_round():
 
             game_id = str(uuid.uuid4())
             try:
-                record_modernart_game(game_id, players_data)
+                await record_modernart_game(game_id, players_data)
             except Exception as e:
                 print(f"Error saving modern art game: {e}")
 
-@app.post("/api/end_round")
+@router.post("/api/end_round")
 async def end_round(req: EndRoundRequest):
     if global_state.current_round > 4:
         raise HTTPException(status_code=400, detail="Game already ended")
 
-    _trigger_end_round()
+    await _trigger_end_round()
         
     return {"status": "success", "state": get_state_for_player(req.player_name)}
 
-@app.post("/api/undo")
+@router.post("/api/undo")
 async def undo():
     pass
 
-@app.get("/api/leaderboard")
+@router.get("/api/leaderboard")
 async def get_leaderboard():
     try:
-        data = get_modernart_leaderboard()
+        data = await get_modernart_leaderboard()
         return {"status": "success", "leaderboard": data}
     except Exception as e:
         return {"status": "error", "message": str(e)}

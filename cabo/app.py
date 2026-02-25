@@ -1,18 +1,15 @@
 import asyncio
 import uuid
 from typing import List, Dict, Optional
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import os
-import sys
 
-# Add parent directory to path for database import
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import database
 
-app = FastAPI(title="Cabo Scorekeeper")
+router = APIRouter(prefix="/cabo", tags=["Cabo"])
 base_dir = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=[base_dir, "templates"])
 
@@ -60,13 +57,13 @@ class RoundSubmitRequest(BaseModel):
 # API
 # -----------------------------------------------------------------------------
 
-@app.post("/api/reset")
+@router.post("/api/reset")
 async def reset_game():
     async with global_lock:
         game_state.__init__()
     return {"status": "ok"}
 
-@app.post("/api/add_player")
+@router.post("/api/add_player")
 async def add_player(req: AddPlayerRequest):
     async with global_lock:
         # Check duplicate
@@ -75,13 +72,13 @@ async def add_player(req: AddPlayerRequest):
         game_state.players.append(Player(name=req.name))
     return {"status": "ok"}
 
-@app.post("/api/remove_player")
+@router.post("/api/remove_player")
 async def remove_player(req: AddPlayerRequest):
     async with global_lock:
         game_state.players = [p for p in game_state.players if p.name != req.name]
     return {"status": "ok"}
 
-@app.post("/api/submit_round")
+@router.post("/api/submit_round")
 async def submit_round(req: RoundSubmitRequest):
     async with global_lock:
         if game_state.status == "finished":
@@ -202,7 +199,7 @@ async def submit_round(req: RoundSubmitRequest):
                 })
             
             try:
-                database.record_cabo_game(game_state.game_id, players_data)
+                await database.record_cabo_game(game_state.game_id, players_data)
             except Exception as e:
                 print(f"Error saving cabo game: {e}")
 
@@ -214,7 +211,7 @@ async def submit_round(req: RoundSubmitRequest):
         }
     return {"status": "ok"}
 
-@app.get("/api/status")
+@router.get("/api/status")
 async def get_status():
     return {
         "players": sorted(game_state.players, key=lambda x: x.total_score),
@@ -223,14 +220,14 @@ async def get_status():
         "game_status": game_state.status
     }
 
-@app.get("/api/leaderboard")
+@router.get("/api/leaderboard")
 async def get_leaderboard():
     try:
-        return database.get_cabo_leaderboard()
+        return await database.get_cabo_leaderboard()
     except Exception as e:
         print(f"Error getting cabo leaderboard: {e}")
         return []
 
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})

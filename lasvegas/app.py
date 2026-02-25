@@ -1,26 +1,20 @@
 import asyncio
-import sys
 from typing import List, Dict, Optional
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import os
 import uuid
 
-# Add parent directory to path so we can import the shared database module
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from database import init_db, record_lasvegas_game, get_lasvegas_leaderboard
+from database import record_lasvegas_game, get_lasvegas_leaderboard
 
-app = FastAPI(title="Las Vegas Money Calculator")
+router = APIRouter(prefix="/lasvegas", tags=["LasVegas"])
 base_dir = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=[base_dir, "templates"])
 
 # Valid denominations (in 万 units)
 VALID_DENOMINATIONS = [30, 40, 50, 60, 70, 80, 90, 100]
-
-# Initialize DB tables on import
-init_db()
 
 # -----------------------------------------------------------------------------
 # Data Models
@@ -81,13 +75,13 @@ class RemoveBillRequest(BaseModel):
 # API
 # -----------------------------------------------------------------------------
 
-@app.post("/api/reset")
+@router.post("/api/reset")
 async def reset_game():
     async with global_lock:
         game_state.__init__()
     return {"status": "ok"}
 
-@app.post("/api/add_player")
+@router.post("/api/add_player")
 async def add_player(req: NameRequest):
     async with global_lock:
         if any(p.name == req.name for p in game_state.players):
@@ -96,14 +90,14 @@ async def add_player(req: NameRequest):
         recalc_ranks()
     return {"status": "ok"}
 
-@app.post("/api/remove_player")
+@router.post("/api/remove_player")
 async def remove_player(req: NameRequest):
     async with global_lock:
         game_state.players = [p for p in game_state.players if p.name != req.name]
         recalc_ranks()
     return {"status": "ok"}
 
-@app.post("/api/add_bill")
+@router.post("/api/add_bill")
 async def add_bill(req: AddBillRequest):
     async with global_lock:
         player = next((p for p in game_state.players if p.name == req.player_name), None)
@@ -118,7 +112,7 @@ async def add_bill(req: AddBillRequest):
         recalc_ranks()
     return {"status": "ok"}
 
-@app.post("/api/remove_bill")
+@router.post("/api/remove_bill")
 async def remove_bill(req: RemoveBillRequest):
     async with global_lock:
         player = next((p for p in game_state.players if p.name == req.player_name), None)
@@ -130,7 +124,7 @@ async def remove_bill(req: RemoveBillRequest):
         recalc_ranks()
     return {"status": "ok"}
 
-@app.post("/api/end_game")
+@router.post("/api/end_game")
 async def end_game():
     """End current game: save each player's result to DB, then reset."""
     async with global_lock:
@@ -143,14 +137,14 @@ async def end_game():
         
         # Record each player's result in DB
         for p in game_state.players:
-            record_lasvegas_game(p.name, p.total_amount, p.bill_count)
+            await record_lasvegas_game(p.name, p.total_amount, p.bill_count)
         
         # Reset game state for next round
         game_state.__init__()
     
     return {"status": "ok"}
 
-@app.get("/api/status")
+@router.get("/api/status")
 async def get_status():
     all_players = [p.model_dump() for p in game_state.players]
     ranked = sorted(
@@ -162,10 +156,10 @@ async def get_status():
         "players": all_players
     }
 
-@app.get("/api/leaderboard")
+@router.get("/api/leaderboard")
 async def get_leaderboard():
-    return {"leaderboard": get_lasvegas_leaderboard()}
+    return {"leaderboard": await get_lasvegas_leaderboard()}
 
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})

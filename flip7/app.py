@@ -1,23 +1,17 @@
 import asyncio
-import sys
 import os
 import uuid
 from typing import List, Dict, Optional
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-# Add parent directory to path so we can import the shared database module
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from database import init_db, record_flip7_game, get_flip7_leaderboard
+from database import record_flip7_game, get_flip7_leaderboard
 
-app = FastAPI(title="7flip Score Tracker")
+router = APIRouter(prefix="/flip7", tags=["Flip7"])
 base_dir = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=[base_dir, "templates"])
-
-# Initialize DB tables on import
-init_db()
 
 # -----------------------------------------------------------------------------
 # Data Models
@@ -99,13 +93,13 @@ class SubmitRoundRequest(BaseModel):
 # API
 # -----------------------------------------------------------------------------
 
-@app.post("/api/reset")
+@router.post("/api/reset")
 async def reset_game():
     async with global_lock:
         game_state.__init__()
     return {"status": "ok"}
 
-@app.post("/api/add_player")
+@router.post("/api/add_player")
 async def add_player(req: NameRequest):
     async with global_lock:
         if any(p.name == req.name for p in game_state.players):
@@ -114,14 +108,14 @@ async def add_player(req: NameRequest):
         recalc_ranks()
     return {"status": "ok"}
 
-@app.post("/api/remove_player")
+@router.post("/api/remove_player")
 async def remove_player(req: NameRequest):
     async with global_lock:
         game_state.players = [p for p in game_state.players if p.name != req.name]
         recalc_ranks()
     return {"status": "ok"}
 
-@app.post("/api/submit_round")
+@router.post("/api/submit_round")
 async def submit_round(req: SubmitRoundRequest):
     """
     Submit cards drawn by players this round, compute scores, update totals.
@@ -162,7 +156,7 @@ async def submit_round(req: SubmitRoundRequest):
                     "bust_count": p.busts
                 } for p in game_state.players
             ]
-            record_flip7_game(game_id, players_db_data)
+            await record_flip7_game(game_id, players_db_data)
             
             return {
                 "status": "game_over",
@@ -172,7 +166,7 @@ async def submit_round(req: SubmitRoundRequest):
             
     return {"status": "ok", "round_scores": round_scores}
 
-@app.get("/api/status")
+@router.get("/api/status")
 async def get_status():
     all_players = [p.model_dump() for p in game_state.players]
     ranked = sorted(
@@ -185,10 +179,10 @@ async def get_status():
         "players": all_players
     }
 
-@app.get("/api/leaderboard")
+@router.get("/api/leaderboard")
 async def get_leaderboard():
-    return {"leaderboard": get_flip7_leaderboard()}
+    return {"leaderboard": await get_flip7_leaderboard()}
 
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
