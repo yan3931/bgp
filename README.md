@@ -195,3 +195,22 @@ data.leaderboard.forEach((p, idx) => {
 * 在主应用的 `/docs` (Swagger UI) 中可以正常看到新游戏的接口。
 * 核心 API（如 `/api/status`、`/api/leaderboard` 以及写入接口）测试正常。
 * 已经在首页和游戏列表中为新游戏添加了入口。
+
+---
+
+## 7. PWA (渐进式 Web 应用) 支持
+桌游助手现已全面支持 PWA！你可以直接在手机浏览器（如 Safari 或 Chrome）中选择“添加到主屏幕”。
+- **沉浸式体验**：从主屏幕启动时，将完全隐藏浏览器的地址栏与底部导航条，呈现纯净的全屏应用界面。
+- **类原生质感**：配合 Apple HIG 设计规范和全局的平滑转场动画，体验将和原生的 iOS App 完全一致。
+- **配置资源**：相关的 `manifest.json` 与 PWA 图标均已存放于 `static/icons` 和 `static` 目录下，所有页面通过 `base.html` 中心化接入，无缝兼容所有子游戏。
+
+---
+
+## LasVegas Recent Architecture Updates
+
+- Added Socket.IO state broadcasting for LasVegas state mutations (`add_player`, `remove_player`, `add_bill`, `remove_bill`, `setup_field`, `end_game`, `reset`), emitting `state_update`.
+- Moved field setup randomization into backend truth state:
+  - New API: `POST /lasvegas/api/setup_field`
+  - New API: `GET /lasvegas/api/field`
+  - `GET /lasvegas/api/status` now includes `field`.
+- Frontend LasVegas page now uses Alpine.js for reactive leaderboard/player/history rendering, reducing `innerHTML` string rendering in core views.

@@ -79,6 +79,7 @@ class GlobalGame:
         self.missions: List[MissionRecord] = []
         self.status = "empty"  # empty, joining, active, lady_of_lake, assassin, ended
         self.vote_fail_count = 0
+        self.history: List[dict] = []
 
         # 投票阶段
         self.vote_team_active = False
@@ -405,6 +406,15 @@ async def vote_team(req: TeamVoteRequest):
                     game_state.mission_votes = []
                     game_state.mission_voted_players = []
             else:
+                game_state.history.append({
+                    "round_num": len(game_state.missions) + 1,
+                    "proposal_index": game_state.vote_fail_count + 1,
+                    "team": list(game_state.current_mission_team),
+                    "captain": game_state.captain_name,
+                    "votes": dict(game_state.team_votes),
+                    "mission_votes": {},
+                    "result": "rejected"
+                })
                 game_state.vote_team_active = False
                 game_state.mission_active = False
                 game_state.current_mission_team = []
@@ -461,6 +471,17 @@ async def _resolve_mission():
     is_fail = fail_count >= 1
     if game_state.target_count >= 7 and round_idx == 3:
         is_fail = fail_count >= 2
+
+    mission_votes_dict = dict(zip(game_state.mission_voted_players, game_state.mission_votes))
+    game_state.history.append({
+        "round_num": round_idx + 1,
+        "proposal_index": game_state.vote_fail_count + 1,
+        "team": list(game_state.current_mission_team),
+        "captain": game_state.captain_name,
+        "votes": dict(game_state.last_vote_snapshot),
+        "mission_votes": mission_votes_dict,
+        "result": "approved_fail" if is_fail else "approved_success"
+    })
 
     game_state.missions.append(MissionRecord(
         round_num=round_idx + 1,
@@ -687,6 +708,7 @@ async def get_status(player_name: str):
 
     if game_state.status == "ended":
         resp["revealed_players"] = [{"name": p.name, "role": p.role} for p in game_state.players]
+        resp["history"] = getattr(game_state, "history", [])
 
     return resp
 
