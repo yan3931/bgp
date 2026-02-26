@@ -1,0 +1,491 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" class="dynamic-svg-title">
+    <defs>
+        <!-- 引入派对风格的粗体英文字体与中文字体 -->
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+SC:wght@800;900&family=Paytone+One&display=swap');
+
+            /* 动画关键帧 */
+
+            /* 背景放射光线旋转 */
+            @keyframes spinRays {
+                from {
+                    transform: rotate(0deg);
+                }
+
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            /* 巨大的数字7 呼吸发光 */
+            @keyframes glow7 {
+
+                0%,
+                100% {
+                    filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5)) drop-shadow(0 0 20px rgba(250, 204, 21, 0.5));
+                    transform: scale(1) rotate(5deg);
+                }
+
+                50% {
+                    filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.9)) drop-shadow(0 0 40px rgba(250, 204, 21, 0.8));
+                    transform: scale(1.05) rotate(8deg);
+                }
+            }
+
+            /* 主标题浮动 */
+            @keyframes floatTitle {
+
+                0%,
+                100% {
+                    transform: translateY(0px);
+                }
+
+                50% {
+                    transform: translateY(-8px);
+                }
+            }
+
+            /* 背景卡牌悬浮与轻微摇晃 */
+            @keyframes floatCardLeft {
+
+                0%,
+                100% {
+                    transform: translate(0px, 0px) rotate(-15deg);
+                }
+
+                50% {
+                    transform: translate(-10px, -15px) rotate(-10deg);
+                }
+            }
+
+            @keyframes floatCardRight {
+
+                0%,
+                100% {
+                    transform: translate(0px, 0px) rotate(20deg);
+                }
+
+                50% {
+                    transform: translate(10px, -20px) rotate(25deg);
+                }
+            }
+
+            @keyframes floatCardTop {
+
+                0%,
+                100% {
+                    transform: translate(0px, 0px) rotate(-5deg);
+                }
+
+                50% {
+                    transform: translate(0px, -15px) rotate(5deg);
+                }
+            }
+
+            /* 7连翻进度条依次点亮动画 (7个槽位) */
+            @keyframes track1 {
+
+                0%,
+                5% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+
+                10%,
+                80% {
+                    fill: #fcd34d;
+                    stroke: #f59e0b;
+                    filter: drop-shadow(0 0 5px #fbbf24);
+                }
+
+                85%,
+                100% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+            }
+
+            @keyframes track2 {
+
+                0%,
+                15% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+
+                20%,
+                80% {
+                    fill: #fcd34d;
+                    stroke: #f59e0b;
+                    filter: drop-shadow(0 0 5px #fbbf24);
+                }
+
+                85%,
+                100% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+            }
+
+            @keyframes track3 {
+
+                0%,
+                25% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+
+                30%,
+                80% {
+                    fill: #fcd34d;
+                    stroke: #f59e0b;
+                    filter: drop-shadow(0 0 5px #fbbf24);
+                }
+
+                85%,
+                100% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+            }
+
+            @keyframes track4 {
+
+                0%,
+                35% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+
+                40%,
+                80% {
+                    fill: #fcd34d;
+                    stroke: #f59e0b;
+                    filter: drop-shadow(0 0 5px #fbbf24);
+                }
+
+                85%,
+                100% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+            }
+
+            @keyframes track5 {
+
+                0%,
+                45% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+
+                50%,
+                80% {
+                    fill: #fcd34d;
+                    stroke: #f59e0b;
+                    filter: drop-shadow(0 0 5px #fbbf24);
+                }
+
+                85%,
+                100% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+            }
+
+            @keyframes track6 {
+
+                0%,
+                55% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+
+                60%,
+                80% {
+                    fill: #fcd34d;
+                    stroke: #f59e0b;
+                    filter: drop-shadow(0 0 5px #fbbf24);
+                }
+
+                85%,
+                100% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                }
+            }
+
+            @keyframes track7 {
+
+                0%,
+                65% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                    transform: scale(1);
+                }
+
+                70%,
+                80% {
+                    fill: #fbbf24;
+                    stroke: #f59e0b;
+                    filter: drop-shadow(0 0 15px #f59e0b);
+                    transform: scale(1.1);
+                }
+
+                85%,
+                100% {
+                    fill: #1e293b;
+                    stroke: #334155;
+                    transform: scale(1);
+                }
+            }
+
+            /* CSS类绑定 */
+            .rays-group {
+                animation: spinRays 20s linear infinite;
+                transform-origin: 400px 200px;
+            }
+
+            .title-float {
+                animation: floatTitle 3s ease-in-out infinite;
+            }
+
+            .giant-7 {
+                animation: glow7 2.5s infinite alternate ease-in-out;
+                transform-origin: center;
+            }
+
+            .card-l {
+                animation: floatCardLeft 5s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            .card-r {
+                animation: floatCardRight 6s ease-in-out infinite 0.5s;
+                transform-origin: center;
+            }
+
+            .card-t {
+                animation: floatCardTop 4.5s ease-in-out infinite 1s;
+                transform-origin: center;
+            }
+
+            .trk-1 {
+                animation: track1 6s infinite;
+            }
+
+            .trk-2 {
+                animation: track2 6s infinite;
+            }
+
+            .trk-3 {
+                animation: track3 6s infinite;
+            }
+
+            .trk-4 {
+                animation: track4 6s infinite;
+            }
+
+            .trk-5 {
+                animation: track5 6s infinite;
+            }
+
+            .trk-6 {
+                animation: track6 6s infinite;
+            }
+
+            .trk-7 {
+                animation: track7 6s infinite;
+                transform-origin: center;
+            }
+
+            /* 文字样式 */
+            .text-flip {
+                font-family: 'Paytone One', sans-serif;
+                font-size: 85px;
+                fill: #ffffff;
+                text-anchor: middle;
+                filter: drop-shadow(0 8px 0px #1e3a8a);
+                /* 粗糙立体阴影 */
+            }
+
+            .text-giant-7 {
+                font-family: 'Paytone One', sans-serif;
+                font-size: 140px;
+                fill: url(#gold-grad);
+                stroke: #ef4444;
+                stroke-width: 6;
+                text-anchor: middle;
+                filter: drop-shadow(0 10px 0px #991b1b);
+            }
+
+            .text-sub {
+                font-family: 'Noto Sans SC', sans-serif;
+                font-weight: 900;
+                font-size: 28px;
+                fill: #f8fafc;
+                letter-spacing: 6px;
+                text-anchor: middle;
+                filter: drop-shadow(0 2px 4px #000);
+            }
+
+            .text-badge {
+                font-family: 'Fredoka One', cursive;
+                font-size: 16px;
+                fill: #ffffff;
+                text-anchor: middle;
+                letter-spacing: 2px;
+            }
+
+            .card-num-main {
+                font-family: 'Fredoka One', cursive;
+                font-size: 60px;
+                text-anchor: middle;
+            }
+
+            .card-num-sm {
+                font-family: 'Fredoka One', cursive;
+                font-size: 16px;
+                text-anchor: middle;
+            }
+        </style>
+
+        <!-- 渐变色彩定义 -->
+        <!-- 极夜深蓝背景渐变 -->
+        <radialGradient id="bg-grad" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="#1e3a8a" />
+            <stop offset="70%" stop-color="#0f172a" />
+            <stop offset="100%" stop-color="#020617" />
+        </radialGradient>
+
+        <!-- 土豪金渐变 (数字7) -->
+        <linearGradient id="gold-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fef08a" />
+            <stop offset="40%" stop-color="#fbbf24" />
+            <stop offset="60%" stop-color="#f59e0b" />
+            <stop offset="100%" stop-color="#b45309" />
+        </linearGradient>
+
+        <!-- 滤镜 -->
+        <filter id="shadow-heavy">
+            <feDropShadow dx="0" dy="10" stdDeviation="6" flood-color="#000" flood-opacity="0.6" />
+        </filter>
+
+        <filter id="shadow-card">
+            <feDropShadow dx="-5" dy="15" stdDeviation="5" flood-color="#000" flood-opacity="0.5" />
+        </filter>
+
+        <!-- 派对光束模板 -->
+        <g id="rays">
+            <path d="M400,200 L100,-100 L200,-100 Z" fill="#3b82f6" opacity="0.15" />
+            <path d="M400,200 L400,-100 L500,-100 Z" fill="#3b82f6" opacity="0.15" />
+            <path d="M400,200 L700,-100 L800,-100 Z" fill="#3b82f6" opacity="0.15" />
+            <path d="M400,200 L900,200 L900,300 Z" fill="#3b82f6" opacity="0.15" />
+            <path d="M400,200 L700,500 L600,500 Z" fill="#3b82f6" opacity="0.15" />
+            <path d="M400,200 L400,500 L300,500 Z" fill="#3b82f6" opacity="0.15" />
+            <path d="M400,200 L100,500 L0,500 Z" fill="#3b82f6" opacity="0.15" />
+            <path d="M400,200 L-100,200 L-100,100 Z" fill="#3b82f6" opacity="0.15" />
+        </g>
+    </defs>
+
+    <!-- 1. 背景层 -->
+    <rect width="800" height="400" fill="url(#bg-grad)" rx="16" />
+
+    <!-- 旋转的派对放射光束 -->
+    <use href="#rays" class="rays-group" />
+
+    <!-- 2. 背景悬浮卡牌 (展示游戏多样数字) -->
+    <!-- 左侧卡牌 (数字3，绿色) -->
+    <g class="card-l" style="transform-origin: 200px 180px;">
+        <g transform="translate(140, 110)" filter="url(#shadow-card)">
+            <rect width="100" height="140" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+            <!-- 卡牌内框 -->
+            <rect width="84" height="124" x="8" y="8" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="3" />
+            <text x="50" y="90" class="card-num-main" fill="#10b981">3</text>
+            <text x="22" y="32" class="card-num-sm" fill="#10b981">3</text>
+            <text x="78" y="126" class="card-num-sm" fill="#10b981" transform="rotate(180, 78, 120)">3</text>
+        </g>
+    </g>
+
+    <!-- 右侧卡牌 (数字5，紫色) -->
+    <g class="card-r" style="transform-origin: 600px 220px;">
+        <g transform="translate(540, 140)" filter="url(#shadow-card)">
+            <rect width="100" height="140" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+            <rect width="84" height="124" x="8" y="8" rx="6" fill="#faf5ff" stroke="#a855f7" stroke-width="3" />
+            <text x="50" y="90" class="card-num-main" fill="#a855f7">5</text>
+            <text x="22" y="32" class="card-num-sm" fill="#a855f7">5</text>
+            <text x="78" y="126" class="card-num-sm" fill="#a855f7" transform="rotate(180, 78, 120)">5</text>
+        </g>
+    </g>
+
+    <!-- 顶部偏后卡牌 (数字8，粉色) -->
+    <g class="card-t" style="transform-origin: 520px 100px; opacity: 0.8;">
+        <g transform="translate(470, 30) scale(0.8)" filter="url(#shadow-card)">
+            <rect width="100" height="140" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+            <rect width="84" height="124" x="8" y="8" rx="6" fill="#fdf2f8" stroke="#ec4899" stroke-width="3" />
+            <text x="50" y="90" class="card-num-main" fill="#ec4899">8</text>
+            <text x="22" y="32" class="card-num-sm" fill="#ec4899">8</text>
+            <text x="78" y="126" class="card-num-sm" fill="#ec4899" transform="rotate(180, 78, 120)">8</text>
+        </g>
+    </g>
+
+
+    <!-- 3. 中央主标题组合 -->
+    <g class="title-float">
+        <!-- PUSH YOUR LUCK 小徽章 -->
+        <g transform="translate(400, 55)">
+            <path d="M -90 -15 L 90 -15 L 105 0 L 90 15 L -90 15 L -105 0 Z" fill="#be123c"
+                filter="url(#shadow-heavy)" />
+            <text x="0" y="5" class="text-badge">PUSH YOUR LUCK!</text>
+        </g>
+
+        <!-- 英文 FLIP -->
+        <text x="320" y="170" class="text-flip animated-text">FLIP</text>
+
+        <!-- 巨大的数字 7 (带有呼吸发光特效) -->
+        <!-- 使用g包裹以确保transform-origin准确 -->
+        <g transform="translate(450, 250)">
+            <text x="0" y="0" class="text-giant-7 giant-7 animated-text">7</text>
+        </g>
+
+        <!-- 中文副标题 -->
+        <text x="400" y="240" class="text-sub animated-text">7连翻</text>
+        
+    </g>
+
+    <!-- 4. 底部核心机制：7连翻进度条 (Tracker) -->
+    <g transform="translate(200, 310)">
+        <!-- 进度条背景线 -->
+        <line x1="15" y1="25" x2="385" y2="25" stroke="#334155" stroke-width="4" stroke-linecap="round" />
+
+        <!-- 7个卡槽，依次亮起 -->
+        <rect x="0" y="0" width="34" height="50" rx="4" class="trk-1" />
+        <rect x="60" y="0" width="34" height="50" rx="4" class="trk-2" />
+        <rect x="120" y="0" width="34" height="50" rx="4" class="trk-3" />
+        <rect x="180" y="0" width="34" height="50" rx="4" class="trk-4" />
+        <rect x="240" y="0" width="34" height="50" rx="4" class="trk-5" />
+        <rect x="300" y="0" width="34" height="50" rx="4" class="trk-6" />
+        <!-- 第7个卡槽是终极目标，有额外放大效果 -->
+        <rect x="360" y="0" width="34" height="50" rx="4" class="trk-7" style="transform-origin: 377px 25px;" />
+
+        <!-- 卡槽内部装饰线 (模拟卡背花纹) -->
+        <g stroke="#0f172a" stroke-width="2" opacity="0.5">
+            <circle cx="17" cy="25" r="8" />
+            <circle cx="77" cy="25" r="8" />
+            <circle cx="137" cy="25" r="8" />
+            <circle cx="197" cy="25" r="8" />
+            <circle cx="257" cy="25" r="8" />
+            <circle cx="317" cy="25" r="8" />
+            <!-- 最后一个槽内画一个星星 -->
+            <path d="M 377 15 L 380 22 L 387 23 L 382 28 L 383 35 L 377 32 L 371 35 L 372 28 L 367 23 L 374 22 Z"
+                fill="#0f172a" stroke="none" />
+        </g>
+    </g>
+
+    <!-- 进度条提示文字 -->
+    <text x="400" y="385" font-family="'Noto Sans SC', sans-serif" font-weight="800" font-size="14" fill="#94a3b8"
+        text-anchor="middle" letter-spacing="2px">
+        集齐 7 张不同数字卡牌，触发终极奖励！
+    </text>
+
+</svg>

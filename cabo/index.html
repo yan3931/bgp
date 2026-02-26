@@ -4,6 +4,179 @@
 
 {% block extra_head %}
 <style>
+
+            @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@800&family=ZCOOL+KuaiLe&display=swap');
+            /* 动画关键帧 */
+
+            /* 卡牌悬浮动画 */
+            @keyframes floatCard1 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(-12deg);
+                }
+
+                50% {
+                    transform: translateY(-15px) rotate(-10deg);
+                }
+            }
+
+            @keyframes floatCard2 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(-4deg);
+                }
+
+                50% {
+                    transform: translateY(12px) rotate(-6deg);
+                }
+            }
+
+            @keyframes floatCard3 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(6deg);
+                }
+
+                50% {
+                    transform: translateY(-10px) rotate(8deg);
+                }
+            }
+
+            @keyframes floatCard4 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(15deg);
+                }
+
+                50% {
+                    transform: translateY(15px) rotate(12deg);
+                }
+            }
+
+            /* 独角兽与魔法光晕呼吸动画 */
+            @keyframes pulseMagic {
+
+                0%,
+                100% {
+                    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4));
+                    opacity: 0.7;
+                }
+
+                50% {
+                    filter: drop-shadow(0 0 25px rgba(52, 211, 153, 0.8));
+                    opacity: 1;
+                }
+            }
+
+            /* 萤火虫/星光飘飞动画 */
+            @keyframes fireflyUp {
+                0% {
+                    transform: translateY(0) scale(0.5);
+                    opacity: 0;
+                }
+
+                20% {
+                    opacity: 0.8;
+                    transform: translateY(-20px) scale(1);
+                }
+
+                80% {
+                    opacity: 0.8;
+                    transform: translateY(-80px) scale(0.8);
+                }
+
+                100% {
+                    transform: translateY(-100px) scale(0.3);
+                    opacity: 0;
+                }
+            }
+
+            /* 标题文字浮现与发光 */
+            @keyframes textGlow {
+
+                0%,
+                100% {
+                    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+                }
+
+                50% {
+                    filter: drop-shadow(0 0 18px rgba(167, 139, 250, 0.6));
+                }
+            }
+
+            /* CSS类绑定 */
+            .card-1 {
+                animation: floatCard1 5s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            .card-2 {
+                animation: floatCard2 6s ease-in-out infinite 1s;
+                transform-origin: center;
+            }
+
+            .card-3 {
+                animation: floatCard3 5.5s ease-in-out infinite 0.5s;
+                transform-origin: center;
+            }
+
+            .card-4 {
+                animation: floatCard4 4.5s ease-in-out infinite 1.5s;
+                transform-origin: center;
+            }
+
+            .unicorn-glow {
+                animation: pulseMagic 4s infinite alternate ease-in-out;
+            }
+
+            .text-main {
+                font-family: 'Fredoka One', cursive;
+                font-size: 76px;
+                fill: url(#text-grad);
+                text-anchor: middle;
+                letter-spacing: 10px;
+                animation: textGlow 3s infinite alternate ease-in-out;
+            }
+
+            .text-sub {
+                font-family: 'ZCOOL KuaiLe', cursive;
+                font-size: 36px;
+                fill: #d8b4fe;
+                text-anchor: middle;
+                letter-spacing: 20px;
+                filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+                transform: translateX(10px);
+            }
+
+            .ff-1 {
+                animation: fireflyUp 4s linear infinite;
+            }
+
+            .ff-2 {
+                animation: fireflyUp 5s linear infinite 1.5s;
+            }
+
+            .ff-3 {
+                animation: fireflyUp 3.5s linear infinite 2s;
+            }
+
+            .ff-4 {
+                animation: fireflyUp 6s linear infinite 0.5s;
+            }
+
+            .ff-5 {
+                animation: fireflyUp 4.5s linear infinite 3s;
+            }
+        
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@800&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<style>
     body {
         /* standard body */
     }
@@ -362,10 +535,10 @@
 {% raw %}
 <div id="app" v-cloak>
     <!-- Hero -->
-    <div class="apple-hero">
-        <span class="apple-hero-emoji">🦄</span>
-        <h1 class="cabo-title">卡波</h1>
-        <p>记忆博弈 · 极限换牌</p>
+    <div class="game-header-wrapper" v-pre>
+        {% endraw %}
+        {% include 'header.svg' %}
+        {% raw %}
     </div>
 
     <!-- Add Player -->

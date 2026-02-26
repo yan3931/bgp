@@ -9,7 +9,7 @@ import uuid
 from database import record_modernart_game, get_modernart_leaderboard
 
 router = APIRouter(prefix="/modernart", tags=["ModernArt"])
-templates = Jinja2Templates(directory=["ModernArt/templates", "templates"])
+templates = Jinja2Templates(directory=["ModernArt/", "templates"])
 
 # Constants
 ARTISTS = ["Manuel Carvalho (Yellow)", "Sigrid Thaler (Blue)", "Daniel Melim (Red)", "Ramon Martins (Green)", "Rafael Silveira (Orange)"]

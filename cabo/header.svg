@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" class="dynamic-svg-title">
+    <defs>
+        <!-- 引入充满魔幻感的中英文字体 -->
+        
+
+        <!-- 渐变色定义 -->
+        <!-- 午夜森林背景渐变 -->
+        <radialGradient id="bg-grad" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#2e1065" /> <!-- 深紫 -->
+            <stop offset="50%" stop-color="#172554" /> <!-- 深蓝 -->
+            <stop offset="100%" stop-color="#020617" /> <!-- 极夜黑 -->
+        </radialGradient>
+
+        <!-- 魔法青绿色渐变 (独角兽与核心元素) -->
+        <linearGradient id="magic-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#34d399" />
+            <stop offset="100%" stop-color="#059669" />
+        </linearGradient>
+
+        <!-- 标题文字渐变 -->
+        <linearGradient id="text-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="50%" stop-color="#e2e8f0" />
+            <stop offset="100%" stop-color="#94a3b8" />
+        </linearGradient>
+
+        <!-- 卡牌背景渐变 (背影与正面) -->
+        <linearGradient id="card-back-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3b0764" />
+            <stop offset="100%" stop-color="#1e1b4b" />
+        </linearGradient>
+
+        <linearGradient id="card-front-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#cbd5e1" />
+        </linearGradient>
+
+        <!-- 滤镜 -->
+        <filter id="shadow-heavy">
+            <feDropShadow dx="0" dy="12" stdDeviation="8" flood-color="#000" flood-opacity="0.8" />
+        </filter>
+
+        <filter id="glow-card-zero">
+            <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#10b981" flood-opacity="0.6" />
+        </filter>
+    </defs>
+
+    <!-- 1. 背景层 -->
+    <rect width="800" height="400" fill="url(#bg-grad)" rx="16" />
+
+    <!-- 背景森林剪影 (松树林) -->
+    <g fill="#020617" opacity="0.7">
+        <!-- 左侧松树 -->
+        <polygon points="-20,400 30,280 80,400" />
+        <polygon points="10,400 60,250 110,400" />
+        <polygon points="60,400 120,300 180,400" />
+        <!-- 右侧松树 -->
+        <polygon points="820,400 770,280 720,400" />
+        <polygon points="790,400 740,250 690,400" />
+        <polygon points="740,400 680,300 620,400" />
+    </g>
+
+    <!-- 2. 独角兽卡波 (背景核心发光体) -->
+    <g class="unicorn-glow" transform="translate(400, 180) scale(1.1)">
+        <!-- 魔法光环 -->
+        <circle cx="0" cy="-20" r="100" fill="url(#magic-grad)" opacity="0.1" filter="blur(20px)" />
+
+        <!-- 独角兽剪影路径 (精美折线/剪影风格) -->
+        <path d="M 20 80 
+                     C 0 60 -20 20 -15 -20 
+                     C -30 -15 -50 -25 -55 -35
+                     C -60 -45 -55 -50 -45 -50
+                     C -35 -50 -20 -40 -15 -45
+                     L -40 -120 
+                     L -5 -55
+                     C 5 -60 15 -50 10 -40
+                     C 30 -10 40 30 40 80 Z" fill="none" stroke="url(#magic-grad)" stroke-width="3" opacity="0.6"
+            filter="blur(1px)" />
+
+        <!-- 实心高亮角 -->
+        <polygon points="-15,-45 -40,-120 -5,-55" fill="#6ee7b7" opacity="0.8" />
+        <!-- 眼睛 -->
+        <circle cx="-30" cy="-35" r="3" fill="#6ee7b7" />
+    </g>
+
+    <!-- 3. 萤火虫/魔法粒子 -->
+    <g fill="#6ee7b7">
+        <circle cx="200" cy="350" r="3" class="ff-1" filter="blur(1px)" />
+        <circle cx="600" cy="320" r="2.5" class="ff-2" filter="blur(1px)" />
+        <circle cx="350" cy="380" r="4" class="ff-3" filter="blur(2px)" />
+        <circle cx="500" cy="360" r="2" class="ff-4" />
+        <circle cx="280" cy="330" r="3" class="ff-5" filter="blur(1px)" />
+    </g>
+
+    <!-- 4. 文字层 -->
+    <g transform="translate(0, -20)">
+        <text x="400" y="150" class="text-main animated-text">CABO</text>
+        <text x="400" y="210" class="text-sub animated-text">卡 波</text>
+    </g>
+
+    <!-- 5. 前景游戏卡牌层 (四张卡) -->
+
+    <!-- 卡牌1 (最左侧，卡背) -->
+    <g class="card-1" style="transform-origin: 180px 300px;">
+        <g transform="translate(130, 240)" filter="url(#shadow-heavy)">
+            <rect width="90" height="130" rx="8" fill="url(#card-back-grad)" stroke="#a855f7" stroke-width="2" />
+            <rect width="76" height="116" x="7" y="7" rx="4" fill="none" stroke="#d8b4fe" stroke-width="1" opacity="0.5"
+                stroke-dasharray="4 4" />
+            <!-- 卡背中心神秘花纹 -->
+            <path d="M 45 35 L 65 65 L 45 95 L 25 65 Z" fill="none" stroke="#c084fc" stroke-width="2" />
+            <circle cx="45" cy="65" r="8" fill="#a855f7" />
+        </g>
+    </g>
+
+    <!-- 卡牌2 (偏左，翻开的偷看卡-Peek) -->
+    <g class="card-2" style="transform-origin: 320px 310px;">
+        <g transform="translate(280, 260)" filter="url(#shadow-heavy)">
+            <rect width="90" height="130" rx="8" fill="url(#card-front-grad)" stroke="#94a3b8" stroke-width="2" />
+            <rect width="76" height="116" x="7" y="7" rx="4" fill="none" stroke="#e2e8f0" stroke-width="2" />
+            <!-- 顶部数字 7 -->
+            <text x="18" y="32" font-family="'Nunito', sans-serif" font-weight="800" font-size="20"
+                fill="#475569">7</text>
+            <!-- 底部倒置数字 7 -->
+            <text x="72" y="118" font-family="'Nunito', sans-serif" font-weight="800" font-size="20" fill="#475569"
+                transform="rotate(180, 72, 110)">7</text>
+            <!-- 眼睛图标 (代表Peek偷看机制) -->
+            <path d="M 25 65 C 35 50 55 50 65 65 C 55 80 35 80 25 65 Z" fill="none" stroke="#334155" stroke-width="3" />
+            <circle cx="45" cy="65" r="7" fill="#3b82f6" />
+        </g>
+    </g>
+
+    <!-- 卡牌3 (偏右，闪耀数字0) - 游戏中最棒的牌 -->
+    <g class="card-3" style="transform-origin: 470px 300px;">
+        <g transform="translate(430, 250)" filter="url(#glow-card-zero)">
+            <rect width="90" height="130" rx="8" fill="#f8fafc" stroke="#10b981" stroke-width="3" />
+            <rect width="76" height="116" x="7" y="7" rx="4" fill="none" stroke="#6ee7b7" stroke-width="2" />
+            <!-- 绿色发光数字 0 -->
+            <text x="18" y="32" font-family="'Nunito', sans-serif" font-weight="800" font-size="20"
+                fill="#10b981">0</text>
+            <text x="72" y="118" font-family="'Nunito', sans-serif" font-weight="800" font-size="20" fill="#10b981"
+                transform="rotate(180, 72, 110)">0</text>
+            <!-- 中心大型数字 0 伴随独角兽角 -->
+            <text x="45" y="80" font-family="'Nunito', sans-serif" font-weight="800" font-size="48"
+                fill="url(#magic-grad)" text-anchor="middle" filter="drop-shadow(0 0 5px rgba(52,211,153,0.8))">0</text>
+        </g>
+    </g>
+
+    <!-- 卡牌4 (最右侧，卡背) -->
+    <g class="card-4" style="transform-origin: 620px 290px;">
+        <g transform="translate(580, 230)" filter="url(#shadow-heavy)">
+            <rect width="90" height="130" rx="8" fill="url(#card-back-grad)" stroke="#a855f7" stroke-width="2" />
+            <rect width="76" height="116" x="7" y="7" rx="4" fill="none" stroke="#d8b4fe" stroke-width="1" opacity="0.5"
+                stroke-dasharray="4 4" />
+            <!-- 卡背中心神秘花纹 -->
+            <path d="M 45 35 L 65 65 L 45 95 L 25 65 Z" fill="none" stroke="#c084fc" stroke-width="2" />
+            <circle cx="45" cy="65" r="8" fill="#a855f7" />
+        </g>
+    </g>
+
+</svg>

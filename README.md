@@ -148,6 +148,7 @@ data.leaderboard.forEach((p, idx) => {
 3. **安全注入**：在原生 JS 通过 `innerHTML` 渲染列表时，涉及到玩家昵称 `p.name` 必须经过 `escHtml()` 等函数转义，避免 XSS。如果使用 Vue.js (`{{ p.name }}`) 则自动转义，无需操心。
 4. **弹窗（Modal/Toast）**：全站禁止使用浏览器自带原生的 `alert()` 或 `confirm()` 阻断页面操作（除非特意声明危急情况）。**强烈建议调用全局已封装的 `window.showToast(message, type)` 进行轻量提示**，亦可自己编写叠加层的 `.apple-modal` 风格弹窗进行二次确认询问。
 5. **禁用状态（Disabled）**：表示不可用、维护中的游戏卡片或按钮等，建议通过降低透明度（如 `.disabled` 类的 `opacity: 0.5` 与浅色背景融合）来实现，并且一定要移除悬浮放大和投影交互（`box-shadow: none`, `cursor: not-allowed`）。避免使用高强度的全局 `filter: grayscale(100%)` ，否则视觉上容易产生生硬的“系统故障感”。
+6. **Vue 与内联 SVG 的包含关系**：由于部分游戏页面使用了 Vue 3（如被 `<div id="app">` 包裹），Vue 的模板编译器在解析 DOM 时会主动剥离并忽略所有的内部 `<style>` 标签。如果你使用 Jinja2 注入包含动态动画或特殊字体的 SVG，请务必将 SVG 的专属 CSS（如 `@keyframes`, `@import url(...)`）写在页面顶层的 `{% block extra_head %}` 之中，切忌直接写在 SVG 文件内部的 `<style>` 里，否则会导致动画静止及字体渲染失败。
 
 ---
 

@@ -1,0 +1,308 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" class="dynamic-svg-title">
+    <defs>
+        <!-- 引入古典衬线英文字体与优美的中文字体 -->
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Noto+Serif+SC:wght@600;900&display=swap');
+
+            /* 动画关键帧 */
+
+            /* 玫瑰花瓣飘落动画 */
+            @keyframes fall {
+                0% {
+                    transform: translateY(-50px) rotate(0deg) scale(1);
+                    opacity: 0;
+                }
+
+                10% {
+                    opacity: 0.8;
+                }
+
+                80% {
+                    opacity: 0.8;
+                }
+
+                100% {
+                    transform: translateY(450px) rotate(360deg) scale(0.8);
+                    opacity: 0;
+                }
+            }
+
+            @keyframes fall-sway {
+                0% {
+                    transform: translate(0, -50px) rotate(0deg);
+                    opacity: 0;
+                }
+
+                20% {
+                    opacity: 0.7;
+                    transform: translate(20px, 50px) rotate(45deg);
+                }
+
+                40% {
+                    transform: translate(-20px, 150px) rotate(90deg);
+                }
+
+                60% {
+                    transform: translate(15px, 250px) rotate(135deg);
+                }
+
+                80% {
+                    opacity: 0.7;
+                    transform: translate(-15px, 350px) rotate(180deg);
+                }
+
+                100% {
+                    transform: translate(0, 450px) rotate(220deg);
+                    opacity: 0;
+                }
+            }
+
+            /* 信封整体悬浮 */
+            @keyframes floatEnvelope {
+
+                0%,
+                100% {
+                    transform: translateY(0px);
+                }
+
+                50% {
+                    transform: translateY(-12px);
+                }
+            }
+
+            /* 火漆印章呼吸光效 */
+            @keyframes pulseSeal {
+
+                0%,
+                100% {
+                    filter: drop-shadow(0 0 5px rgba(220, 38, 38, 0.6));
+                    transform: scale(1);
+                }
+
+                50% {
+                    filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.9));
+                    transform: scale(1.03);
+                }
+            }
+
+            /* 标题文字微光 */
+            @keyframes textGlow {
+
+                0%,
+                100% {
+                    filter: drop-shadow(0 0 3px rgba(253, 224, 71, 0.3));
+                }
+
+                50% {
+                    filter: drop-shadow(0 0 10px rgba(253, 224, 71, 0.7));
+                }
+            }
+
+            /* 类与样式绑定 */
+            .envelope-group {
+                animation: floatEnvelope 5s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            .wax-seal {
+                animation: pulseSeal 3s infinite alternate ease-in-out;
+                transform-origin: 400px 215px;
+                /* 印章中心点 */
+            }
+
+            .text-eng {
+                font-family: 'Cinzel Decorative', serif;
+                font-weight: 900;
+                font-size: 52px;
+                fill: url(#gold-grad);
+                text-anchor: middle;
+                letter-spacing: 12px;
+                animation: textGlow 4s infinite alternate ease-in-out;
+                transform: translateX(6px);
+            }
+
+            .text-zh {
+                font-family: 'Noto Serif SC', serif;
+                font-weight: 900;
+                font-size: 32px;
+                fill: url(#gold-grad-light);
+                text-anchor: middle;
+                letter-spacing: 24px;
+                transform: translateX(12px);
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+            }
+
+            .petal-1 {
+                animation: fall-sway 8s linear infinite;
+                transform-origin: center;
+            }
+
+            .petal-2 {
+                animation: fall 6s linear infinite 2s;
+                transform-origin: center;
+            }
+
+            .petal-3 {
+                animation: fall-sway 9s linear infinite 4s;
+                transform-origin: center;
+            }
+
+            .petal-4 {
+                animation: fall 7s linear infinite 1s;
+                transform-origin: center;
+            }
+
+            .petal-5 {
+                animation: fall-sway 8.5s linear infinite 5s;
+                transform-origin: center;
+            }
+
+            .petal-6 {
+                animation: fall 7.5s linear infinite 3s;
+                transform-origin: center;
+            }
+        </style>
+
+        <!-- 渐变色彩定义 -->
+        <!-- 背景勃艮第红渐变 -->
+        <radialGradient id="bg-grad" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="#500714" />
+            <stop offset="60%" stop-color="#2a0208" />
+            <stop offset="100%" stop-color="#110002" />
+        </radialGradient>
+
+        <!-- 黄金渐变 (文字与边框) -->
+        <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#cda557" />
+            <stop offset="25%" stop-color="#fcf1ac" />
+            <stop offset="50%" stop-color="#b8860b" />
+            <stop offset="75%" stop-color="#fdf5c9" />
+            <stop offset="100%" stop-color="#8b6508" />
+        </linearGradient>
+
+        <!-- 亮金渐变 (中文) -->
+        <linearGradient id="gold-grad-light" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#fef08a" />
+            <stop offset="100%" stop-color="#b45309" />
+        </linearGradient>
+
+        <!-- 羊皮纸渐变 (信封) -->
+        <linearGradient id="paper-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fdfbf7" />
+            <stop offset="50%" stop-color="#f4ebdb" />
+            <stop offset="100%" stop-color="#e3d0b3" />
+        </linearGradient>
+
+        <!-- 信封阴影面渐变 -->
+        <linearGradient id="paper-dark-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#f4ebdb" />
+            <stop offset="100%" stop-color="#d6bfa0" />
+        </linearGradient>
+
+        <!-- 火漆印章渐变 -->
+        <radialGradient id="wax-grad" cx="40%" cy="30%" r="60%">
+            <stop offset="0%" stop-color="#ef4444" />
+            <stop offset="60%" stop-color="#991b1b" />
+            <stop offset="100%" stop-color="#450a0a" />
+        </radialGradient>
+
+        <!-- SVG 滤镜效果 -->
+        <filter id="shadow-heavy" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="15" stdDeviation="10" flood-color="#000" flood-opacity="0.7" />
+        </filter>
+
+        <filter id="shadow-light" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3" />
+        </filter>
+
+        <!-- 玫瑰花瓣路径模板 -->
+        <g id="petal">
+            <path d="M0,0 C10,-15 25,-10 20,5 C15,20 -5,20 -15,10 C-20,0 -10,10 0,0 Z" fill="#dc2626" />
+            <path d="M0,0 C10,-15 25,-10 20,5 C15,20 -5,20 -15,10 C-20,0 -10,10 0,0 Z" fill="none" stroke="#991b1b"
+                stroke-width="0.5" />
+        </g>
+    </defs>
+
+    <!-- 1. 宫廷背景 -->
+    <rect width="800" height="400" fill="url(#bg-grad)" rx="12" />
+
+    <!-- 四周古典金线角花装饰 -->
+    <g fill="none" stroke="url(#gold-grad)" stroke-width="2" opacity="0.6">
+        <!-- 左上 -->
+        <path d="M 30 60 L 30 30 L 60 30" />
+        <circle cx="30" cy="30" r="4" fill="url(#gold-grad)" />
+        <!-- 右上 -->
+        <path d="M 770 60 L 770 30 L 740 30" />
+        <circle cx="770" cy="30" r="4" fill="url(#gold-grad)" />
+        <!-- 左下 -->
+        <path d="M 30 340 L 30 370 L 60 370" />
+        <circle cx="30" cy="370" r="4" fill="url(#gold-grad)" />
+        <!-- 右下 -->
+        <path d="M 770 340 L 770 370 L 740 370" />
+        <circle cx="770" cy="370" r="4" fill="url(#gold-grad)" />
+        <!-- 内框细线 -->
+        <rect x="40" y="40" width="720" height="320" stroke-width="1" opacity="0.3" rx="4" />
+    </g>
+
+    <!-- 2. 背景层飘落的花瓣 (模糊、较暗) -->
+    <use href="#petal" x="150" y="-30" class="petal-1" transform="scale(0.8)" filter="blur(2px)" opacity="0.5" />
+    <use href="#petal" x="650" y="-50" class="petal-2" transform="scale(0.6) rotate(45)" filter="blur(1px)" />
+    <use href="#petal" x="280" y="-40" class="petal-5" transform="scale(0.9) rotate(120)" opacity="0.6" />
+
+    <!-- 3. 中央动画信封组合 -->
+    <g class="envelope-group" filter="url(#shadow-heavy)">
+
+        <!-- 信封主体背板 -->
+        <rect x="270" y="110" width="260" height="160" fill="url(#paper-dark-grad)" rx="2" />
+
+        <!-- 信封侧面折页 (左) -->
+        <polygon points="270,110 270,270 400,190" fill="url(#paper-dark-grad)" />
+        <!-- 信封侧面折页 (右) -->
+        <polygon points="530,110 530,270 400,190" fill="url(#paper-dark-grad)" />
+
+        <!-- 信封底面折页 -->
+        <polygon points="270,270 530,270 400,190" fill="url(#paper-grad)" filter="url(#shadow-light)" />
+
+        <!-- 信封顶面折页 (盖下) -->
+        <polygon points="270,110 530,110 400,215" fill="url(#paper-grad)" filter="url(#shadow-light)" />
+
+        <!-- 信封边缘金线装饰 -->
+        <polygon points="275,115 525,115 400,210" fill="none" stroke="url(#gold-grad)" stroke-width="1.5"
+            opacity="0.7" />
+        <polygon points="275,265 525,265 400,195" fill="none" stroke="url(#gold-grad)" stroke-width="1.5"
+            opacity="0.5" />
+
+        <!-- 火漆印章 (红蜡封) -->
+        <g class="wax-seal">
+            <!-- 印章底座滴落边缘 (不规则圆) -->
+            <path
+                d="M 400 185 C 415 185 428 195 430 210 C 432 225 420 242 405 245 C 385 248 370 230 372 212 C 374 195 385 185 400 185 Z"
+                fill="url(#wax-grad)" filter="url(#shadow-light)" />
+
+            <!-- 印章主体圆 -->
+            <circle cx="400" cy="215" r="22" fill="url(#wax-grad)" />
+
+            <!-- 印章压痕内圈 -->
+            <circle cx="400" cy="215" r="18" fill="none" stroke="#450a0a" stroke-width="1.5" opacity="0.6" />
+            <circle cx="400" cy="215" r="17" fill="none" stroke="#fca5a5" stroke-width="0.5" opacity="0.4" />
+
+            <!-- 公主的皇冠徽记 (金色压花质感) -->
+            <path d="M 390 212 L 393 222 L 400 224 L 407 222 L 410 212 L 404 216 L 400 210 L 396 216 Z" fill="#fef08a"
+                opacity="0.9" />
+            <circle cx="390" cy="210" r="1.5" fill="#fef08a" />
+            <circle cx="400" cy="208" r="1.5" fill="#fef08a" />
+            <circle cx="410" cy="210" r="1.5" fill="#fef08a" />
+        </g>
+
+    </g>
+
+    <!-- 4. 文字层 -->
+    <text x="400" y="85" class="text-eng animated-text">LOVE LETTER</text>
+    <text x="400" y="345" class="text-zh animated-text">情 书</text>
+
+    <!-- 5. 前景层飘落的花瓣 (清晰、较大) -->
+    <use href="#petal" x="100" y="-80" class="petal-3" transform="scale(1.2)" />
+    <use href="#petal" x="720" y="-20" class="petal-4" transform="scale(1.5) rotate(-30)" />
+    <use href="#petal" x="500" y="-60" class="petal-6" transform="scale(1.1) rotate(60)" />
+
+</svg>

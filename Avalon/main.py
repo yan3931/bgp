@@ -96,6 +96,7 @@ class GlobalGame:
         # 队长系统
         self.captain_index = 0
         self.captain_name: Optional[str] = None
+        self.team_proposer: Optional[str] = None
 
         # 刺杀阶段
         self.assassin_target: Optional[str] = None
@@ -138,6 +139,7 @@ class JoinRequest(BaseModel):
     player_name: str
 
 class StartMissionRequest(BaseModel):
+    player_name: Optional[str] = None
     team: List[str]
 
 class TeamVoteRequest(BaseModel):
@@ -372,7 +374,12 @@ async def propose_team(req: StartMissionRequest):
         if len(req.team) != required_size:
             raise HTTPException(status_code=400, detail=f"本轮需要 {required_size} 人")
 
+        proposer = req.player_name or game_state.captain_name
+        if proposer and not any(p.name == proposer for p in game_state.players):
+            raise HTTPException(status_code=400, detail="Player not found")
+
         game_state.current_mission_team = req.team
+        game_state.team_proposer = proposer
         game_state.vote_team_active = True
         game_state.team_votes = {}
         game_state.last_vote_result = None
@@ -520,7 +527,8 @@ async def assign_excalibur(req: ExcaliburAssignRequest):
     async with global_lock:
         if game_state.excalibur_phase != "assign":
             raise HTTPException(status_code=400, detail="当前不在王者之剑分配阶段")
-        if req.target == game_state.captain_name:
+        proposer = game_state.team_proposer or game_state.captain_name
+        if req.target == proposer:
             raise HTTPException(status_code=400, detail="不能将王者之剑交给自己")
         if req.target not in game_state.current_mission_team:
             raise HTTPException(status_code=400, detail="目标必须是本轮队员")
@@ -628,7 +636,7 @@ async def get_status(player_name: str):
             "players_list": [], "mission_history": [], "your_role": "", "vision": [], "revealed_players": [],
             "vote_fail_count": 0, "mission_active": False, "mission_team": [], "has_acted": False,
             "vote_team_active": False, "team_votes": {}, "last_vote_result": None,
-            "last_vote_snapshot": {}, "captain": None, "required_team_size": 2,
+            "last_vote_snapshot": {}, "captain": None, "team_proposer": None, "required_team_size": 2,
             "game_winner": None, "assassin_target": None,
             "lady_of_lake_holder": None, "lady_of_lake_active": False,
             "lady_of_lake_result": None, "lady_of_lake_history": [],
@@ -675,6 +683,7 @@ async def get_status(player_name: str):
         "last_vote_snapshot": game_state.last_vote_snapshot,
 
         "captain": game_state.captain_name,
+        "team_proposer": game_state.team_proposer,
         "required_team_size": required_size,
 
         "game_winner": game_state.game_winner,

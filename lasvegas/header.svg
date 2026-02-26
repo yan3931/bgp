@@ -1,0 +1,334 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" class="dynamic-svg-title">
+    <defs>
+        <!-- 引入复古/霓虹风格字体 -->
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Righteous&family=Noto+Serif+SC:wght@900&family=Montserrat:wght@800&display=swap');
+
+            /* 动画关键帧 */
+            /* 跑马灯滚动效果 */
+            @keyframes marqueeMove {
+                from {
+                    stroke-dashoffset: 0;
+                }
+
+                to {
+                    stroke-dashoffset: -80;
+                }
+
+                /* 2倍的dash间距 */
+            }
+
+            /* 霓虹灯闪烁效果 */
+            @keyframes neonFlicker {
+
+                0%,
+                18%,
+                22%,
+                25%,
+                53%,
+                57%,
+                100% {
+                    opacity: 1;
+                    filter: drop-shadow(0 0 10px #ec4899) drop-shadow(0 0 20px #ec4899);
+                }
+
+                20%,
+                24%,
+                55% {
+                    opacity: 0.5;
+                    filter: drop-shadow(0 0 2px #ec4899);
+                }
+            }
+
+            /* 元素悬浮效果 */
+            @keyframes floatItem1 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(-15deg);
+                }
+
+                50% {
+                    transform: translateY(-15px) rotate(-10deg);
+                }
+            }
+
+            @keyframes floatItem2 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(20deg);
+                }
+
+                50% {
+                    transform: translateY(-10px) rotate(25deg);
+                }
+            }
+
+            @keyframes floatItem3 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(10deg);
+                }
+
+                50% {
+                    transform: translateY(-20px) rotate(5deg);
+                }
+            }
+
+            @keyframes floatItem4 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(-25deg);
+                }
+
+                50% {
+                    transform: translateY(15px) rotate(-20deg);
+                }
+            }
+
+            /* 聚光灯旋转 */
+            @keyframes sweepLight {
+                0% {
+                    transform: rotate(-30deg);
+                    opacity: 0;
+                }
+
+                50% {
+                    opacity: 0.5;
+                }
+
+                100% {
+                    transform: rotate(30deg);
+                    opacity: 0;
+                }
+            }
+
+            /* 类样式 */
+            .marquee-lights {
+                animation: marqueeMove 1.5s linear infinite;
+            }
+
+            .text-neon-main {
+                font-family: 'Righteous', cursive;
+                font-size: 72px;
+                fill: #fdf2f8;
+                text-anchor: middle;
+                letter-spacing: 5px;
+                animation: neonFlicker 4s infinite alternate;
+            }
+
+            .text-neon-sub {
+                font-family: 'Noto Serif SC', serif;
+                font-weight: 900;
+                font-size: 38px;
+                fill: #fef08a;
+                text-anchor: middle;
+                letter-spacing: 15px;
+                filter: drop-shadow(0 0 8px #ca8a04);
+                transform: translateX(7px);
+                /* 居中校正 */
+            }
+
+            .text-small-top {
+                font-family: 'Montserrat', sans-serif;
+                font-weight: 800;
+                font-size: 18px;
+                fill: #67e8f9;
+                text-anchor: middle;
+                letter-spacing: 8px;
+                filter: drop-shadow(0 0 5px #06b6d4);
+            }
+
+            .money-text {
+                font-family: 'Montserrat', sans-serif;
+                font-weight: 800;
+                font-size: 16px;
+                fill: #dcfce7;
+                text-anchor: middle;
+            }
+
+            /* 悬浮控制类 */
+            .float-1 {
+                animation: floatItem1 6s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            .float-2 {
+                animation: floatItem2 5s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            .float-3 {
+                animation: floatItem3 7s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            .float-4 {
+                animation: floatItem4 6.5s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            .sweep {
+                animation: sweepLight 8s ease-in-out infinite alternate;
+                transform-origin: 400px 400px;
+            }
+        </style>
+
+        <!-- 渐变和滤镜 -->
+        <radialGradient id="bg-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#31103f" />
+            <stop offset="100%" stop-color="#09090b" />
+        </radialGradient>
+
+        <linearGradient id="sign-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#18181b" />
+            <stop offset="100%" stop-color="#09090b" />
+        </linearGradient>
+
+        <linearGradient id="money-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#166534" />
+            <stop offset="100%" stop-color="#14532d" />
+        </linearGradient>
+
+        <filter id="shadow-dark">
+            <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity="0.8" />
+        </filter>
+
+        <filter id="glow-dice-cyan">
+            <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="#06b6d4" flood-opacity="0.5" />
+        </filter>
+        <filter id="glow-dice-pink">
+            <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="#ec4899" flood-opacity="0.5" />
+        </filter>
+        <filter id="glow-dice-yellow">
+            <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="#eab308" flood-opacity="0.5" />
+        </filter>
+    </defs>
+
+    <!-- 1. 背景层 -->
+    <rect width="800" height="400" fill="url(#bg-glow)" rx="15" />
+
+    <!-- 背景探照灯 -->
+    <polygon points="400,400 200,-50 600,-50" fill="#ffffff" opacity="0" class="sweep"
+        style="mix-blend-mode: overlay;" />
+
+    <!-- 2. 背景游戏元素 (钞票) -->
+    <!-- 左侧钞票 $50,000 -->
+    <g class="float-3" style="transform-origin: 150px 100px;">
+        <g transform="translate(80, 50)">
+            <rect width="120" height="60" rx="4" fill="url(#money-grad)" stroke="#22c55e" stroke-width="2"
+                filter="url(#shadow-dark)" />
+            <circle cx="60" cy="30" r="22" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.5" />
+            <text x="60" y="36" class="money-text">$50,000</text>
+        </g>
+    </g>
+
+    <!-- 右侧钞票 $90,000 -->
+    <g class="float-4" style="transform-origin: 650px 300px;">
+        <g transform="translate(500, 260)">
+            <rect width="120" height="60" rx="4" fill="url(#money-grad)" stroke="#22c55e" stroke-width="2"
+                filter="url(#shadow-dark)" />
+            <circle cx="60" cy="30" r="22" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.5" />
+            <text x="60" y="36" class="money-text">$90,000</text>
+        </g>
+    </g>
+
+    <!-- 3. 中央主灯牌 (Marquee Sign) -->
+    <g transform="translate(400, 200)" filter="url(#shadow-dark)">
+        <!-- 黑色底板 -->
+        <ellipse cx="0" cy="0" rx="280" ry="130" fill="url(#sign-bg)" stroke="#111" stroke-width="5" />
+
+        <!-- 红色外发光边框 -->
+        <ellipse cx="0" cy="0" rx="280" ry="130" fill="none" stroke="#be123c" stroke-width="14" />
+
+        <!-- 跑马灯 (黄色虚线模拟灯泡) -->
+        <!-- stroke-dasharray="0 40" 配合圆帽产生一个个圆点，跑马灯动画改变 offset -->
+        <ellipse cx="0" cy="0" rx="280" ry="130" fill="none" stroke="#fde047" stroke-width="8" stroke-linecap="round"
+            stroke-dasharray="0 40" class="marquee-lights" />
+
+        <!-- 内部装饰线 -->
+        <ellipse cx="0" cy="0" rx="255" ry="105" fill="none" stroke="#fb7185" stroke-width="2" opacity="0.4" />
+
+        <!-- 顶部装饰星星 (Starburst) -->
+        <path
+            d="M 0 -130 L 10 -150 L 30 -150 L 15 -165 L 20 -185 L 0 -170 L -20 -185 L -15 -165 L -30 -150 L -10 -150 Z"
+            fill="#fcd34d" />
+        <path d="M 0 -130 L 5 -145 L 20 -145 L 10 -155 L 15 -170 L 0 -160 L -15 -170 L -10 -155 L -20 -145 L -5 -145 Z"
+            fill="#fef08a" />
+    </g>
+
+    <!-- 4. 文字层 -->
+    <g>
+        <!-- 顶部副标题 -->
+        <text x="400" y="125" class="text-small-top animated-text">THE DICE GAME</text>
+
+        <!-- 英文主标题 (带闪烁霓虹动画) -->
+        <text x="400" y="210" class="text-neon-main animated-text">LAS VEGAS</text>
+
+        <!-- 中文主标题 -->
+        <text x="400" y="280" class="text-neon-sub animated-text">拉斯维加斯</text>
+    </g>
+
+    <!-- 5. 前景游戏元素 (彩色骰子) -->
+
+    <!-- 青色骰子 (点数6) 左下角 -->
+    <g class="float-1" style="transform-origin: 180px 280px;">
+        <g transform="translate(130, 230)" filter="url(#glow-dice-cyan)">
+            <rect width="80" height="80" rx="16" fill="#0891b2" stroke="#22d3ee" stroke-width="3" />
+            <!-- 内部高光 -->
+            <rect width="70" height="70" x="5" y="5" rx="12" fill="none" stroke="#a5f3fc" stroke-width="1"
+                opacity="0.6" />
+            <!-- 6个点 -->
+            <circle cx="22" cy="22" r="7" fill="#fff" />
+            <circle cx="22" cy="40" r="7" fill="#fff" />
+            <circle cx="22" cy="58" r="7" fill="#fff" />
+            <circle cx="58" cy="22" r="7" fill="#fff" />
+            <circle cx="58" cy="40" r="7" fill="#fff" />
+            <circle cx="58" cy="58" r="7" fill="#fff" />
+        </g>
+    </g>
+
+    <!-- 粉色骰子 (点数5) 右上角 -->
+    <g class="float-2" style="transform-origin: 650px 100px;">
+        <g transform="translate(600, 50)" filter="url(#glow-dice-pink)">
+            <rect width="70" height="70" rx="14" fill="#db2777" stroke="#f472b6" stroke-width="3" />
+            <rect width="60" height="60" x="5" y="5" rx="10" fill="none" stroke="#fbcfe8" stroke-width="1"
+                opacity="0.6" />
+            <!-- 5个点 -->
+            <circle cx="18" cy="18" r="6" fill="#fff" />
+            <circle cx="52" cy="18" r="6" fill="#fff" />
+            <circle cx="35" cy="35" r="6" fill="#fff" />
+            <circle cx="18" cy="52" r="6" fill="#fff" />
+            <circle cx="52" cy="52" r="6" fill="#fff" />
+        </g>
+    </g>
+
+    <!-- 黄色骰子 (点数4) 右下角 -->
+    <g class="float-1" style="transform-origin: 680px 320px;" style="animation-delay: -3s;">
+        <g transform="translate(640, 270)" filter="url(#glow-dice-yellow)">
+            <rect width="75" height="75" rx="15" fill="#ca8a04" stroke="#fde047" stroke-width="3" />
+            <rect width="65" height="65" x="5" y="5" rx="11" fill="none" stroke="#fef08a" stroke-width="1"
+                opacity="0.6" />
+            <!-- 4个点 -->
+            <circle cx="22" cy="22" r="6.5" fill="#fff" />
+            <circle cx="53" cy="22" r="6.5" fill="#fff" />
+            <circle cx="22" cy="53" r="6.5" fill="#fff" />
+            <circle cx="53" cy="53" r="6.5" fill="#fff" />
+        </g>
+    </g>
+
+    <!-- 白色骰子 (点数1) 左上角 (较小) -->
+    <g class="float-2" style="transform-origin: 220px 80px;" style="animation-delay: -2s;">
+        <g transform="translate(190, 45)">
+            <rect width="50" height="50" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"
+                filter="url(#shadow-dark)" />
+            <rect width="42" height="42" x="4" y="4" rx="8" fill="none" stroke="#fff" stroke-width="1" opacity="0.8" />
+            <!-- 1个点 (大) -->
+            <circle cx="25" cy="25" r="8" fill="#ef4444" /> <!-- 红色单点，经典赌场骰子设定 -->
+        </g>
+    </g>
+
+</svg>

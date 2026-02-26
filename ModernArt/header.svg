@@ -1,0 +1,451 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" class="dynamic-svg-title">
+    <defs>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Noto+Sans+SC:wght@700;900&family=Bebas+Neue&display=swap');
+
+            /* === 动画关键帧 === */
+
+            /* 拍卖槌敲击动画：真实物理回绕，举起 -> 猛烈敲击 -> 弹起 -> 停顿 */
+            @keyframes gavelStrike {
+
+                0%,
+                15% {
+                    transform: rotate(25deg);
+                }
+
+                /* 高高举起 */
+                20% {
+                    transform: rotate(-45deg);
+                }
+
+                /* 猛烈敲下，命中底座 */
+                23% {
+                    transform: rotate(-20deg);
+                }
+
+                /* 物理反弹 */
+                28% {
+                    transform: rotate(-40deg);
+                }
+
+                /* 二次轻微回落 */
+                33%,
+                100% {
+                    transform: rotate(25deg);
+                }
+
+                /* 再次举起 */
+            }
+
+            /* 成交(SOLD)文字闪现 */
+            @keyframes soldFlash {
+
+                0%,
+                18% {
+                    opacity: 0;
+                    transform: scale(0.5) translate(0, 20px);
+                }
+
+                20%,
+                35% {
+                    opacity: 1;
+                    transform: scale(1.1) translate(0, 0);
+                    filter: drop-shadow(0 0 15px #ef4444);
+                }
+
+                40%,
+                100% {
+                    opacity: 0;
+                    transform: scale(1) translate(0, -10px);
+                }
+            }
+
+            /* 敲击冲击波 */
+            @keyframes shockwave {
+
+                0%,
+                19% {
+                    r: 0;
+                    opacity: 0;
+                    stroke-width: 5;
+                }
+
+                20% {
+                    r: 10;
+                    opacity: 1;
+                    stroke-width: 8;
+                }
+
+                30%,
+                100% {
+                    r: 60;
+                    opacity: 0;
+                    stroke-width: 1;
+                }
+            }
+
+            /* 竞价牌举起动画 */
+            @keyframes paddleRaise {
+
+                0%,
+                50% {
+                    transform: translateY(150px) rotate(-15deg);
+                    opacity: 0;
+                }
+
+                55% {
+                    transform: translateY(-10px) rotate(5deg);
+                    opacity: 1;
+                }
+
+                60% {
+                    transform: translateY(0px) rotate(0deg);
+                    opacity: 1;
+                }
+
+                80% {
+                    transform: translateY(0px) rotate(0deg);
+                    opacity: 1;
+                }
+
+                85%,
+                100% {
+                    transform: translateY(150px) rotate(10deg);
+                    opacity: 0;
+                }
+            }
+
+            /* 艺术画作悬浮动画 */
+            @keyframes floatArt1 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(-5deg);
+                }
+
+                50% {
+                    transform: translateY(-15px) rotate(-2deg);
+                }
+            }
+
+            @keyframes floatArt2 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(8deg) scale(0.85);
+                }
+
+                50% {
+                    transform: translateY(10px) rotate(5deg) scale(0.85);
+                }
+            }
+
+            @keyframes floatArt3 {
+
+                0%,
+                100% {
+                    transform: translateY(0px) rotate(-3deg) scale(0.9);
+                }
+
+                50% {
+                    transform: translateY(-8px) rotate(-6deg) scale(0.9);
+                }
+            }
+
+            /* 市场行情指示块呼吸灯效果 */
+            @keyframes marketPulse {
+
+                0%,
+                100% {
+                    opacity: 0.4;
+                }
+
+                50% {
+                    opacity: 1;
+                    filter: drop-shadow(0 0 8px currentColor);
+                }
+            }
+
+            /* 标题色彩游走 */
+            @keyframes titleHue {
+                0% {
+                    filter: hue-rotate(0deg);
+                }
+
+                100% {
+                    filter: hue-rotate(360deg);
+                }
+            }
+
+            /* === CSS类绑定 === */
+            .gavel-group {
+                animation: gavelStrike 4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+                transform-origin: 750px 179px;
+            }
+
+            .sold-text {
+                animation: soldFlash 4s ease-out infinite;
+            }
+
+            .wave {
+                animation: shockwave 4s ease-out infinite;
+                transform-origin: 605px 325px;
+            }
+
+            .paddle-group {
+                animation: paddleRaise 4s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
+                transform-origin: center bottom;
+            }
+
+            .art-1 {
+                animation: floatArt1 6s ease-in-out infinite;
+                transform-origin: center;
+            }
+
+            .art-2 {
+                animation: floatArt2 7s ease-in-out infinite 1s;
+                transform-origin: center;
+            }
+
+            .art-3 {
+                animation: floatArt3 5s ease-in-out infinite 0.5s;
+                transform-origin: center;
+            }
+
+            .market-1 {
+                color: #facc15;
+                animation: marketPulse 3s ease-in-out infinite 0.0s;
+            }
+
+            /* 黄 */
+            .market-2 {
+                color: #38bdf8;
+                animation: marketPulse 3s ease-in-out infinite 0.6s;
+            }
+
+            /* 蓝 */
+            .market-3 {
+                color: #f43f5e;
+                animation: marketPulse 3s ease-in-out infinite 1.2s;
+            }
+
+            /* 红 */
+            .market-4 {
+                color: #34d399;
+                animation: marketPulse 3s ease-in-out infinite 1.8s;
+            }
+
+            /* 绿 */
+            .market-5 {
+                color: #c084fc;
+                animation: marketPulse 3s ease-in-out infinite 2.4s;
+            }
+
+            /* 紫 */
+
+            /* === 文本样式 === */
+            .text-eng-main {
+                font-family: 'Montserrat', sans-serif;
+                font-weight: 900;
+                font-size: 78px;
+                fill: #ffffff;
+                text-anchor: middle;
+                letter-spacing: 2px;
+                filter: drop-shadow(5px 5px 0px #000000);
+            }
+
+            .text-eng-overlay {
+                font-family: 'Montserrat', sans-serif;
+                font-weight: 900;
+                font-size: 78px;
+                fill: url(#art-grad);
+                text-anchor: middle;
+                letter-spacing: 2px;
+                mix-blend-mode: overlay;
+                animation: titleHue 10s linear infinite;
+            }
+
+            .text-zh-sub {
+                font-family: 'Noto Sans SC', sans-serif;
+                font-weight: 900;
+                font-size: 32px;
+                fill: #e2e8f0;
+                letter-spacing: 18px;
+                text-anchor: middle;
+                filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.8));
+                transform: translateX(9px);
+            }
+
+            .text-sold {
+                font-family: 'Bebas Neue', 'Montserrat', sans-serif;
+                font-size: 48px;
+                font-weight: 900;
+                fill: #ef4444;
+                stroke: #ffffff;
+                stroke-width: 2;
+                text-anchor: middle;
+                letter-spacing: 5px;
+                transform: rotate(-10deg);
+            }
+
+            .text-bid {
+                font-family: 'Montserrat', sans-serif;
+                font-weight: 900;
+                font-size: 42px;
+                fill: #0f172a;
+                text-anchor: middle;
+            }
+        </style>
+
+        <radialGradient id="gallery-light" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#334155" />
+            <stop offset="50%" stop-color="#0f172a" />
+            <stop offset="100%" stop-color="#020617" />
+        </radialGradient>
+
+        <linearGradient id="art-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f43f5e" />
+            <stop offset="33%" stop-color="#facc15" />
+            <stop offset="66%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#c084fc" />
+        </linearGradient>
+
+        <linearGradient id="wood-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#b45309" />
+            <stop offset="50%" stop-color="#92400e" />
+            <stop offset="100%" stop-color="#78350f" />
+        </linearGradient>
+        <linearGradient id="wood-light" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#d97706" />
+            <stop offset="100%" stop-color="#b45309" />
+        </linearGradient>
+
+        <filter id="shadow-frame">
+            <feDropShadow dx="0" dy="15" stdDeviation="12" flood-color="#000" flood-opacity="0.8" />
+        </filter>
+        <filter id="shadow-gavel">
+            <feDropShadow dx="-5" dy="10" stdDeviation="5" flood-color="#000" flood-opacity="0.6" />
+        </filter>
+    </defs>
+
+    <!-- 1. 画廊背景 -->
+    <rect width="800" height="400" fill="url(#gallery-light)" rx="16" />
+
+    <g stroke="#ffffff" stroke-width="1" opacity="0.05">
+        <line x1="0" y1="100" x2="800" y2="100" />
+        <line x1="0" y1="200" x2="800" y2="200" />
+        <line x1="0" y1="300" x2="800" y2="300" />
+        <line x1="266" y1="0" x2="266" y2="400" />
+        <line x1="533" y1="0" x2="533" y2="400" />
+    </g>
+
+    <!-- 2. 背景悬浮艺术品 -->
+    <g class="art-1" style="transform-origin: 200px 150px;">
+        <g transform="translate(80, 50)" filter="url(#shadow-frame)">
+            <rect width="160" height="200" fill="#111" rx="4" />
+            <rect width="140" height="180" x="10" y="10" fill="#f8fafc" />
+            <rect width="120" height="160" x="20" y="20" fill="#e2e8f0" />
+            <rect width="60" height="60" x="20" y="20" fill="#ef4444" />
+            <rect width="50" height="90" x="90" y="20" fill="#eab308" />
+            <rect width="120" height="40" x="20" y="140" fill="#3b82f6" />
+            <line x1="80" y1="20" x2="80" y2="180" stroke="#0f172a" stroke-width="6" />
+            <line x1="20" y1="80" x2="140" y2="80" stroke="#0f172a" stroke-width="6" />
+            <line x1="20" y1="140" x2="140" y2="140" stroke="#0f172a" stroke-width="6" />
+        </g>
+    </g>
+
+    <g class="art-2" style="transform-origin: 650px 120px;">
+        <g transform="translate(560, 20)" filter="url(#shadow-frame)">
+            <rect width="180" height="180" fill="#e2e8f0" rx="4" />
+            <rect width="160" height="160" x="10" y="10" fill="#ffffff" />
+            <rect width="140" height="140" x="20" y="20" fill="#0f172a" />
+            <circle cx="90" cy="90" r="50" fill="#f472b6" />
+            <circle cx="60" cy="60" r="20" fill="#2dd4bf" />
+            <path d="M 40 140 C 60 100 120 100 140 140" fill="none" stroke="#fde047" stroke-width="8"
+                stroke-linecap="round" />
+        </g>
+    </g>
+
+    <g class="art-3" style="transform-origin: 400px 300px; opacity: 0.6;">
+        <g transform="translate(320, 180)" filter="url(#shadow-frame)">
+            <rect width="140" height="100" fill="#334155" rx="2" />
+            <rect width="130" height="90" x="5" y="5" fill="#f8fafc" />
+            <path d="M 15 80 Q 70 10 125 80" fill="none" stroke="#64748b" stroke-width="15" stroke-linecap="round" />
+            <circle cx="70" cy="60" r="15" fill="#f87171" />
+        </g>
+    </g>
+
+    <!-- 3. 中央主标题组合 -->
+    <g transform="translate(0, -10)">
+        <text x="400" y="180" class="text-eng-main animated-text">MODERN ART</text>
+        <text x="400" y="180" class="text-eng-overlay animated-text">MODERN ART</text>
+        <text x="400" y="240" class="text-zh-sub animated-text">现 代 艺 术</text>
+        <rect x="250" y="260" width="300" height="2" fill="#475569" opacity="0.5" />
+        <rect x="350" y="260" width="100" height="2" fill="#e2e8f0" />
+    </g>
+
+    <!-- 4. 前景游戏机制动画区 -->
+    <g class="paddle-group">
+        <g transform="translate(150, 240)" filter="url(#shadow-gavel)">
+            <rect x="-10" y="60" width="20" height="100" fill="url(#wood-light)" rx="5" />
+            <rect x="-10" y="60" width="5" height="100" fill="#000" opacity="0.2" rx="5" />
+            <circle cx="0" cy="0" r="60" fill="#f8fafc" stroke="#e2e8f0" stroke-width="4" />
+            <circle cx="0" cy="0" r="50" fill="none" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="2 4" />
+            <text x="0" y="15" class="text-bid">$100</text>
+            <text x="0" y="35" font-family="'Montserrat', sans-serif" font-weight="800" font-size="16" fill="#64748b"
+                text-anchor="middle">THOUSAND</text>
+        </g>
+    </g>
+
+    <!-- B. 拍卖槌 (Gavel) 右下方敲击 -->
+    <g>
+        <!-- 敲击底座 (Sound Block) 保持静止，放置于重击落点 -->
+        <g transform="translate(605, 330)" filter="url(#shadow-gavel)">
+            <ellipse cx="0" cy="0" rx="45" ry="15" fill="#78350f" />
+            <rect x="-45" y="0" width="90" height="10" fill="url(#wood-grad)" />
+            <ellipse cx="0" cy="10" rx="45" ry="15" fill="#451a03" />
+        </g>
+
+        <!-- 敲击冲击波光圈 -->
+        <circle cx="605" cy="325" class="wave" fill="none" stroke="#fcd34d" />
+
+        <!-- 动态拍卖槌主体 (锤柄与锤头统一合并) -->
+        <g class="gavel-group">
+            <!-- 锤柄 -->
+            <rect x="570" y="172" width="190" height="14" fill="url(#wood-light)" rx="7" />
+            <!-- 锤头 (完美连接在锤柄左端) -->
+            <g transform="translate(585, 179)">
+                <rect x="-25" y="-35" width="50" height="70" fill="url(#wood-grad)" rx="10"
+                    filter="url(#shadow-gavel)" />
+                <!-- 锤头金边装饰 -->
+                <rect x="-26" y="-20" width="52" height="6" fill="#fbbf24" />
+                <rect x="-26" y="14" width="52" height="6" fill="#fbbf24" />
+                <!-- 锤头两侧敲击面 -->
+                <path d="M -25 -25 Q -40 0 -25 25 Z" fill="#92400e" />
+                <path d="M 25 -25 Q 40 0 25 25 Z" fill="#92400e" />
+            </g>
+            <!-- 锤柄尾端转轴装饰球 (锚点位置) -->
+            <circle cx="750" cy="179" r="12" fill="url(#wood-grad)" filter="url(#shadow-gavel)" />
+            <circle cx="750" cy="179" r="6" fill="#451a03" />
+        </g>
+
+        <!-- 成交文字 (敲击时闪现) -->
+        <text x="585" y="260" class="sold-text text-sold">SOLD!</text>
+    </g>
+
+    <!-- 5. 底部画家的市场身价指示器 -->
+    <g transform="translate(300, 360)">
+        <rect x="0" y="0" width="200" height="12" fill="#0f172a" rx="6" />
+        <rect x="15" y="2" width="24" height="8" class="market-1" fill="currentColor" rx="2" />
+        <rect x="50" y="2" width="24" height="8" class="market-2" fill="currentColor" rx="2" />
+        <rect x="85" y="2" width="24" height="8" class="market-3" fill="currentColor" rx="2" />
+        <rect x="120" y="2" width="24" height="8" class="market-4" fill="currentColor" rx="2" />
+        <rect x="155" y="2" width="24" height="8" class="market-5" fill="currentColor" rx="2" />
+        <rect x="0" y="0" width="200" height="12" fill="none" stroke="#334155" stroke-width="2" rx="6" />
+    </g>
+    <text x="400" y="390" font-family="'Noto Sans SC', sans-serif" font-weight="700" font-size="12" fill="#64748b"
+        text-anchor="middle" letter-spacing="4px">
+        市 场 行 情 指 示
+    </text>
+
+</svg>

@@ -133,13 +133,42 @@
             font-size: 2rem;
         }
     }
+
+    .nav-random-btn {
+        background: transparent;
+        border: none;
+        color: var(--apple-blue);
+        font-size: 0.9rem;
+        font-weight: 500;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .nav-random-btn:hover {
+        opacity: 0.8;
+    }
+
+    .starter-result {
+        background: linear-gradient(135deg, rgba(0, 113, 227, 0.1), rgba(90, 200, 250, 0.14));
+        border: 1px solid rgba(0, 113, 227, 0.2);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+        margin-top: var(--space-md);
+        color: var(--apple-black);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
 </style>
 {% endblock %}
 
 {% block nav_left %}
-<a href="/" class="apple-nav-back" style="position: static; min-height: 44px; align-items: center; display: flex;">
-    <i class="ph ph-house" style="font-size: 1.2rem; margin-right: 4px;"></i> 首页
-</a>
+<button id="openStarterPickerBtn" class="nav-random-btn" type="button" aria-haspopup="dialog" aria-controls="starterPickerModal">
+    <i class="ph ph-shuffle" style="font-size: 1.2rem;"></i> 随机初始玩家
+</button>
 {% endblock %}
 
 {% block content %}
@@ -148,6 +177,28 @@
     <span class="apple-hero-emoji">🎲</span>
     <h1>桌游助手</h1>
     <p>你的桌游好搭子</p>
+</div>
+
+<div id="starterPickerModal" class="apple-modal" onclick="if(event.target === this) closeStarterPicker()">
+    <div class="apple-modal-content">
+        <div class="apple-modal-header">
+            <h2 class="apple-modal-title">随机初始玩家</h2>
+            <button class="apple-modal-close" type="button" onclick="closeStarterPicker()">
+                <i class="ph-bold ph-x"></i>
+            </button>
+        </div>
+        <div class="apple-modal-body">
+            <label for="playerCountInput" style="display:block; margin-bottom: 8px; font-weight: 600; color: var(--apple-black);">
+                选择玩家人数
+            </label>
+            <input id="playerCountInput" class="apple-input" type="number" min="2" max="12" step="1" value="6">
+            <p style="margin-top: 8px; font-size: 0.88rem;">支持 2-12 人，计算结果为“X号玩家先手”。</p>
+            <button id="calcStarterBtn" class="apple-btn apple-btn-primary apple-btn-block" type="button" style="margin-top: 16px;">
+                计算本局起始玩家
+            </button>
+            <div id="starterResult" class="starter-result" style="display:none;"></div>
+        </div>
+    </div>
 </div>
 
 <div class="game-grid">
@@ -304,4 +355,37 @@
 <footer class="apple-footer">
     <p>Board Game Portal © 2026</p>
 </footer>
+{% endblock %}
+
+{% block extra_body %}
+<script>
+    (function () {
+        const modal = document.getElementById('starterPickerModal');
+        const openBtn = document.getElementById('openStarterPickerBtn');
+        const calcBtn = document.getElementById('calcStarterBtn');
+        const countInput = document.getElementById('playerCountInput');
+        const resultEl = document.getElementById('starterResult');
+
+        window.closeStarterPicker = function () {
+            modal.classList.remove('show');
+        };
+
+        openBtn.addEventListener('click', function () {
+            modal.classList.add('show');
+            countInput.focus();
+            countInput.select();
+        });
+
+        calcBtn.addEventListener('click', function () {
+            const count = parseInt(countInput.value, 10);
+            if (!Number.isInteger(count) || count < 2 || count > 12) {
+                showToast('请输入 2 到 12 的玩家人数', 'error');
+                return;
+            }
+            const starter = Math.floor(Math.random() * count) + 1;
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '本次游戏起始玩家：<strong>' + starter + '号玩家</strong>';
+        });
+    })();
+</script>
 {% endblock %}

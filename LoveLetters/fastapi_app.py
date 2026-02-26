@@ -11,7 +11,7 @@ from sio_server import sio
 
 # Templates
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-templates = Jinja2Templates(directory=[os.path.join(BASE_DIR, "templates"), "templates"])
+templates = Jinja2Templates(directory=[BASE_DIR, "templates"])
 
 # --- Game Logic & State ---
 CONFIG_BASIC = {

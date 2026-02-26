@@ -4,6 +4,204 @@
 
 {% block extra_head %}
 <style>
+
+            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+SC:wght@700;900&display=swap');
+
+            /* 动画关键帧定义 */
+            @keyframes swordDrop {
+                0% {
+                    transform: translateY(-200px);
+                    opacity: 0;
+                    filter: drop-shadow(0 0 0px rgba(255, 255, 255, 0));
+                }
+
+                60% {
+                    transform: translateY(10px);
+                    opacity: 1;
+                }
+
+                80% {
+                    transform: translateY(-5px);
+                }
+
+                100% {
+                    transform: translateY(0);
+                    opacity: 1;
+                    filter: drop-shadow(0 0 15px rgba(226, 232, 240, 0.4));
+                }
+            }
+
+            @keyframes shieldFadeIn {
+                0% {
+                    transform: scale(0.9);
+                    opacity: 0;
+                }
+
+                50% {
+                    opacity: 0;
+                }
+
+                100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes bannerExpand {
+                0% {
+                    transform: scaleX(0);
+                    opacity: 0;
+                }
+
+                70% {
+                    transform: scaleX(0);
+                    opacity: 0;
+                }
+
+                100% {
+                    transform: scaleX(1);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes textReveal {
+                0% {
+                    opacity: 0;
+                    filter: blur(10px);
+                    transform: translateY(10px);
+                }
+
+                80% {
+                    opacity: 0;
+                    filter: blur(10px);
+                    transform: translateY(10px);
+                }
+
+                100% {
+                    opacity: 1;
+                    filter: blur(0px);
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes pulseBlue {
+
+                0%,
+                100% {
+                    fill-opacity: 0.6;
+                    filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.5));
+                }
+
+                50% {
+                    fill-opacity: 0.9;
+                    filter: drop-shadow(0 0 25px rgba(37, 99, 235, 0.9));
+                }
+            }
+
+            @keyframes pulseRed {
+
+                0%,
+                100% {
+                    fill-opacity: 0.6;
+                    filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.5));
+                }
+
+                50% {
+                    fill-opacity: 0.9;
+                    filter: drop-shadow(0 0 25px rgba(220, 38, 38, 0.9));
+                }
+            }
+
+            @keyframes particleFloat {
+                0% {
+                    transform: translateY(0) scale(1);
+                    opacity: 0;
+                }
+
+                20% {
+                    opacity: 0.8;
+                }
+
+                80% {
+                    opacity: 0.6;
+                }
+
+                100% {
+                    transform: translateY(-80px) scale(0.3);
+                    opacity: 0;
+                }
+            }
+
+            /* 元素类样式分配 */
+            .anim-sword {
+                animation: swordDrop 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                transform-origin: center;
+            }
+
+            .anim-shield {
+                animation: shieldFadeIn 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+                transform-origin: center;
+            }
+
+            .anim-banner {
+                animation: bannerExpand 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                transform-origin: center;
+            }
+
+            .anim-text {
+                animation: textReveal 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+
+            .shield-blue-side {
+                animation: pulseBlue 4s infinite alternate ease-in-out;
+            }
+
+            .shield-red-side {
+                animation: pulseRed 4s infinite alternate ease-in-out;
+            }
+
+            .particle {
+                opacity: 0;
+                animation: particleFloat 3s infinite linear;
+            }
+
+            /* 文本样式 */
+            .text-eng-sub {
+                font-family: 'Cinzel', serif;
+                font-weight: 700;
+                font-size: 16px;
+                fill: #94a3b8;
+                letter-spacing: 12px;
+                text-anchor: middle;
+            }
+
+            .text-eng-main {
+                font-family: 'Cinzel', serif;
+                font-weight: 900;
+                font-size: 56px;
+                fill: url(#gold-grad);
+                letter-spacing: 20px;
+                text-anchor: middle;
+                /* 修复letter-spacing导致的偏移 */
+                transform: translateX(10px);
+            }
+
+            .text-zh-main {
+                font-family: 'Noto Serif SC', serif;
+                font-weight: 900;
+                font-size: 32px;
+                fill: url(#gold-grad-light);
+                letter-spacing: 24px;
+                text-anchor: middle;
+                transform: translateX(12px);
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+            }
+        
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<style>
     body {
         padding-bottom: 80px;
     }
@@ -481,10 +679,10 @@
 <div id="app" class="bg-transition-slow" :class="{'bg-phase-vote': voteTeamActive, 'bg-phase-mission': missionActive}" v-cloak>
 
     <!-- Hero -->
-    <div class="apple-hero">
-        <span class="apple-hero-emoji">🛡️</span>
-        <h1>阿瓦隆</h1>
-        <p>阵营推理 · 身份隐藏</p>
+    <div class="game-header-wrapper" v-pre>
+        {% endraw %}
+        {% include 'header.svg' %}
+        {% raw %}
     </div>
 
     <!-- Error Toast -->
@@ -504,7 +702,7 @@
 
         <div class="apple-card">
             <h4 class="mb-md">加入游戏</h4>
-            <input v-model="myName" class="apple-input mb-md" placeholder="输入你的昵称">
+            <input v-model="myName" class="apple-input mb-md" placeholder="输入你的姓名">
 
             <div v-if="status === 'joining'" class="apple-alert apple-alert-info mb-md">
                 <div class="d-flex justify-between items-center">
@@ -860,7 +1058,7 @@
 
         <!-- Overlay: Excalibur Assign (队长分配王者之剑) -->
         <transition name="overlay">
-            <div v-if="excaliburPhase === 'assign' && myName === captain" class="vote-overlay">
+            <div v-if="excaliburPhase === 'assign' && myName === teamProposer" class="vote-overlay">
                 <h2>🗡️ 分配王者之剑</h2>
                 <p style="color: rgba(255,255,255,0.7); margin-bottom: var(--space-lg); text-align: center;">
                     选择一名队员持有王者之剑
@@ -876,10 +1074,10 @@
         </transition>
 
         <!-- Excalibur Assign waiting (non-captain sees waiting) -->
-        <div v-if="excaliburPhase === 'assign' && myName !== captain" class="apple-card mb-md"
+        <div v-if="excaliburPhase === 'assign' && myName !== teamProposer" class="apple-card mb-md"
             style="border: 2px solid var(--apple-orange);">
             <h5 class="text-center mb-md" style="color: var(--apple-orange);">🗡️ 王者之剑分配中</h5>
-            <p class="text-center text-muted">等待队长 <strong>{{ captain }}</strong> 分配王者之剑...</p>
+            <p class="text-center text-muted">等待发起人 <strong>{{ teamProposer }}</strong> 分配王者之剑...</p>
         </div>
 
         <!-- Excalibur holder badge during mission -->
@@ -1026,6 +1224,7 @@
                 selectedTeam: [],
                 revealedPlayers: [],
                 captain: null,
+                teamProposer: null,
                 requiredTeamSize: 2,
                 gameWinner: null,
                 assassinTarget: null,
@@ -1168,6 +1367,7 @@
                 }
                 try {
                     await axios.post('/avalon/propose_team', {
+                        player_name: this.myName,
                         team: this.selectedTeam
                     });
                     this.selectedTeam = [];
@@ -1379,6 +1579,7 @@
                             this.lastVoteResult = d.last_vote_result;
                             this.lastVoteSnapshot = d.last_vote_snapshot || {};
                             this.captain = d.captain;
+                            this.teamProposer = d.team_proposer || d.captain;
                             this.requiredTeamSize = d.required_team_size;
 
                             // 湖中仙女

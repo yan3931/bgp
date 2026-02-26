@@ -196,17 +196,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="apple-hero">
-    <span class="apple-hero-emoji">🃏</span>
-    <h1>7连翻</h1>
-    <p>刺激翻牌 · 见好就收</p>
-</div>
-
-<div style="text-align: center; margin-bottom: var(--space-lg);">
-    <div class="apple-segment">
-        <button class="apple-segment-btn active" onclick="switchTab('play')">计分板</button>
-        <button class="apple-segment-btn" onclick="switchTab('leaderboard')">排行榜</button>
-    </div>
+<div class="game-header-wrapper">
+    {% include 'header.svg' %}
 </div>
 
 <div id="tab-play" class="tab-pane active">

@@ -1405,3 +1405,29 @@ input[type="number"] {
         background: #3b0909 !important;
     }
 }
+
+/* ---- Game Header SVGs ---- */
+.game-header-wrapper {
+    width: 100%;
+    max-width: 500px;
+    margin: 24px auto;
+    display: flex;
+    justify-content: center;
+}
+
+/* Global simple text animation for SVG titles. Some SVG titles override this with inline styles. */
+.animated-text {
+    fill: transparent;
+    stroke: var(--theme-color, #f5f5f7);
+    stroke-width: 1.5px;
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    animation: text-draw 2s ease-out forwards;
+}
+
+@keyframes text-draw {
+    100% {
+        stroke-dashoffset: 0;
+        fill: var(--theme-color, #f5f5f7);
+    }
+}
