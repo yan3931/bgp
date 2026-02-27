@@ -197,8 +197,10 @@ def calculate_vision(viewer: Player, all_players: List[Player]) -> List[Dict[str
                 seen_identity = "梅林?"
         elif viewer.role in evil_team_visible:
             # 普通邪恶队员看到同伙（包括红方兰斯洛特）
-            if target.role in evil_team_visible or target.role == RoleType.LANCELOT_EVIL:
+            if target.role in evil_team_visible:
                 seen_identity = "同伙"
+            elif target.role == RoleType.LANCELOT_EVIL:
+                seen_identity = "红方兰斯洛特"
         elif viewer.role == RoleType.LANCELOT_EVIL:
             # 红方兰斯洛特不主动看到队友（类似奥伯伦的反向）
             pass

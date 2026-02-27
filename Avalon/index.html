@@ -221,22 +221,191 @@
         box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
     }
 
-    .vision-list {
-        list-style: none;
-        padding: 0;
-        margin: var(--space-sm) 0 0;
+    .vision-intel-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(18, 18, 18, 0.72);
+        backdrop-filter: saturate(180%) blur(24px);
+        -webkit-backdrop-filter: saturate(180%) blur(24px);
+        box-shadow: 
+            inset 0 1px 1px rgba(255, 255, 255, 0.1),
+            0 24px 48px rgba(0, 0, 0, 0.5);
+        animation: visionReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
-    .vision-list li {
-        font-size: 0.9rem;
-        padding: 6px 0;
-        color: var(--apple-gray);
-        font-weight: 500;
+    @keyframes visionReveal {
+        0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .vision-list li.evil {
-        color: var(--apple-red);
-        font-weight: 600;
+    .vision-intel-card::before,
+    .vision-intel-card::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(60px);
+        pointer-events: none;
+        opacity: 0;
+        z-index: 1;
+    }
+
+    .vision-intel-content {
+        position: relative;
+        z-index: 2;
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 32px 24px 20px;
+    }
+
+    .vision-intel-title {
+        margin-top: auto;
+        color: #f5f5f7;
+        font-size: clamp(1.8rem, 5vw, 2.4rem);
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        font-family: "Noto Serif SC", serif;
+        text-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+        background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.8) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .vision-intel-subtitle {
+        margin-top: 10px;
+        color: rgba(245, 245, 247, 0.6);
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .vision-intel-names {
+        margin-top: auto;
+        color: #ffffff;
+        font-size: 1.05rem;
+        letter-spacing: -0.01em;
+        font-weight: 700;
+        padding: 12px 12px 4px;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* ---- Character Themes (Refined) ---- */
+
+    .vision-theme-evil-team::before {
+        width: 380px;
+        height: 380px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(255, 69, 58, 0.7) 0%, rgba(255, 69, 58, 0.2) 40%, rgba(255, 69, 58, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-theme-merlin::before {
+        width: 380px;
+        height: 380px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(255, 214, 10, 0.6) 0%, rgba(255, 159, 10, 0.2) 45%, rgba(255, 159, 10, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-theme-percival::before {
+        width: 320px;
+        height: 320px;
+        left: -40px;
+        top: -60px;
+        background: radial-gradient(circle, rgba(191, 90, 242, 0.6) 0%, rgba(191, 90, 242, 0.2) 40%, rgba(191, 90, 242, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-theme-percival::after {
+        width: 340px;
+        height: 340px;
+        right: -60px;
+        bottom: -80px;
+        background: radial-gradient(circle, rgba(10, 132, 255, 0.6) 0%, rgba(10, 132, 255, 0.2) 45%, rgba(10, 132, 255, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-theme-oberon {
+        background: linear-gradient(160deg, rgba(28, 28, 30, 0.95) 0%, rgba(44, 44, 46, 0.9) 100%);
+    }
+
+    .vision-theme-loyal::before {
+        width: 360px;
+        height: 360px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(245, 245, 247, 0.15) 0%, rgba(245, 245, 247, 0.05) 30%, rgba(245, 245, 247, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-theme-lancelot-good::before {
+        width: 380px;
+        height: 380px;
+        left: 45%;
+        top: 45%;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(10, 132, 255, 0.65) 0%, rgba(10, 132, 255, 0.2) 40%, rgba(10, 132, 255, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-theme-lancelot-good::after {
+        width: 200px;
+        height: 200px;
+        right: -60px;
+        bottom: -60px;
+        background: radial-gradient(circle, rgba(255, 69, 58, 0.3) 0%, rgba(255, 69, 58, 0.1) 40%, rgba(255, 69, 58, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-theme-lancelot-evil {
+        background: linear-gradient(165deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 15, 0.96) 100%);
+    }
+
+    .vision-theme-lancelot-evil::before {
+        width: 360px;
+        height: 360px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(255, 59, 48, 0.65) 0%, rgba(255, 59, 48, 0.2) 40%, rgba(255, 59, 48, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-theme-lancelot-evil::after {
+        width: 300px;
+        height: 300px;
+        right: -50px;
+        top: -60px;
+        background: radial-gradient(circle, rgba(94, 92, 230, 0.5) 0%, rgba(48, 176, 199, 0.2) 40%, rgba(94, 92, 230, 0) 70%);
+        opacity: 1;
+    }
+
+    .vision-alert-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-size: 0.8rem;
+        color: #ffffff;
     }
 
     .team-display {
@@ -562,6 +731,10 @@
         transform: translateX(20px);
     }
 
+    .apple-dot {
+        position: relative;
+    }
+
     .swap-badge {
         position: absolute;
         top: -6px;
@@ -590,15 +763,24 @@
     }
 
     @keyframes pulse-glow {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
 
-        0%,
-        100% {
-            opacity: 1;
-        }
+    @keyframes pulseSwap {
+        0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.6); }
+        70% { box-shadow: 0 0 0 12px rgba(255, 149, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0); }
+    }
 
-        50% {
-            opacity: 0.4;
-        }
+    .apple-dot.swap-active {
+        animation: pulseSwap 2s infinite;
+    }
+
+    /* 只有在没有结果时才显示橙色边框 */
+    .apple-dot.swap-active:not(.success):not(.fail) {
+        border-color: var(--apple-orange) !important;
+
     }
 
     .reveal-list {
@@ -667,6 +849,115 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
+    /* ---- 结算界面 Apple 风格优化 ---- */
+    .victory-hero {
+        font-size: 4.5rem;
+        margin-bottom: 8px;
+        filter: drop-shadow(0 8px 16px rgba(0,0,0,0.1));
+    }
+
+    .victory-title {
+        font-size: clamp(2.2rem, 6vw, 3.2rem);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        margin-bottom: 8px;
+        background-clip: text;
+        -webkit-background-clip: text;
+    }
+
+    .victory-blue {
+        background-image: linear-gradient(135deg, #0071e3 0%, #4facfe 100%);
+        color: transparent;
+    }
+
+    .victory-red {
+        background-image: linear-gradient(135deg, #ff3b30 0%, #ff8008 100%);
+        color: transparent;
+    }
+
+    .assassin-result {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 24px;
+        background: rgba(255, 59, 48, 0.08);
+        border-radius: 30px;
+        color: var(--apple-red);
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: var(--space-xl);
+        box-shadow: inset 0 0 0 1px rgba(255, 59, 48, 0.15), 0 8px 16px rgba(255, 59, 48, 0.08);
+    }
+
+    .reveal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
+        margin-bottom: var(--space-2xl);
+    }
+
+    .reveal-card {
+        background: rgba(128, 128, 128, 0.06);
+        border-radius: 20px;
+        padding: 20px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), background 0.4s;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    .reveal-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        background: rgba(128, 128, 128, 0.1);
+    }
+
+    .reveal-card .name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--apple-black);
+        letter-spacing: -0.01em;
+    }
+
+    .reveal-card .role {
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .reveal-card .role { background: rgba(0, 0, 0, 0.25); }
+        .reveal-card .name { color: #f5f5f7; }
+    }
+
+    .apple-btn-pill {
+        border-radius: 999px;
+        padding: 16px 24px;
+        font-weight: 600;
+        font-size: 1.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .action-buttons-group {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-bottom: var(--space-xl);
+    }
+
+    @media (max-width: 480px) {
+        .action-buttons-group { flex-direction: column; }
+    }
 </style>
 {% endblock %}
 
@@ -700,33 +991,7 @@
     <!-- Step 1: Join / Setup -->
     <div v-if="step === 1" class="apple-section">
 
-        <div class="apple-card">
-            <h4 class="mb-md">加入游戏</h4>
-            <input v-model="myName" class="apple-input mb-md" placeholder="输入你的姓名">
-
-            <div v-if="status === 'joining'" class="apple-alert apple-alert-info mb-md">
-                <div class="d-flex justify-between items-center">
-                    <span class="apple-tag apple-tag-blue">等待中</span>
-                    <span class="fw-700">{{ currentCount }} / {{ targetCount }} 人</span>
-                </div>
-                <div class="text-muted text-sm mt-sm">已加入: {{ allPlayers.join(', ') }}</div>
-            </div>
-
-            <div v-if="status === 'joining'">
-                <button class="apple-btn apple-btn-primary apple-btn-block" @click="joinGame"
-                    :disabled="!myName">加入房间</button>
-            </div>
-            <div v-if="status === 'active' || status === 'assassin'">
-                <div class="apple-alert apple-alert-info mb-md">游戏已开始，输入名字重连</div>
-                <button class="apple-btn apple-btn-primary apple-btn-block" style="background: var(--apple-orange);"
-                    @click="joinGame" :disabled="!myName">重连</button>
-            </div>
-            <div v-if="status === 'empty'" class="text-center text-muted" style="padding: var(--space-lg) 0;">
-                当前无房间，请先创建
-            </div>
-        </div>
-
-        <div v-if="status === 'empty'" class="apple-card">
+        <div v-if="status === 'empty' || status === 'ended'" class="apple-card">
             <h4 class="mb-md">创建新房间</h4>
             <p class="text-sm text-muted mb-md">标准包配置</p>
 
@@ -767,6 +1032,32 @@
             <div class="config-preview" v-html="getConfigPreview()"></div>
 
             <button class="apple-btn apple-btn-success apple-btn-block apple-btn-lg" @click="createGame">开新局</button>
+        </div>
+
+        <div class="apple-card">
+            <h4 class="mb-md">加入游戏</h4>
+            <input v-model="myName" class="apple-input mb-md" placeholder="输入你的姓名">
+
+            <div v-if="status === 'joining'" class="apple-alert apple-alert-info mb-md">
+                <div class="d-flex justify-between items-center">
+                    <span class="apple-tag apple-tag-blue">等待中</span>
+                    <span class="fw-700">{{ currentCount }} / {{ targetCount }} 人</span>
+                </div>
+                <div class="text-muted text-sm mt-sm">已加入: {{ allPlayers.join(', ') }}</div>
+            </div>
+
+            <div v-if="status === 'joining'">
+                <button class="apple-btn apple-btn-primary apple-btn-block" @click="joinGame"
+                    :disabled="!myName">加入房间</button>
+            </div>
+            <div v-if="status === 'active' || status === 'assassin' || status === 'ended'">
+                <div class="apple-alert apple-alert-info mb-md">游戏已开始或已结束，输入名字进入</div>
+                <button class="apple-btn apple-btn-primary apple-btn-block" style="background: var(--apple-orange);"
+                    @click="joinGame" :disabled="!myName">进入房间</button>
+            </div>
+            <div v-if="status === 'empty'" class="text-center text-muted" style="padding: var(--space-lg) 0;">
+                当前无房间，请先创建
+            </div>
         </div>
     </div>
 
@@ -843,7 +1134,7 @@
     </div>
 
     <!-- Step 3: Main Game -->
-    <div v-if="step === 3" class="apple-section" style="padding-top: var(--space-md);">
+    <div v-if="step === 3 && status !== 'ended'" class="apple-section" style="padding-top: var(--space-md);">
 
         <!-- Identity -->
         <div class="apple-card mb-md">
@@ -865,32 +1156,53 @@
                         </span>
                     </div>
                 </div>
-                <div v-if="visionData.length" class="mt-md"
-                    style="background:var(--apple-bg); padding:var(--space-md); border-radius:var(--radius-md);">
+                <div class="mt-md">
                     <div class="fw-600 text-sm mb-sm">你的视野</div>
-                    <ul class="vision-list">
-                        <li v-for="v in visionData"
-                            :class="{'evil': v.identity.includes('坏') || v.identity.includes('同')}">
-                            {{ v.name }}: {{ v.identity }}
-                        </li>
-                    </ul>
+                    <div class="vision-intel-card" :class="getVisionThemeClass()">
+                        <div class="vision-intel-content">
+                            <div class="vision-intel-title">{{ getVisionPanelMeta().title }}</div>
+                            <div class="vision-intel-subtitle">
+                                {{ getVisionPanelMeta().subtitle }}
+                            </div>
+                            <div class="vision-intel-names">{{ getVisionNamesText() }}</div>
+                        </div>
+                    </div>
                 </div>
-                <div v-else class="text-center text-muted text-sm mt-md">(你没有特殊视野)</div>
             </div>
+        </div>
+
+        <!-- Assassin Phase -->
+        <div v-if="status === 'assassin'" class="apple-card text-center mb-md" style="border: 2px solid var(--apple-red);">
+            <h3 class="text-red mb-lg"><i class="ph-fill ph-skull"></i> 刺杀阶段</h3>
+            <p class="text-muted mb-lg">好人完成了3个任务！{{ getAssassinRoleName() }}正在选择刺杀目标...</p>
+
+            <div v-if="canAssassinate()">
+                <h5 class="mb-md">选择刺杀目标 (猜测梅林)</h5>
+                <div class="apple-toggle-grid">
+                    <template v-for="p in allPlayers" :key="'kill-'+p">
+                        <button class="apple-btn apple-btn-outline"
+                            style="color: var(--apple-red); border-color: rgba(255,59,48,0.3);" @click="assassinate(p)">
+                            {{ p }}
+                        </button>
+                    </template>
+                </div>
+            </div>
+            <div v-else class="text-muted">等待{{ getAssassinRoleName() }}选择...</div>
         </div>
 
         <!-- Mission Progress -->
         <div class="apple-card mb-md text-center">
             <div class="apple-dots mb-md">
                 <div v-for="i in 5" class="apple-dot"
-                    :class="[getMissionStatusClass(i), {current: i === missionHistory.length + 1}]">
+                    :class="[getMissionStatusClass(i), {current: i === missionHistory.length + 1}, {'swap-active': lancelotSwapReveal[i-1] === true}]">
                     <span>{{ i }}</span>
                     <span class="sub" v-if="missionHistory[i-1]">{{ missionHistory[i-1].fail_count }}坏</span>
                     <!-- 兰斯洛特转换牌徽标 -->
                     <span
                         v-if="lancelotEnabled && lancelotSwapReveal[i-1] !== null && lancelotSwapReveal[i-1] !== undefined"
                         class="swap-badge" :class="{'no-swap': !lancelotSwapReveal[i-1]}">
-                        {{ lancelotSwapReveal[i-1] ? '⚡' : '—' }}
+                        <i v-if="lancelotSwapReveal[i-1]" class="ph-bold ph-arrows-clockwise"></i>
+                        <i v-else class="ph-bold ph-minus"></i>
                     </span>
                 </div>
             </div>
@@ -906,6 +1218,12 @@
             <div class="text-sm mt-xs" v-if="ladyOfLakeHolder">
                 🧚 湖中仙女: <span class="fw-700" style="color: var(--apple-purple, #af52de);">{{ ladyOfLakeHolder
                     }}</span>
+            </div>
+            <!-- Lancelot Swap Alert -->
+            <div v-if="lancelotEnabled && getLatestSwapStatus() === true" 
+                 class="apple-alert mt-md" 
+                 style="background: var(--apple-orange-light); border: 1px solid rgba(255,149,0,0.3); color: #c27000; border-radius: 12px; padding: 10px;">
+                <i class="ph-bold ph-arrows-clockwise"></i> 阵营已转换！请留意你的身份变化
             </div>
         </div>
 
@@ -1129,52 +1447,55 @@
         </transition>
     </div>
 
-    <!-- Assassin Phase -->
-    <div v-if="status === 'assassin'" class="apple-section">
-        <div class="apple-card text-center">
-            <h3 class="text-red mb-lg"><i class="ph-fill ph-skull"></i> 刺杀阶段</h3>
-            <p class="text-muted mb-lg">好人完成了3个任务！{{ getAssassinRoleName() }}正在选择刺杀目标...</p>
 
-            <div v-if="canAssassinate()">
-                <h5 class="mb-md">选择刺杀目标 (猜测梅林)</h5>
-                <div class="apple-toggle-grid">
-                    <template v-for="p in allPlayers" :key="'kill-'+p">
-                        <button class="apple-btn apple-btn-outline"
-                            style="color: var(--apple-red); border-color: rgba(255,59,48,0.3);" @click="assassinate(p)">
-                            {{ p }}
-                        </button>
-                    </template>
-                </div>
-            </div>
-            <div v-else class="text-muted">等待{{ getAssassinRoleName() }}选择...</div>
-        </div>
-    </div>
 
     <!-- Game Over -->
-    <div v-if="status === 'ended'" class="apple-section">
-        <div class="apple-card text-center">
-            <h2 class="mb-lg" :class="gameWinner==='good'?'text-blue':'text-red'" style="font-size:1.8rem;">
-                {{ gameWinner === 'good' ? '🛡️ 好人胜利!' : '🗡️ 坏人胜利!' }}
-            </h2>
-            <div v-if="assassinTarget" class="text-muted mb-lg">
-                刺客刺杀了: <strong class="text-red">{{ assassinTarget }}</strong>
+    <div v-if="status === 'ended' && revealedPlayers.length > 0" class="apple-section">
+        <div class="apple-card" style="padding: var(--space-2xl) var(--space-lg); text-align: center; overflow: hidden; position: relative;">
+            
+            <div class="victory-hero">
+                {{ gameWinner === 'good' ? '🛡️' : '🗡️' }}
             </div>
-            <ul class="reveal-list mb-lg" style="padding: 0 var(--space-md);">
-                <li v-for="p in revealedPlayers">
-                    <span>{{ p.name }}</span>
-                    <span :class="isEvil(p.role)?'text-red fw-600':'text-blue fw-600'">{{ roleMap[p.role]
-                        }}</span>
-                </li>
-            </ul>
-            <button class="apple-btn apple-btn-primary apple-btn-block apple-btn-lg mb-sm" @click="quickRestart">🔄
-                一键重开</button>
-            <button class="apple-btn apple-btn-secondary apple-btn-block" @click="resetGame">⚙️ 更换人数</button>
-            <div id="dashboard-chart" style="width: 100%; height: 400px; margin-top: var(--space-xl);"></div>
+            
+            <h2 class="victory-title" :class="gameWinner==='good' ? 'victory-blue' : 'victory-red'">
+                {{ gameWinner === 'good' ? '正义长存' : '暗影降临' }}
+            </h2>
+            
+            <div class="text-muted" style="font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: var(--space-lg);">
+                {{ gameWinner === 'good' ? '好人阵营取得最终胜利' : '邪恶阵营夺取最终胜利' }}
+            </div>
+
+            <div v-if="assassinTarget" class="assassin-result">
+                <span>刺客最终刺杀了 <strong style="margin-left: 4px; font-size: 1.15rem;">{{ assassinTarget }}</strong></span>
+            </div>
+
+            <div style="text-align: left; max-width: 800px; margin: 0 auto;">
+                <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: var(--space-md); color: var(--apple-black); padding-left: 4px; letter-spacing: -0.02em;">全员身份揭晓</h3>
+                <div class="reveal-grid">
+                    <div v-for="p in revealedPlayers" :key="p.name" class="reveal-card">
+                        <div class="name">{{ p.name }}</div>
+                        <div class="role" :class="isEvil(p.role) ? 'text-red' : 'text-blue'">
+                            {{ roleMap[p.role] }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons-group">
+                    <button class="apple-btn apple-btn-primary apple-btn-pill" style="flex: 1;" @click="quickRestart">
+                        🔄一键重开
+                    </button>
+                    <button class="apple-btn apple-btn-secondary apple-btn-pill" style="flex: 1;" @click="resetGame">
+                        ⚙️ 更换人数
+                    </button>
+                </div>
+            </div>
+
+            <div id="dashboard-chart" style="width: 100%; height: 400px; margin-top: var(--space-2xl);"></div>
         </div>
     </div>
 
     <!-- Game Controls -->
-    <div v-if="step === 3 || status === 'assassin' || status === 'active'" class="apple-card text-center"
+    <div v-if="(step === 3 || status === 'assassin' || status === 'active') && status !== 'ended'" class="apple-card text-center"
         style="background: var(--apple-bg); box-shadow: none; margin-top: var(--space-lg);">
         <div class="game-controls">
             <button class="apple-btn apple-btn-sm" style="background: var(--apple-orange); color: white;"
@@ -1253,6 +1574,7 @@
                 lbData: [],
                 history: [],
                 chartRendered: false,
+                cacheBuster: Date.now(),
                 roleMap: {
                     'Merlin': '梅林',
                     'Percival': '派西维尔',
@@ -1459,6 +1781,69 @@
                 }
                 return false;
             },
+            getVisionPanelMeta() {
+                if (["Morgana", "Assassin", "Mordred", "Minion"].includes(this.myRole)) {
+                    return {
+                        theme: "evil-team",
+                        title: "暗影盟友",
+                        subtitle: "已知邪恶阵营"
+                    };
+                }
+                if (this.myRole === "Merlin") {
+                    return {
+                        theme: "merlin",
+                        title: "邪恶印记",
+                        subtitle: "身份未知的爪牙"
+                    };
+                }
+                if (this.myRole === "Percival") {
+                    return {
+                        theme: "percival",
+                        title: "真假先知",
+                        subtitle: "梅林或莫甘娜，请谨慎抉择"
+                    };
+                }
+                if (this.myRole === "Lancelot Good") {
+                    return {
+                        theme: "lancelot-good",
+                        title: "誓约之剑",
+                        subtitle: "等待天明，警惕命运的试炼"
+                    };
+                }
+                if (this.myRole === "Lancelot Evil") {
+                    return {
+                        theme: "lancelot-evil",
+                        title: "堕落之刃",
+                        subtitle: "沉潜暗夜，迎接暗影的凝视"
+                    };
+                }
+                if (this.myRole === "Oberon") {
+                    return {
+                        theme: "oberon",
+                        title: "孤军奋战",
+                        subtitle: "无法确认盟友，请隐蔽行动"
+                    };
+                }
+                return {
+                    theme: "loyal",
+                    title: "长夜无明",
+                    subtitle: "阿瓦隆等待黎明，请保持闭眼"
+                };
+            },
+            getVisionThemeClass() {
+                return `vision-theme-${this.getVisionPanelMeta().theme}`;
+            },
+            getVisionNamesText() {
+                if (!this.visionData.length) {
+                    return "暂无可见目标";
+                }
+                return this.visionData.map(v => {
+                    if ((v.identity || "").includes("兰斯洛特") || (v.identity || "").includes("Lancelot")) {
+                        return `${v.name}（兰斯洛特）`;
+                    }
+                    return v.name;
+                }).join("、");
+            },
             canAssassinate() {
                 // 判断当前玩家是否可以执行刺杀
                 if (this.assassinRole === this.myRole) return true;
@@ -1503,9 +1888,12 @@
                             const d = res.data;
                             this.status = d.status;
                             this.currentCount = d.current_count;
-                            this.targetCount = d.target_count;
                             this.allPlayers = d.players || [];
-                            if (d.status !== 'empty') {
+                            
+                            // Only sync config from server if a game is actually in progress or joining
+                            // This prevents local creation settings from being reset by polling
+                            if (d.status === 'joining' || d.status === 'active' || d.status === 'assassin') {
+                                this.targetCount = d.target_count;
                                 this.lancelotEnabled = d.lancelot_enabled || false;
                                 this.excaliburEnabled = d.excalibur_enabled || false;
                                 if (d.lady_of_lake_enabled !== undefined) {
@@ -1614,6 +2002,12 @@
                 const r = this.missionHistory[i - 1];
                 return r ? (r.result === 'success' ? 'success' : 'fail') : '';
             },
+            getLatestSwapStatus() {
+                if (!this.lancelotEnabled) return null;
+                const reveals = this.lancelotSwapReveal.filter(r => r !== null && r !== undefined);
+                if (reveals.length === 0) return null;
+                return reveals[reveals.length - 1];
+            },
             isEvil(role) {
                 return ['Morgana', 'Assassin', 'Mordred', 'Oberon', 'Minion', 'Lancelot Evil'].includes(
                     role);
@@ -1632,7 +2026,7 @@
                     'Lancelot Good': 'LANCELOT(GOOD).png',
                     'Lancelot Evil': 'LANCELOT(EVIL).png'
                 };
-                return '/avalon/assets/' + (map[role] || 'SERVANT.jpg');
+                return '/avalon/assets/' + (map[role] || 'SERVANT.jpg') + '?v=' + this.cacheBuster;
             },
             showError(e) {
                 this.errorMsg = e.response?.data?.detail || "Error";
