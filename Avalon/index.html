@@ -338,8 +338,14 @@
         opacity: 1;
     }
 
-    .vision-theme-oberon {
-        background: linear-gradient(160deg, rgba(28, 28, 30, 0.95) 0%, rgba(44, 44, 46, 0.9) 100%);
+    .vision-theme-oberon::before {
+        width: 380px;
+        height: 380px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, rgba(142, 142, 147, 0.3) 0%, rgba(142, 142, 147, 0.1) 40%, rgba(142, 142, 147, 0) 70%);
+        opacity: 1;
     }
 
     .vision-theme-loyal::before {
@@ -369,10 +375,6 @@
         bottom: -60px;
         background: radial-gradient(circle, rgba(255, 69, 58, 0.3) 0%, rgba(255, 69, 58, 0.1) 40%, rgba(255, 69, 58, 0) 70%);
         opacity: 1;
-    }
-
-    .vision-theme-lancelot-evil {
-        background: linear-gradient(165deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 15, 0.96) 100%);
     }
 
     .vision-theme-lancelot-evil::before {
@@ -2023,8 +2025,8 @@
                     'Mordred': 'MORDRED.jpg',
                     'Oberon': 'OBERON.jpg',
                     'Minion': 'MINION.jpg',
-                    'Lancelot Good': 'LANCELOT(GOOD).png',
-                    'Lancelot Evil': 'LANCELOT(EVIL).png'
+                    'Lancelot Good': 'LANCELOT(GOOD).jpg',
+                    'Lancelot Evil': 'LANCELOT(EVIL).jpg'
                 };
                 return '/avalon/assets/' + (map[role] || 'SERVANT.jpg') + '?v=' + this.cacheBuster;
             },
