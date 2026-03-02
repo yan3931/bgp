@@ -678,6 +678,46 @@
                 </div>
             </a>
 
+            <!-- 纸牌帮 -->
+            <a href="#" class="game-card" data-min="3" data-max="6">
+                <div class="game-header">
+                    <div class="game-icon" style="background: rgba(88, 86, 214, 0.08); cursor: pointer;"
+                        onclick="openRulesModal('纸牌帮', event)">
+                        <i class="ph-fill ph-spade" style="color: var(--apple-indigo, #5856d6);"></i>
+                    </div>
+                    <div class="game-title">
+                        <h3>纸牌帮</h3>
+                        <span class="en-name">The Gang <i class="ph-fill ph-star"
+                                style="color: var(--apple-yellow); margin-left: 6px;"></i> 7.6</span>
+                    </div>
+                </div>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <i class="ph-bold ph-users stat-icon"></i>推荐 5人
+                    </div>
+                    <div class="stat-item">
+                        <i class="ph-bold ph-clock stat-icon"></i>20分钟
+                    </div>
+                    <div class="stat-item" style="grid-column: span 2;">
+                        <i class="ph-bold ph-trend-up stat-icon"></i>难度 1.60/5
+                    </div>
+                </div>
+                <div class="game-description">
+                    《纸牌帮》是一款以德州扑克为核心机制的合作类抢劫游戏！集结你的帮派，利用扑克牌的威力完成一系列银行劫案。玩家们需在禁止交流的情况下，暗自评估自己手牌与他人的相对强度并盲选对应的预测筹码。随着桌面上的公共牌不断翻开，你有机会重新评估并调整预期。回合结束时，若全员对自身牌力排名的预测完全准确，即可成功开启一个金库，否则将触发警报。在三次警报响起前成功开启三个金库，即可带领你的帮派赢得胜利！
+                </div>
+                <div class="game-tags">
+                    <div
+                        style="width: 100%; font-size: 0.8rem; color: var(--apple-gray); font-weight: 600; margin-bottom: 2px;">
+                        标签</div>
+                    <span class="tag">合作</span>
+                    <span class="tag">卡牌</span>
+                    <div
+                        style="width: 100%; font-size: 0.8rem; color: var(--apple-gray); font-weight: 600; margin-top: 6px; margin-bottom: 2px;">
+                        机制</div>
+                    <span class="tag" style="background: rgba(0, 113, 227, 0.08); color: var(--apple-blue);">下注与打赌</span>
+                </div>
+            </a>
+
         </div>
 
         <!-- Rules Modal -->
@@ -1190,6 +1230,44 @@
                         </ul>
                     </div>
                 `
+            },
+            '纸牌帮': {
+                content: `
+                    <div class="rule-section">
+                        <h4>🃏 游戏目标</h4>
+                        <p>玩家们扮演一个专业盗贼团伙，必须完美配合来完成一系列抢劫行动。你们需要通过合作打扑克，在触发 3 次警报（失败 3 次）之前，成功破解 3 个金库（成功 3 次），即可赢得游戏胜利。</p>
+                    </div>
+                    <div class="rule-section">
+                        <h4>⚙️ 核心机制与沟通限制</h4>
+                        <ul>
+                            <li><strong>合作评估：</strong>与常规扑克不同，你们不仅不能虚张声势（Bluff），还要尽量准确评估自己手牌在所有玩家中的相对强度。</li>
+                            <li><strong>禁止交流手牌：</strong>严禁通过任何语言或暗示透露自己手上的底牌信息。</li>
+                            <li><strong>筹码交流法：</strong>游戏使用带有星数（1星至玩家总人数）的筹码来进行沟通。拿取 1 星筹码代表你认为自己的牌是全场最弱的，拿取最高星数的筹码代表你认为自己的牌是全场最强的。</li>
+                        </ul>
+                    </div>
+                    <div class="rule-section">
+                        <h4>🔄 单次抢劫流程 (A Heist)</h4>
+                        <p>每次抢劫分为 4 个回合：</p>
+                        <ul>
+                            <li><strong>第 1 回合 (翻牌前)：</strong>每人发 2 张底牌。大家根据底牌拿取对应星数的白色筹码。当每个人面前都有一个白色筹码时，回合结束。</li>
+                            <li><strong>第 2 回合 (翻牌圈)：</strong>翻开 3 张公共牌。大家重新评估牌力并拿取黄色筹码。</li>
+                            <li><strong>第 3 回合 (转牌圈)：</strong>再翻开 1 张公共牌。大家评估牌力后拿取橙色筹码。</li>
+                            <li><strong>第 4 回合 (河牌圈)：</strong>翻开最后 1 张公共牌。大家进行最终评估并拿取红色筹码。</li>
+                        </ul>
+                    </div>
+                    <div class="rule-section">
+                        <h4>🏁 摊牌与结算 (The Showdown)</h4>
+                        <p>在第 4 回合结束后进入摊牌阶段，此时只有红色筹码生效。玩家必须按星数从小到大的顺序亮出底牌。</p>
+                        <ul>
+                            <li><strong>抢劫成功：</strong>如果牌型强度确实是严格递增的（或完全平局），则抢劫成功，翻开一面金库。</li>
+                            <li><strong>抢劫失败：</strong>如果任何一位玩家亮出的牌型比前一位玩家弱，则抢劫失败，触发一次警报。</li>
+                        </ul>
+                        <p>摊牌结束后重新洗牌开始下一次抢劫，直到达成 3 次成功或 3 次失败。</p>
+                    </div>
+                    <div class="rule-section">
+                        <p><em>注：牌型大小与标准德州扑克一致（皇家同花顺 > 同花顺 > 四条 > 葫芦 > 同花 > 顺子 > 三条 > 两对 > 一对 > 高牌）。</em></p>
+                    </div>
+                `
             }
         };
 
@@ -1474,7 +1552,7 @@
                 content: `
                     <div class="rule-section">
                         <h4>💡 核心逻辑：从混沌到有序</h4>
-                        <p><strong>基础策略：</strong>《卡波》是一个关于**记忆力**、**概率**与**胆识**的游戏。你的首要任务是尽快通过各种手段摸清自己 4 张牌的底细，并不断将大数牌置换为小数牌。
+                        <p><strong>基础策略：</strong>《卡波》是一个关于<strong>记忆力</strong>、<strong>概率</strong>与<strong>胆识</strong>的游戏。你的首要任务是尽快通过各种手段摸清自己 4 张牌的底细，并不断将大数牌置换为小数牌。
                         <br>
                         <ul>
                             <li><strong>优先度排布：</strong>游戏初期，由于你只知道 2 张牌，首要目标是利用“7-8”偷看另外两张。在完全确定自己手牌数值前，不要盲目喊出 CABO。</li>
@@ -1511,7 +1589,7 @@
                         <p><strong>极端局势处理：</strong><br>
                         <ul>
                             <li><strong>神风战术：</strong>这是一场豪赌。如果你开局就拿到了 12 或 13，可以尝试不置换，而是通过技能牌凑齐“双 12 + 双 13”。一旦成功，50 分的重创足以让对手直接出局。</li>
-                            <li><strong>精准控分：</strong>如果你的总积分已经到了 80-90 分，而本轮形势不利。与其费力减分，不如故意保留一些大牌，尝试将总分推到**精准 100 分**。这种“死而复生”的战术往往能让垫底玩家瞬间回到第一梯队。</li>
+                            <li><strong>精准控分：</strong>如果你的总积分已经到了 80-90 分，而本轮形势不利。与其费力减分，不如故意保留一些大牌，尝试将总分推到<strong>精准 100 分</strong>。这种“死而复生”的战术往往能让垫底玩家瞬间回到第一梯队。</li>
                         </ul>
                     </div>
                     <div class="rule-section">
@@ -1626,6 +1704,46 @@
                         <ul>
                             <li><strong>清仓大甩卖：</strong>由于第四轮结束后手牌作废，所有的出牌都应以“完成变现”或“干扰对手变现”为目的。不要计较那一两千块的出价，只要能变现，哪怕溢价买入也是在回笼资金。</li>
                             <li><strong>最后的计算：</strong>时刻留意其他人的博物馆后方（估算大概高度），在最后一次变现前，如果你确信自己领先，可以采取激进的出价策略来封堵对手的增值路径。</li>
+                        </ul>
+                    </div>
+                `
+            },
+            '纸牌帮': {
+                content: `
+                    <div class="rule-section">
+                        <h4>💡 核心逻辑：建立“锚点”与相对牌力</h4>
+                        <p><strong>基础策略：</strong>这个游戏最怕的是大家都在中间星数犹豫不决。你们需要有人快速站出来充当“天花板”和“地板”。
+                        <br>
+                        <ul>
+                            <li><strong>抢占两极（第一回合）：</strong>翻牌前，如果你拿到了绝对的烂牌（比如 2-7 不同花），<strong>立刻</strong>拿取 1 星筹码。如果你拿到了极强的底牌（如 AA、KK 或 AK），<strong>立刻</strong>拿最高星筹码。这能为队友提供清晰的参考系，让那些拿着边缘牌（如 8-9 同花）的人更容易定位自己的中间星数。</li>
+                            <li><strong>别怕“抢”筹码：</strong>如果你觉得自己的牌比拿 1 星的队友还烂，直接把 1 星从他面前拿过来换给他 2 星。这是一种强烈的暗示：“兄弟，我这把是真的什么都没有”。</li>
+                        </ul>
+                    </div>
+                    <div class="rule-section">
+                        <h4>🔄 动态沟通：筹码升降级的“潜台词”</h4>
+                        <p><strong>进阶技巧：</strong>从第二回合开始，公共牌的出现会改变一切。<strong>筹码星数的变化，就是你们唯一的发言机会。</strong>
+                        <br>
+                        <ul>
+                            <li><strong>跳跃升级（中大奖了）：</strong>如果一个第一回合拿 1 星的玩家，在翻牌圈突然抢走了最高星的筹码，说明他原本的烂牌中了“暗三条”或者两对！这时候原本拿最高星的玩家（可能只是个高牌 A）必须乖乖降级。</li>
+                            <li><strong>缓慢降级（底牌未中）：</strong>如果你翻牌前拿了最高星（比如底牌 AQ），但前三张公共牌是 2-5-8，你完全没中。你应该主动把最高星让出来，换成中等星数，告诉队友：“我只有高牌，这把靠你们了”。</li>
+                        </ul>
+                    </div>
+                    <div class="rule-section">
+                        <h4>👁️ 读牌艺术：学会“看公共面”</h4>
+                        <p><strong>防止翻车：</strong>在《纸牌帮》里，你的牌力不是绝对的，而是受公共牌（Community cards）限制的。
+                        <br>
+                        <ul>
+                            <li><strong>同花/顺子面警告：</strong>如果第四回合（河牌圈）桌面上出现了 4 张同花色的牌，而你手里<strong>没有</strong>那个花色。就算你手里有一对 A，你的牌力也瞬间跌入谷底。此时你必须疯狂降级，哪怕去抢 1 星筹码，因为任何有该花色的玩家都能秒杀你。</li>
+                            <li><strong>公牌最大化：</strong>如果桌面的 5 张牌是 10-J-Q-K-A 的顺子，而大家手里都没有同花，那么全场的牌力是<strong>完全平局</strong>的。此时你们谁拿 1 星谁拿最高星都无所谓（规则允许平局算过关），不要为了抢星数产生无谓的内耗。</li>
+                        </ul>
+                    </div>
+                    <div class="rule-section">
+                        <h4>⏳ 节奏掌控：让牌与观察</h4>
+                        <p><strong>默契培养：</strong>
+                        <br>
+                        <ul>
+                            <li><strong>中等牌力的“等”：</strong>如果你手里是中等对子（比如底牌发了一对 8），翻牌前不要急着拿筹码。先看队友的动作，等烂牌和极品牌归位后，你再去拿剩下的中间星数，这样能最大程度避免排序混乱。</li>
+                            <li><strong>河牌圈的最终确认：</strong>最后一张公共牌翻出后，是最容易翻车的阶段。此时拿到最高星的人，必须是确信自己拥有<strong>坚果牌（The Nuts，当前牌面下不可能被击败的牌）</strong>或者接近坚果的牌。如果大家都在互相推让最高星，说明集体拉胯，这时候哪怕是个“顶对”也能硬着头皮拿最高星了。</li>
                         </ul>
                     </div>
                 `
