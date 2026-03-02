@@ -1,9 +1,18 @@
 import sqlite3
-from typing import Dict, List
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Dict, List
 
 import aiosqlite
 
 DB_NAME = "games.db"
+
+
+@asynccontextmanager
+async def _get_db() -> AsyncIterator[aiosqlite.Connection]:
+    """统一的数据库连接获取入口。业务层应始终通过此函数获取连接。"""
+    async with aiosqlite.connect(DB_NAME) as db:
+        yield db
+
 
 async def init_db():
     async with aiosqlite.connect(DB_NAME) as db:

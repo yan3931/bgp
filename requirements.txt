@@ -3,3 +3,5 @@ uvicorn[standard]
 jinja2
 python-socketio
 aiosqlite
+# 可选：生产环境设置 REDIS_URL 时需要安装
+# redis[hiredis]

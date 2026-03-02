@@ -4,10 +4,39 @@
 
 ---
 
-## 1. 目录及架构要求 (Directory & Architecture)
-1. **模块化结构**：每个游戏应作为一个独立的 Python/Flask 蓝图（Blueprint）或独立的路由模块建立，目录需位于根目录下（如 `cabo/`、`lasvegas/`、`Avalon/` 等）。
-2. **路由分配**：在 `main.py` 内注册该游戏专属路由，并在首页 `gamelist.html` (`index.html`) 的游戏列表中添加对应入口与规则描述。
-3. **数据分离**：涉及游戏战绩、胜率数据的读取与写入，统一复用和扩展 `database.py` 中已封装的数据库操作逻辑，避免在各游戏的 `app.py` 中直接拼写重复 SQL 获取跨游戏的公共数据接口（如排行榜接口需保持输出格式的一致）。
+## 1. 分层架构与路由管理 (Layered Architecture & Routing)
+
+本项目采用 **三层架构**，所有游戏模块必须遵循此分层规范：
+
+```
+接入层 (API Layer)        →  app.py        →  路由注册、请求解析、响应格式化
+业务引擎层 (Engine Layer)  →  engine.py     →  游戏规则、状态机、纯计算逻辑
+数据访问层 (DAL)           →  database.py   →  统一的异步数据库读写接口
+```
+
+1. **接入层 (`app.py`)**：使用 FastAPI 的 `APIRouter` 进行模块化路由注册。每个游戏拥有独立的路由前缀（如 `/cabo/`, `/lasvegas/`）。API 端点**只负责**接收请求、调用引擎层并返回结果，禁止在路由函数中编写业务逻辑。
+2. **业务引擎层 (`engine.py`)**：封装具体的游戏规则判定、分数计算等纯逻辑。引擎类不依赖 FastAPI、Socket.IO 或数据库，保持可独立测试。
+3. **数据访问层 (`database.py`)**：所有数据库读写操作统一封装为 `async def` 函数。业务代码不应直接编写 SQL，而是调用 `database.py` 中预定义的异步函数。使用 `_get_db()` 上下文管理器统一获取连接。
+4. **模块化结构**：每个游戏位于根目录下的独立文件夹（如 `cabo/`），包含 `app.py`（接入层）和 `engine.py`（引擎层）。
+5. **路由分配**：在 `main.py` 的 `APPS_CONFIG` 中注册游戏模块。
+
+---
+
+## 1.5 状态管理与实时通信 (State Management & Real-time)
+
+### 持久化数据
+对于用户资料、历史战绩等冷数据，使用异步 SQLite (`aiosqlite`)。所有数据库操作通过 `database.py` 统一封装。
+
+### 内存级状态 (Truth State)
+对局中的高频变动状态（如手牌、当前回合、场上筹码）通过 `state_store.py` 统一管理：
+- **MemoryStore**（默认）：基于 Python `dict` + `asyncio.Lock`，零依赖，适用于单进程开发环境。
+- **RedisStore**（生产环境）：设置环境变量 `REDIS_URL` 即可无缝切换，支持多进程/多容器部署。
+
+### WebSocket/Socket.IO 解耦
+实时广播服务已独立为**推送网关** (`sio_server.py` 中的 `EventGateway`)：
+- 游戏引擎不再直接调用 `sio.emit()`，而是通过 `state_store.publish("game:xxx", event_data)` 发布事件。
+- `EventGateway` 订阅各游戏频道，自动向前端触发 `state_update` 事件。
+- 若新游戏需要实时推送，只需在 `sio_server.py` 的 `GAME_CHANNELS` 列表中添加频道名。
 
 ---
 
@@ -154,48 +183,58 @@ data.leaderboard.forEach((p, idx) => {
 
 ## 6. 新游戏接入检查清单
 
-本项目现已全面采用 `APIRouter + include_router + 异步数据库 (aiosqlite)` 架构。在添加新游戏时，请遵循以下检查清单。
+本项目采用 **三层架构 (API → Engine → DAL) + 事件驱动推送** 模式。在添加新游戏时，请遵循以下检查清单。
 
-**1. 路由模式 (Router pattern)**
+**1. 模块结构 (Module structure)**
 
-* 在游戏模块中，使用 `router = APIRouter(prefix="/yourgame", tags=["YourGame"])`。
+* 在根目录下创建游戏文件夹（如 `yourgame/`），包含以下文件：
+  - `app.py`：接入层 — 路由定义、请求解析、调用引擎、返回结果
+  - `engine.py`：引擎层 — 纯游戏逻辑、数据模型、状态操作
+  - `index.html`：前端页面
+  - `__init__.py`：空文件（使其成为 Python 包）
+
+**2. 引擎层规范 (Engine pattern)**
+
+* `engine.py` 中定义 `GameState` 类和 `YourGameEngine` 类。
+* 引擎类的方法只操作传入的 `GameState` 对象，不依赖 FastAPI/Socket.IO/数据库。
+* 引擎方法返回结果字典，不抛出 HTTP 异常。
+
+**3. 路由层规范 (Router pattern)**
+
+* 在 `app.py` 中使用 `router = APIRouter(prefix="/yourgame", tags=["YourGame"])`。
 * 不要为游戏模块创建子 `FastAPI()` 应用。
 * 导出的变量名必须是 `router`（供 `main.py` 的动态加载器使用）。
+* 路由函数只做：解析请求 → 加锁 → 调用引擎 → 发布事件 → 返回结果。
 
-**2. 在主应用中注册 (Register in main app)**
+**4. 在主应用中注册 (Register in main app)**
 
 * 在 `APPS_CONFIG` 中添加映射，例如：`"yourgame": "yourgame.app"`。
-* 主应用应使用 `app.include_router(sub_router)`。
-* 不要使用 `app.mount(..., sub_app)` 来挂载游戏 API。
 * 如果需要静态文件，请在 `main.py` 中显式挂载到最终的带前缀的路径上。
 
-**3. 数据库规范（仅限异步）**
+**5. 数据库规范（仅限异步）**
 
 * `database.py` 中的 API 均为异步函数；所有调用都必须使用 `await`。
-* 不要在异步路由中使用阻塞式的 `sqlite3.connect(...)`。
-* 新增的数据库辅助函数应使用 `async def` 定义，并保持返回的数据结构与现有的排行榜 API 结构一致。
+* 使用 `_get_db()` 上下文管理器获取连接，不要直接使用 `aiosqlite.connect()`。
+* 在 `init_db()` 中添加新游戏的 `CREATE TABLE IF NOT EXISTS` 语句。
 
-**4. 生命周期与初始化 (Lifecycle and init)**
+**6. 状态管理与实时推送 (State & real-time)**
 
-* 不要在游戏模块导入时（import time）调用 `init_db()`。
-* 数据库的初始化已集中在应用的生命周期 (lifespan) 中处理：`await database.init_db()`。
+* 如需实时推送，通过 `state_store.publish("game:yourgame", event_data)` 发布事件。
+* 在 `sio_server.py` 的 `EventGateway.GAME_CHANNELS` 中添加 `"game:yourgame"`。
+* 不要在游戏模块中直接调用 `sio.emit()`。
 
-**5. 导入规范 (Import rules)**
+**7. 生命周期、导入、前端规范**
 
-* 不要使用 `sys.path.insert(...)` 或 `sys.path.append(...)` 这种 Hack 写法。
-* 使用标准的导入方式：`import database` 或 `from database import ...`。
+* 不要在模块导入时调用 `init_db()`，数据库初始化已集中在 lifespan 中处理。
+* 使用标准导入 `import database` 或 `from yourgame.engine import ...`，禁止 `sys.path.insert`。
+* 前端使用 `const API_BASE = '/yourgame/api'`，保持页面路由与 API 前缀对齐。
 
-**6. 前端 API 基础路径 (Frontend API base path)**
+**8. 合并前的快速检查 (Pre-merge quick checks)**
 
-* 在前端代码中使用带有前缀的 API 基础路径，例如 `const API_BASE = '/yourgame/api'`。
-* 保持页面路由和 API 前缀对齐（例如页面为 `/yourgame/`，API 为 `/yourgame/api/...`）。
-
-**7. 合并前的快速检查 (Pre-merge quick checks)**
-
-* 运行 `python -m compileall .` 能够顺利通过。
-* 在主应用的 `/docs` (Swagger UI) 中可以正常看到新游戏的接口。
+* `python -m compileall .` 编译通过。
+* `/docs` (Swagger UI) 中可正常看到新游戏的 API 端点。
 * 核心 API（如 `/api/status`、`/api/leaderboard` 以及写入接口）测试正常。
-* 已经在首页和游戏列表中为新游戏添加了入口。
+* 已在首页和游戏列表中添加了入口。
 
 ---
 

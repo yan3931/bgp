@@ -9,7 +9,8 @@ from contextlib import asynccontextmanager
 import socketio
 
 import database
-from sio_server import sio
+from sio_server import sio, gateway
+from state_store import get_store, close_store
 
 APPS_CONFIG = {
     "avalon": "Avalon.main",
@@ -23,7 +24,11 @@ APPS_CONFIG = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await database.init_db()
+    # 初始化推送网关（订阅 state_store 事件频道）
+    gateway.init()
     yield
+    # 关闭状态存储连接
+    await close_store()
 
 app = FastAPI(title="Board Game Portal", lifespan=lifespan)
 
