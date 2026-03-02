@@ -17,24 +17,51 @@
         background-clip: text;
     }
 
-    .apple-hero .mode-label {
-        display: inline-block;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--apple-blue);
-        background: var(--apple-blue-light);
-        padding: 4px 12px;
-        border-radius: 12px;
-        margin-bottom: 12px;
+    /* ---- Hero Dashboard (Re-design) ---- */
+    .hero-dashboard {
+        margin: 20px 16px 8px;
+        padding: 24px 20px;
+        border-radius: 28px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.75));
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
-    .remaining-sub {
-        font-size: 0.9rem;
-        font-weight: 500;
+    .dashboard-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding-left: 8px;
+    }
+
+    .dashboard-mode {
+        display: inline-flex;
+        align-items: center;
+        background: var(--apple-blue-light);
+        color: var(--apple-blue);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        box-shadow: 0 4px 12px rgba(0, 113, 227, 0.15);
+    }
+
+    .dashboard-played {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.95rem;
+        font-weight: 600;
         color: var(--apple-gray);
-        margin-top: 8px;
+        background: rgba(0, 0, 0, 0.04);
+        padding: 8px 16px;
+        border-radius: 14px;
     }
 
     /* ---- Progress Ring ---- */
@@ -347,19 +374,31 @@
 
 {% block content %}
 <!-- Hero -->
-<div class="game-header-wrapper" id="setup-section" style="padding-bottom: 0;">
-    {% include 'header.svg' %}
+<div class="game-header-wrapper" id="setup-section" style="padding-bottom: 0; display: flex; flex-direction: column; align-items: center;">
+    <div style="width: 100%; text-align: center;">
+        {% include 'header.svg' %}
+    </div>
+    
     <div class="apple-segment" style="margin: 16px auto 0; display: inline-flex;">
         <button id="btn-basic" class="apple-segment-btn" onclick="switchMode('basic')" style="min-width: 80px;">2-4人</button>
         <button id="btn-ext" class="apple-segment-btn" onclick="switchMode('extension')" style="min-width: 80px;">5-8人</button>
     </div>
 </div>
 
-<!-- Summary Hero -->
-<div class="apple-hero" style="padding-top: var(--space-xl); padding-bottom: 0;">
-    <div class="mode-label" id="mode-name">{{ data.mode_name }}</div>
+<!-- Summary Hero Re-design -->
+<div class="hero-dashboard">
+    <div class="dashboard-info">
+        <div class="dashboard-mode">
+            <i class="ph-bold ph-users" style="margin-right: 6px; font-size: 1.1rem;"></i>
+            <span id="mode-name">{{ data.mode_name }}</span>
+        </div>
+        <div class="dashboard-played">
+            <i class="ph-bold ph-cards" style="margin-right: 8px; font-size: 1.1rem; opacity: 0.8;"></i>
+            <span id="played-info"></span>
+        </div>
+    </div>
 
-    <div class="progress-ring-wrap" id="ring-wrap">
+    <div class="progress-ring-wrap" id="ring-wrap" style="margin: 0; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.08));">
         <svg width="130" height="130">
             <circle class="progress-ring-bg" cx="65" cy="65" r="54" fill="none" stroke-width="10"></circle>
             <circle class="progress-ring-fill" id="ring-fill" cx="65" cy="65" r="54" fill="none" stroke-width="10"
@@ -370,8 +409,6 @@
             <div class="ring-label">剩余</div>
         </div>
     </div>
-
-    <div class="remaining-sub" id="played-info"></div>
 </div>
 
 <!-- Card List -->
