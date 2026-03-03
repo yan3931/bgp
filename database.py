@@ -78,8 +78,8 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
     ),
     "game_results:Avalon": BoardGame(
         name="阿瓦隆",
-        rating=7.5,
-        complexity=1.74,
+        rating=7.4,
+        complexity=2.12,
         min_players=5,
         max_players=12,
         default_duration=30,
