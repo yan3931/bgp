@@ -727,26 +727,32 @@
                     const lastScoreText = p.last_score !== null ? `${p.last_score}分` : '--';
 
                     html += `
-                            <div class="apple-list-item">
-                                <div class="rank-num ${rankClass}">${rankIcon}</div>
-                                
-                                <div class="apple-list-item-content">
-                                    <div class="apple-list-item-title">${p.name}</div>
-                                    <div class="history-trail">${p.total_games}局 · 胜率${p.win_rate}%</div>
+                            <div class="apple-list-item" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 16px;">
+                                <div style="display: flex; align-items: center;">
+                                    <div class="rank-num ${rankClass}">${rankIcon}</div>
+                                    
+                                    <div class="apple-list-item-content" style="flex: 1;">
+                                        <div class="apple-list-item-title">${p.name}</div>
+                                        <div class="history-trail">${p.total_games}局 · 胜率${p.win_rate}%</div>
+                                    </div>
+                                    
+                                    <div style="text-align: right;">
+                                        <div class="score-badge" style="font-size: 1.35rem; color: var(--apple-blue); line-height: 1;">${p.avg_score}</div>
+                                        <div class="history-trail" style="font-size: 0.75rem; margin-top: 4px;">均分</div>
+                                    </div>
                                 </div>
                                 
-                                <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
-                                    <div style="text-align: right; width: 60px;">
-                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">爆牌</div>
-                                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-red);">${p.total_busts}</div>
+                                <div style="display: flex; background: rgba(0,0,0,0.02); border-radius: 10px; padding: 10px 0; justify-content: space-evenly;">
+                                    <div style="text-align: center; flex: 1;">
+                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 4px;">爆牌</div>
+                                        <div class="score-badge" style="font-size: 1.05rem; color: var(--apple-red); line-height: 1;">${p.total_busts}</div>
                                     </div>
-                                    <div style="text-align: right; width: 60px;">
-                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">均分</div>
-                                        <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);">${p.avg_score}</div>
-                                    </div>
-                                    <div style="text-align: right; width: 60px;">
-                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">上局</div>
-                                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">${lastScoreText}</div>
+                                    
+                                    <div style="width: 1px; background: rgba(0,0,0,0.05); margin: 0 8px;"></div>
+                                    
+                                    <div style="text-align: center; flex: 1;">
+                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 4px;">上局</div>
+                                        <div class="score-badge" style="font-size: 1.05rem; color: var(--apple-gray); line-height: 1;">${lastScoreText}</div>
                                     </div>
                                 </div>
                             </div>
