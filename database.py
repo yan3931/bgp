@@ -1,3 +1,4 @@
+import math
 import sqlite3
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, List, Optional, Set
@@ -52,12 +53,17 @@ class BoardGame:
         游戏权重 W_i，用于宏加权胜率公式:
             P_total = Σ(W_i × S_i) / Σ(W_i)
 
-        W = (α·R/10 + β·C/5) × log₂(1 + T/T₀) × [max(1, log₂(P_rep)) × M_mode]
-        α=0.4, β=0.6, T₀=15
+        W = (α·((R-5)/5) + β·(C/5)²) × log₂(1 + T/T₀) × [max(1, log₂(P_rep)) × M_mode]
+        α=0.2, β=0.8, T₀=15
         """
         import math
-        alpha, beta, t0 = 0.4, 0.6, 15
-        quality = alpha * (self.rating / 10) + beta * (self.complexity / 5)
+        alpha, beta, t0 = 0.2, 0.8, 15
+        # 评分基线偏移: 5分为及格线
+        r_trans = max(0, self.rating - 5) / 5.0
+        # 复杂度指数化: 平方
+        c_trans = (self.complexity / 5.0) ** 2
+        
+        quality = alpha * r_trans + beta * c_trans
         effort = math.log2(1 + self.default_duration / t0)
         scale = max(1, math.log2(self.p_rep)) * self.m_mode
         return quality * effort * scale
@@ -304,11 +310,14 @@ async def _fetch_scored_leaderboard(
         for row in rows:
             total = row["total_games"]
             wins = row["wins"]
+            raw_rate = wins / total * 100 if total > 0 else 0
+            f = 1 - math.exp(-0.5 * total) if total > 0 else 0
+            adjusted_rate = round(f * raw_rate + (1 - f) * 50, 1)
             item = {
                 "name": row["player_name"],
                 "total_games": total,
                 "wins": wins,
-                "win_rate": round(wins / total * 100, 1) if total > 0 else 0,
+                "win_rate": adjusted_rate,
                 score_key: row["avg_value"],
             }
             if extra_row_parser:
@@ -369,12 +378,15 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
     stats = []
     for row in rows:
         p_name, total, wins, avg = row
+        raw_rate = wins / total * 100 if total > 0 else 0
+        f = 1 - math.exp(-0.5 * total) if total > 0 else 0
+        adjusted_rate = round(f * raw_rate + (1 - f) * 50, 1)
         stats.append(
             {
                 "name": p_name,
                 "wins": wins,
                 "total": total,
-                "win_rate": round(wins / total * 100, 1) if total > 0 else 0,
+                "win_rate": adjusted_rate,
                 "avg_score": round(avg, 1) if avg else 0,
             }
         )
@@ -385,9 +397,10 @@ async def get_global_leaderboard() -> List[Dict]:
     """
     宏加权胜率排行榜。
 
-    公式:  P_total = Σ(W_i × S_i) / Σ(W_i)
+    公式:  P_total = Σ(W_i × F_i × S_i) / Σ(W_i × F_i)
       - S_i = 玩家在游戏 i 的胜率 (wins / games)
       - W_i = GAME_REGISTRY 中该游戏的 weight
+      - F_i = 学习曲线因子 = 1 - exp(-λ · N), λ=0.5, N=玩家在该游戏的局数
     """
 
     # (registry_key, SQL) — 每条查询携带注册表 key 以便查找权重
@@ -447,14 +460,18 @@ async def get_global_leaderboard() -> List[Dict]:
 
     result = []
     for p_name, game_map in per_game.items():
-        sum_ws = 0.0   # Σ(W_i × S_i)
-        sum_w = 0.0     # Σ(W_i)
+        sum_ws = 0.0   # Σ(W_i × F_i × S_i)
+        sum_w = 0.0     # Σ(W_i × F_i)
         for reg_key, counts in game_map.items():
             bg = GAME_REGISTRY.get(reg_key)
             w = bg.weight if bg else 1.0
-            s = counts["wins"] / counts["games"] if counts["games"] > 0 else 0.0
-            sum_ws += w * s
-            sum_w += w
+            n = counts["games"]
+            s = counts["wins"] / n if n > 0 else 0.0
+            # 学习曲线因子: F = 1 - exp(-λ·N), λ=0.5
+            f_learning = 1 - math.exp(-0.5 * n)
+            effective_w = w * f_learning
+            sum_ws += effective_w * s
+            sum_w += effective_w
 
         weighted_rate = (sum_ws / sum_w * 100) if sum_w > 0 else 0.0
         t = totals.get(p_name, {"total_games": 0, "total_wins": 0})
@@ -498,13 +515,14 @@ async def get_lasvegas_leaderboard() -> List[Dict]:
         cumulative_rows = await cursor.fetchall()
     cumulative = {}
     for row in cumulative_rows:
+        games_played = row[2]
         cumulative[row[0]] = {
             "name": row[0],
             "total_amount": row[1],
-            "games_played": row[2],
+            "games_played": games_played,
             "last_game_amount": 0,
             "last_game_bills": 0,
-            "avg_amount": round(row[1] / row[2], 1) if row[2] > 0 else 0
+            "avg_amount": round(row[1] / games_played, 1) if games_played > 0 else 0,
         }
 
     # Get the latest game timestamp
@@ -615,10 +633,13 @@ async def get_simple_leaderboard(game_name: str) -> List[Dict]:
     stats = []
     for row in rows:
         p_name, total, wins = row
+        raw_rate = wins / total * 100 if total > 0 else 0
+        f = 1 - math.exp(-0.5 * total) if total > 0 else 0
+        adjusted_rate = round(f * raw_rate + (1 - f) * 50, 1)
         stats.append({
             "name": p_name,
             "wins": wins,
             "total": total,
-            "win_rate": round(wins / total * 100, 1) if total > 0 else 0,
+            "win_rate": adjusted_rate,
         })
     return stats
