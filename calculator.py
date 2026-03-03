@@ -115,7 +115,7 @@ if __name__ == "__main__":
     print(f"复杂度: {vanilla_game.total_complexity}")
     print(f"时长: {vanilla_game.total_duration} 分钟\n")
 
-    print("--- 加入《城市拓展》后的最终数据 ---")
+    print("--- 加入拓展后的最终数据 ---")
     print(f"合并评分: {full_game.total_rating}")
     print(f"合并复杂度: {full_game.total_complexity}")
     print(f"合并时长: {full_game.total_duration} 分钟")
