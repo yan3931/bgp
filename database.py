@@ -25,6 +25,7 @@ class BoardGame:
         max_players: int,
         default_duration: int,
         recommended_players: Optional[Set[int]] = None,
+        m_mode: float = 1.0,
     ):
         self.name = name
         self.rating = rating
@@ -33,6 +34,7 @@ class BoardGame:
         self.max_players = max_players
         self.default_duration = default_duration
         self.recommended_players = recommended_players or set()
+        self.m_mode = m_mode
 
     @property
     def p_rep(self) -> float:
@@ -50,14 +52,14 @@ class BoardGame:
         游戏权重 W_i，用于宏加权胜率公式:
             P_total = Σ(W_i × S_i) / Σ(W_i)
 
-        W = (α·R/10 + β·C/5) × log₂(1 + T/T₀) × max(1, log₂(P_rep))
+        W = (α·R/10 + β·C/5) × log₂(1 + T/T₀) × [max(1, log₂(P_rep)) × M_mode]
         α=0.4, β=0.6, T₀=15
         """
         import math
         alpha, beta, t0 = 0.4, 0.6, 15
         quality = alpha * (self.rating / 10) + beta * (self.complexity / 5)
         effort = math.log2(1 + self.default_duration / t0)
-        scale = max(1, math.log2(self.p_rep))
+        scale = max(1, math.log2(self.p_rep)) * self.m_mode
         return quality * effort * scale
 
 
@@ -84,6 +86,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=12,
         default_duration=30,
         recommended_players={7, 8},
+        m_mode=0.75,
     ),
     "lasvegas_leaderboard": BoardGame(
         name="拉斯维加斯",
@@ -147,6 +150,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=6,
         default_duration=20,
         recommended_players={5},
+        m_mode=0.5,
     ),
 }
 
