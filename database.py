@@ -1,10 +1,120 @@
 import sqlite3
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Dict, List
+from typing import AsyncIterator, Dict, List, Optional, Set
 
 import aiosqlite
 
 DB_NAME = "games.db"
+
+
+# ---------------------------------------------------------------------------
+# BoardGame 元数据模型 —— 宏加权算法基础
+# ---------------------------------------------------------------------------
+
+class BoardGame:
+    """
+    桌游元数据模型，用于宏加权胜率计算。
+    """
+
+    def __init__(
+        self,
+        name: str,
+        rating: float,
+        complexity: float,
+        min_players: int,
+        max_players: int,
+        default_duration: int,
+        recommended_players: Optional[Set[int]] = None,
+    ):
+        self.name = name
+        self.rating = rating
+        self.complexity = complexity
+        self.min_players = min_players
+        self.max_players = max_players
+        self.default_duration = default_duration
+        self.recommended_players = recommended_players or set()
+
+    @property
+    def p_rep(self) -> float:
+        """
+        表征理论人数 (Representative Player Count)。
+        优先使用推荐人数的平均值；否则使用人数区间中位数。
+        """
+        if self.recommended_players:
+            return sum(self.recommended_players) / len(self.recommended_players)
+        return (self.min_players + self.max_players) / 2.0
+
+    @property
+    def weight(self) -> float:
+        """
+        游戏权重 W_i，用于宏加权胜率公式:
+            P_total = Σ(W_i × S_i) / Σ(W_i)
+        权重 = complexity × p_rep × (default_duration / 30)
+        """
+        return self.complexity * self.p_rep * (self.default_duration / 30.0)
+
+
+# ---------------------------------------------------------------------------
+# 游戏元数据注册表 —— 统一维护各游戏的 rating / complexity / 人数 / 时长
+# key 格式: "表名" 或 "表名:game_name"（用于 game_results 表中区分不同游戏）
+# ---------------------------------------------------------------------------
+
+GAME_REGISTRY: Dict[str, BoardGame] = {
+    "game_results:Avalon": BoardGame(
+        name="阿瓦隆",
+        rating=7.5,
+        complexity=1.74,
+        min_players=5,
+        max_players=12,
+        default_duration=30,
+        recommended_players={7, 8},
+    ),
+    "game_results:LoveLetters": BoardGame(
+        name="情书",
+        rating=7.4,
+        complexity=1.30,
+        min_players=2,
+        max_players=8,
+        default_duration=25,
+        recommended_players={4, 5, 6},
+    ),
+    "cabo_game_results": BoardGame(
+        name="卡波",
+        rating=7.3,
+        complexity=1.23,
+        min_players=2,
+        max_players=4,
+        default_duration=45,
+        recommended_players={3, 4},
+    ),
+    "lasvegas_leaderboard": BoardGame(
+        name="拉斯维加斯",
+        rating=7.5,
+        complexity=1.42,
+        min_players=2,
+        max_players=6,
+        default_duration=52.5,
+        recommended_players={4, 5},
+    ),
+    "flip7_game_results": BoardGame(
+        name="7连翻",
+        rating=7.2,
+        complexity=1.03,
+        min_players=3,
+        max_players=18,
+        default_duration=20,
+        recommended_players={5, 6},
+    ),
+    "modernart_game_results": BoardGame(
+        name="现代艺术",
+        rating=7.5,
+        complexity=2.28,
+        min_players=3,
+        max_players=5,
+        default_duration=45,
+        recommended_players={4, 5},
+    ),
+}
 
 
 @asynccontextmanager
@@ -226,30 +336,80 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
 
 
 async def get_global_leaderboard() -> List[Dict]:
-    all_data = []
-    async with aiosqlite.connect(DB_NAME) as db:
-        for query in [
-            "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END FROM game_results",
-            "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END FROM cabo_game_results",
-            "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END FROM flip7_game_results",
-            "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END FROM modernart_game_results",
-            "SELECT player_name, 1, 0 FROM lasvegas_leaderboard",
-        ]:
-            try:
-                cursor = await db.execute(query)
-                all_data.extend(await cursor.fetchall())
-            except sqlite3.OperationalError:
-                pass
+    """
+    宏加权胜率排行榜。
 
-    stats = {}
-    for p_name, games, wins in all_data:
-        if p_name not in stats:
-            stats[p_name] = {"name": p_name, "total_games": 0, "total_wins": 0}
-        stats[p_name]["total_games"] += games
-        stats[p_name]["total_wins"] += wins
-        
-    result = list(stats.values())
-    result.sort(key=lambda x: (-x["total_wins"], -x["total_games"]))
+    公式:  P_total = Σ(W_i × S_i) / Σ(W_i)
+      - S_i = 玩家在游戏 i 的胜率 (wins / games)
+      - W_i = GAME_REGISTRY 中该游戏的 weight
+    """
+
+    # (registry_key, SQL) — 每条查询携带注册表 key 以便查找权重
+    queries = [
+        ("game_results:Avalon",
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM game_results WHERE game_name = 'Avalon'"),
+        ("game_results:LoveLetters",
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM game_results WHERE game_name = 'LoveLetters'"),
+        ("cabo_game_results",
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM cabo_game_results"),
+        ("flip7_game_results",
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM flip7_game_results"),
+        ("modernart_game_results",
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM modernart_game_results"),
+        ("lasvegas_leaderboard",
+         "SELECT player_name, 1, 0 FROM lasvegas_leaderboard"),
+    ]
+
+    # player_name -> { registry_key -> {"games": int, "wins": int} }
+    per_game: Dict[str, Dict[str, Dict[str, int]]] = {}
+    # 同时保留总局数 / 总胜场用于展示
+    totals: Dict[str, Dict[str, int]] = {}
+
+    async with aiosqlite.connect(DB_NAME) as db:
+        for reg_key, sql in queries:
+            try:
+                cursor = await db.execute(sql)
+                rows = await cursor.fetchall()
+            except sqlite3.OperationalError:
+                continue
+            for p_name, games, wins in rows:
+                # 累计 per-game
+                per_game.setdefault(p_name, {}).setdefault(
+                    reg_key, {"games": 0, "wins": 0}
+                )
+                per_game[p_name][reg_key]["games"] += games
+                per_game[p_name][reg_key]["wins"] += wins
+                # 累计 totals
+                totals.setdefault(p_name, {"total_games": 0, "total_wins": 0})
+                totals[p_name]["total_games"] += games
+                totals[p_name]["total_wins"] += wins
+
+    result = []
+    for p_name, game_map in per_game.items():
+        sum_ws = 0.0   # Σ(W_i × S_i)
+        sum_w = 0.0     # Σ(W_i)
+        for reg_key, counts in game_map.items():
+            bg = GAME_REGISTRY.get(reg_key)
+            w = bg.weight if bg else 1.0
+            s = counts["wins"] / counts["games"] if counts["games"] > 0 else 0.0
+            sum_ws += w * s
+            sum_w += w
+
+        weighted_rate = (sum_ws / sum_w * 100) if sum_w > 0 else 0.0
+        t = totals.get(p_name, {"total_games": 0, "total_wins": 0})
+        result.append({
+            "name": p_name,
+            "total_games": t["total_games"],
+            "total_wins": t["total_wins"],
+            "weighted_win_rate": round(weighted_rate, 1),
+        })
+
+    result.sort(key=lambda x: (-x["weighted_win_rate"], -x["total_wins"]))
     return result
 
 

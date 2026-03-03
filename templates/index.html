@@ -335,6 +335,7 @@
 <div class="section-title"
     style="margin-top: var(--space-xl); margin-bottom: var(--space-md); font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
     🏆 全局成就榜
+    <i class="ph ph-info" style="font-size: 1.2rem; color: var(--apple-gray); cursor: help;" title="胜率为加权宏平均（根据游戏复杂度、理论人数及默认时长进行加权计算）"></i>
 </div>
 <div class="apple-list mb-xl">
     {% for player in leaderboard %}
@@ -344,9 +345,9 @@
         </div>
         <div class="apple-list-item-content">
             <div class="apple-list-item-title">{{ player.name }}</div>
-            <div class="apple-list-item-subtitle">总局数: {{ player.total_games }} · 胜率 {% if player.total_games > 0 %}{{ ((player.total_wins / player.total_games) * 100) | round(1) }}%{% else %}0%{% endif %}</div>
+            <div class="apple-list-item-subtitle">总局数: {{ player.total_games }} · 胜 {{ player.total_wins }}局</div>
         </div>
-        <div class="apple-list-item-trailing text-blue fw-700">胜 {{ player.total_wins }}</div>
+        <div class="apple-list-item-trailing text-blue fw-700">胜率 {{ player.weighted_win_rate }}%</div>
     </div>
     {% endfor %}
 </div>
