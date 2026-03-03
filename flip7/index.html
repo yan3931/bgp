@@ -158,9 +158,107 @@
         display: flex;
     }
 
+    /* ---- Player Cards (Accordion) ---- */
+    .player-section {
+        margin-bottom: var(--space-md);
+    }
 
+    .player-card {
+        background: var(--apple-white);
+        border-radius: var(--radius-lg);
+        margin-bottom: var(--space-md);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        transition: all 0.2s var(--ease-apple);
+    }
 
-    /* Modals */
+    .player-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .player-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-lg);
+        cursor: pointer;
+        transition: background var(--transition-fast);
+        background: var(--apple-white);
+    }
+
+    .player-card-header:active {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .player-card-left {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .player-card-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .player-card-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: -0.01em;
+        color: var(--apple-black);
+    }
+
+    .player-card-summary {
+        font-size: 0.85rem;
+        color: var(--apple-gray);
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    .player-card-chevron {
+        color: var(--apple-gray);
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        font-size: 1rem;
+    }
+
+    .player-card-chevron.open {
+        transform: rotate(90deg);
+        color: var(--apple-blue);
+    }
+
+    .player-card-body {
+        display: none;
+        padding: 0 var(--space-lg) var(--space-lg);
+        border-top: 1px solid rgba(0, 0, 0, 0.04);
+        margin-top: 4px;
+        padding-top: var(--space-md);
+    }
+
+    .player-card-body.open {
+        display: block;
+        animation: slideDown 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }    /* Modals */
     .game-over-modal .apple-modal-content {
         text-align: center;
         padding: 40px 20px;
@@ -266,6 +364,7 @@
 <script>
     const API_BASE = '/flip7/api';
     let players = [];
+    let rankedPlayers = [];
     // round state: name -> array of cards (strings)
     let roundState = {};
 
@@ -349,7 +448,8 @@
     async function fetchStatus() {
         const res = await fetch(`${API_BASE}/status`);
         const data = await res.json();
-        players = data.ranked;
+        rankedPlayers = data.ranked;
+        players = data.players;
 
         if (data.status === 'finished') {
             document.getElementById('round-section').style.display = 'none';
@@ -368,7 +468,7 @@
     function renderPlayers(isFinished) {
         const ul = document.getElementById('player-list-ui');
         ul.innerHTML = '';
-        players.forEach((p, idx) => {
+        rankedPlayers.forEach((p, idx) => {
             const li = document.createElement('li');
             li.className = 'player-item';
             let rankStr = p.total_score >= 200 ? '👑 ' : `${p.rank}. `;
@@ -386,30 +486,74 @@
         });
     }
 
+    let expandedPlayers = {};
+
+    function togglePlayerRound(name) {
+        expandedPlayers[name] = !expandedPlayers[name];
+        const chevron = document.getElementById(`chevron-${name}`);
+        const body = document.getElementById(`body-${name}`);
+        if (expandedPlayers[name]) {
+            chevron.classList.add('open');
+            body.classList.add('open');
+        } else {
+            chevron.classList.remove('open');
+            body.classList.remove('open');
+        }
+    }
+
     function renderRoundUI() {
         const container = document.getElementById('round-players-container');
         container.innerHTML = '';
 
         // Ensure roundState tracks all current players
         let newRoundState = {};
-        players.forEach(p => {
+        
+        const section = document.createElement('div');
+        section.className = 'player-section';
+
+        // Helper to pick a basic avatar color based on index
+        const colors = ['#e17055', '#0984e3', '#00b894', '#6c5ce7', '#fdcb6e', '#e84393'];
+
+        players.forEach((p, idx) => {
             newRoundState[p.name] = roundState[p.name] || [];
+            if (expandedPlayers[p.name] === undefined) {
+                expandedPlayers[p.name] = false;
+            }
 
-            const block = document.createElement('div');
-            block.className = 'round-player-block';
-            block.innerHTML = `<h3>${p.name} 的最终手牌</h3>`;
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            
+            const isOpen = expandedPlayers[p.name] ? 'open' : '';
+            const color = colors[idx % colors.length];
+            const cardCount = newRoundState[p.name].length;
 
-            const grid = document.createElement('div');
-            grid.className = 'card-selector';
+            card.innerHTML = `
+                <div class="player-card-header" onclick="togglePlayerRound('${p.name}')">
+                    <div class="player-card-left">
+                        <div class="player-card-avatar" style="background: ${color}">${p.name.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div class="player-card-name">${p.name}</div>
+                            <div class="player-card-summary" id="summary-${p.name}">${cardCount > 0 ? cardCount + ' 张手牌' : '未选择手牌'}</div>
+                        </div>
+                    </div>
+                    <i class="ph-bold ph-caret-right player-card-chevron ${isOpen}" id="chevron-${p.name}"></i>
+                </div>
+                <div class="player-card-body ${isOpen}" id="body-${p.name}">
+                    <div class="section-title" style="margin-top:var(--space-xs); font-size: 1rem;">选择最终手牌</div>
+                    <div class="card-selector"></div>
+                </div>
+            `;
 
-            CARDS.forEach(card => {
+            const grid = card.querySelector('.card-selector');
+
+            CARDS.forEach(cardDef => {
                 const btn = document.createElement('button');
                 btn.className = 'card-btn';
-                btn.dataset.num = card.type === 'num' ? "true" : "false";
-                btn.dataset.type = card.type;
-                btn.innerHTML = `${card.v} <div class="count-badge"></div>`;
+                btn.dataset.num = cardDef.type === 'num' ? "true" : "false";
+                btn.dataset.type = cardDef.type;
+                btn.innerHTML = `${cardDef.v} <div class="count-badge"></div>`;
 
-                const count = newRoundState[p.name].filter(c => c === card.v).length;
+                const count = newRoundState[p.name].filter(c => c === cardDef.v).length;
                 if (count > 0) {
                     btn.classList.add('selected');
                     if (count > 1) {
@@ -418,13 +562,14 @@
                     }
                 }
 
-                btn.onclick = () => toggleCard(p.name, card.v, btn);
+                btn.onclick = () => toggleCard(p.name, cardDef.v, btn);
                 grid.appendChild(btn);
             });
 
-            block.appendChild(grid);
-            container.appendChild(block);
+            section.appendChild(card);
         });
+        
+        container.appendChild(section);
         roundState = newRoundState;
     }
 
@@ -456,6 +601,13 @@
         } else {
             btn.classList.add('selected', 'multi');
             badge.innerText = count;
+        }
+
+        // Update player card summary text
+        const totalCards = roundState[playerName].length;
+        const summaryEl = document.getElementById(`summary-${playerName}`);
+        if (summaryEl) {
+            summaryEl.innerText = totalCards > 0 ? totalCards + ' 张手牌' : '未选择手牌';
         }
     }
 
