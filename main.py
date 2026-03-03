@@ -89,4 +89,4 @@ async def get_leaderboard_api():
 final_app = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path='/socket.io')
 
 if __name__ == "__main__":
-    uvicorn.run("main:final_app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:final_app", host="127.0.0.1", port=8000, reload=True)
