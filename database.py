@@ -60,6 +60,15 @@ class BoardGame:
 # ---------------------------------------------------------------------------
 
 GAME_REGISTRY: Dict[str, BoardGame] = {
+    "game_results:Splendor": BoardGame(
+        name="璀璨宝石",
+        rating=7.4,
+        complexity=2.31,
+        min_players=2,
+        max_players=4,
+        default_duration=30,
+        recommended_players={3},
+    ),
     "game_results:Avalon": BoardGame(
         name="阿瓦隆",
         rating=7.5,
@@ -68,6 +77,15 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=12,
         default_duration=30,
         recommended_players={7, 8},
+    ),
+    "lasvegas_leaderboard": BoardGame(
+        name="拉斯维加斯",
+        rating=7.5,
+        complexity=1.42,
+        min_players=2,
+        max_players=6,
+        default_duration=52.5,
+        recommended_players={4, 5},
     ),
     "game_results:LoveLetters": BoardGame(
         name="情书",
@@ -78,6 +96,15 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         default_duration=25,
         recommended_players={4, 5, 6},
     ),
+    "game_results:ExplodingKittens": BoardGame(
+        name="炸弹猫",
+        rating=6.1,
+        complexity=1.08,
+        min_players=2,
+        max_players=5,
+        default_duration=15,
+        recommended_players={4, 5},
+    ),
     "cabo_game_results": BoardGame(
         name="卡波",
         rating=7.3,
@@ -86,15 +113,6 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=4,
         default_duration=45,
         recommended_players={3, 4},
-    ),
-    "lasvegas_leaderboard": BoardGame(
-        name="拉斯维加斯",
-        rating=7.5,
-        complexity=1.42,
-        min_players=2,
-        max_players=6,
-        default_duration=52.5,
-        recommended_players={4, 5},
     ),
     "flip7_game_results": BoardGame(
         name="7连翻",
@@ -113,6 +131,15 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=5,
         default_duration=45,
         recommended_players={4, 5},
+    ),
+    "game_results:TheGang": BoardGame(
+        name="纸牌帮",
+        rating=7.6,
+        complexity=1.60,
+        min_players=3,
+        max_players=6,
+        default_duration=20,
+        recommended_players={5},
     ),
 }
 
@@ -372,6 +399,15 @@ async def get_global_leaderboard() -> List[Dict]:
         ("lasvegas_leaderboard",
          "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
          "FROM lasvegas_leaderboard"),
+        ("game_results:Splendor",
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM game_results WHERE game_name = 'Splendor'"),
+        ("game_results:ExplodingKittens",
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM game_results WHERE game_name = 'ExplodingKittens'"),
+        ("game_results:TheGang",
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM game_results WHERE game_name = 'TheGang'"),
     ]
 
     # player_name -> { registry_key -> {"games": int, "wins": int} }
@@ -543,3 +579,35 @@ async def get_modernart_leaderboard() -> List[Dict]:
         score_key="avg_money",
         order_clause="wins DESC, avg_value DESC",
     )
+
+
+async def get_simple_leaderboard(game_name: str) -> List[Dict]:
+    """
+    通用排行榜查询，用于只使用 game_results 表的简单游戏。
+    返回按胜场降序排列的玩家统计列表。
+    """
+    async with _get_db() as db:
+        cursor = await db.execute(
+            """
+            SELECT player_name,
+                   COUNT(*) as total_games,
+                   SUM(CASE WHEN is_winner THEN 1 ELSE 0 END) as wins
+            FROM game_results
+            WHERE game_name = ?
+            GROUP BY player_name
+            ORDER BY wins DESC, total_games ASC
+            """,
+            (game_name,),
+        )
+        rows = await cursor.fetchall()
+
+    stats = []
+    for row in rows:
+        p_name, total, wins = row
+        stats.append({
+            "name": p_name,
+            "wins": wins,
+            "total": total,
+            "win_rate": round(wins / total * 100, 1) if total > 0 else 0,
+        })
+    return stats

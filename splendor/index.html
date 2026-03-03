@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}璀璨宝石 - 记录与排行{% endblock %}
+
+{% block content %}
+<div class="apple-hero mb-xl text-center">
+    <span class="apple-hero-emoji">💎</span>
+    <h1 class="mb-sm">璀璨宝石</h1>
+    <p class="text-muted" style="font-size: 1.05rem; font-weight: 500;">Splendor · 记录对局与排行榜</p>
+</div>
+
+<!-- 添加玩家 -->
+<div class="section-title">👥 玩家管理</div>
+<div class="apple-card mb-lg">
+    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <input id="playerInput" class="apple-input" placeholder="输入玩家名" style="flex: 1;"
+               onkeydown="if(event.key==='Enter') addPlayer()">
+        <button class="apple-btn apple-btn-primary" onclick="addPlayer()">添加</button>
+    </div>
+    <div id="playerList"></div>
+</div>
+
+<!-- 记录对局 -->
+<div class="section-title">🏅 记录对局</div>
+<div class="apple-card mb-lg">
+    <p class="text-muted mb-md" style="font-size: 0.9rem;">选择本局胜者后提交记录</p>
+    <div id="winnerSelect" class="mb-md"></div>
+    <button class="apple-btn apple-btn-success apple-btn-block" onclick="submitRecord()">
+        <i class="ph-bold ph-trophy"></i> 提交记录
+    </button>
+    <button class="apple-btn apple-btn-secondary apple-btn-block" onclick="resetGame()" style="margin-top: 8px;">
+        <i class="ph-bold ph-arrow-counter-clockwise"></i> 重置玩家
+    </button>
+</div>
+
+<!-- 排行榜 -->
+<div id="inline-leaderboard-section">
+    <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜</div>
+    <div id="histLeaderboard" class="apple-list">
+        <div class="empty-state">
+            <span class="empty-icon">💎</span>
+            还没人玩过呢，快去开一局！
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script>
+    const API_BASE = '/splendor/api';
+    let selectedWinner = null;
+
+    function escHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    async function fetchStatus() {
+        const res = await fetch(`${API_BASE}/status`);
+        const data = await res.json();
+        renderPlayers(data.players);
+    }
+
+    function renderPlayers(players) {
+        // 玩家列表
+        const listEl = document.getElementById('playerList');
+        if (players.length === 0) {
+            listEl.innerHTML = '<p class="text-muted" style="font-size: 0.9rem; text-align: center;">暂无玩家</p>';
+        } else {
+            listEl.innerHTML = players.map(name => `
+                <div class="apple-list-item" style="padding: 8px 0;">
+                    <div class="apple-list-item-content">
+                        <div class="apple-list-item-title">${escHtml(name)}</div>
+                    </div>
+                    <button class="apple-btn apple-btn-danger" style="padding: 4px 12px; font-size: 0.8rem;"
+                            onclick="removePlayer('${escHtml(name)}')">移除</button>
+                </div>
+            `).join('');
+        }
+
+        // 胜者选择
+        const selectEl = document.getElementById('winnerSelect');
+        if (players.length === 0) {
+            selectEl.innerHTML = '<p class="text-muted" style="font-size: 0.9rem; text-align: center;">请先添加玩家</p>';
+            selectedWinner = null;
+        } else {
+            selectEl.innerHTML = players.map(name => `
+                <button class="apple-btn ${selectedWinner === name ? 'apple-btn-primary' : 'apple-btn-secondary'}"
+                        style="margin: 4px;"
+                        onclick="selectWinner('${escHtml(name)}')">${escHtml(name)}</button>
+            `).join('');
+        }
+    }
+
+    function selectWinner(name) {
+        selectedWinner = name;
+        fetchStatus();
+    }
+
+    async function addPlayer() {
+        const input = document.getElementById('playerInput');
+        const name = input.value.trim();
+        if (!name) return;
+        const res = await fetch(`${API_BASE}/add_player`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name})
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            input.value = '';
+            fetchStatus();
+        } else {
+            window.showToast(data.msg, 'error');
+        }
+    }
+
+    async function removePlayer(name) {
+        await fetch(`${API_BASE}/remove_player`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name})
+        });
+        if (selectedWinner === name) selectedWinner = null;
+        fetchStatus();
+    }
+
+    async function submitRecord() {
+        if (!selectedWinner) {
+            window.showToast('请先选择胜者', 'error');
+            return;
+        }
+        const res = await fetch(`${API_BASE}/record`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({winner: selectedWinner})
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            window.showToast(`已记录！胜者: ${data.winner}`, 'success');
+            selectedWinner = null;
+            fetchStatus();
+            fetchLeaderboard();
+        } else {
+            window.showToast(data.msg, 'error');
+        }
+    }
+
+    async function resetGame() {
+        await fetch(`${API_BASE}/reset`, {method: 'POST'});
+        selectedWinner = null;
+        fetchStatus();
+    }
+
+    async function fetchLeaderboard() {
+        const res = await fetch(`${API_BASE}/leaderboard`);
+        const data = await res.json();
+        const lb = data.leaderboard || [];
+        const el = document.getElementById('histLeaderboard');
+
+        if (lb.length === 0) {
+            el.innerHTML = '<div class="empty-state"><span class="empty-icon">💎</span>还没人玩过呢，快去开一局！</div>';
+            return;
+        }
+
+        let html = '';
+        lb.forEach((p, idx) => {
+            const rank = idx + 1;
+            let rankClass = rank === 1 ? 'rank-1' : (rank === 2 ? 'rank-2' : (rank === 3 ? 'rank-3' : 'rank-other'));
+            let rankIcon = rank === 1 ? '👑' : rank;
+            html += `
+                <div class="apple-list-item">
+                    <div class="rank-num ${rankClass}">${rankIcon}</div>
+                    <div class="apple-list-item-content">
+                        <div class="apple-list-item-title">${escHtml(p.name)}</div>
+                        <div class="history-trail">${p.total} 局 · 胜率 ${p.win_rate}%</div>
+                    </div>
+                    <div style="text-align: right; width: 60px;">
+                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">胜场</div>
+                        <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);">${p.wins}</div>
+                    </div>
+                </div>
+            `;
+        });
+        el.innerHTML = html;
+    }
+
+    // 初始化
+    fetchStatus();
+    fetchLeaderboard();
+</script>
+{% endblock %}

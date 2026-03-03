@@ -18,7 +18,10 @@ APPS_CONFIG = {
     "lasvegas": "lasvegas.app",
     "loveletters": "LoveLetters.fastapi_app",
     "flip7": "flip7.app",
-    "modernart": "ModernArt.app"
+    "modernart": "ModernArt.app",
+    "splendor": "splendor.app",
+    "explodingkittens": "explodingkittens.app",
+    "thegang": "thegang.app",
 }
 
 @asynccontextmanager
