@@ -158,6 +158,7 @@ async def init_db():
                 player_name TEXT NOT NULL,
                 game_amount INTEGER NOT NULL,
                 bill_count INTEGER NOT NULL,
+                is_winner BOOLEAN NOT NULL DEFAULT 0,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
             """
@@ -192,6 +193,13 @@ async def init_db():
         try:
             await db.execute(
                 "ALTER TABLE flip7_game_results ADD COLUMN bust_count INTEGER NOT NULL DEFAULT 0"
+            )
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            await db.execute(
+                "ALTER TABLE lasvegas_leaderboard ADD COLUMN is_winner BOOLEAN NOT NULL DEFAULT 0"
             )
         except sqlite3.OperationalError:
             pass
@@ -362,7 +370,8 @@ async def get_global_leaderboard() -> List[Dict]:
          "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
          "FROM modernart_game_results"),
         ("lasvegas_leaderboard",
-         "SELECT player_name, 1, 0 FROM lasvegas_leaderboard"),
+         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
+         "FROM lasvegas_leaderboard"),
     ]
 
     # player_name -> { registry_key -> {"games": int, "wins": int} }
@@ -413,15 +422,15 @@ async def get_global_leaderboard() -> List[Dict]:
     return result
 
 
-async def record_lasvegas_game(player_name: str, game_amount: int, bill_count: int):
+async def record_lasvegas_game(player_name: str, game_amount: int, bill_count: int, is_winner: bool = False):
     """Record a single player's Las Vegas game result."""
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             """
-            INSERT INTO lasvegas_leaderboard (player_name, game_amount, bill_count)
-            VALUES (?, ?, ?)
+            INSERT INTO lasvegas_leaderboard (player_name, game_amount, bill_count, is_winner)
+            VALUES (?, ?, ?, ?)
             """,
-            (player_name, game_amount, bill_count),
+            (player_name, game_amount, bill_count, is_winner),
         )
         await db.commit()
 

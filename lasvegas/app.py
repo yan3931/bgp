@@ -112,8 +112,18 @@ async def end_game():
         error = engine.validate_end_game(game_state)
         if error:
             return error
+        # 确定获胜者：金额最高者获胜（金额相同则比张数）
+        winner = max(
+            game_state.players,
+            key=lambda p: (p.total_amount, p.bill_count),
+        )
         for player in game_state.players:
-            await record_lasvegas_game(player.name, player.total_amount, player.bill_count)
+            await record_lasvegas_game(
+                player.name,
+                player.total_amount,
+                player.bill_count,
+                is_winner=(player.name == winner.name),
+            )
         engine.reset(game_state)
     await _publish("end_game")
     return {"status": "ok"}
