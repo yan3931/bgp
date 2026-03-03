@@ -61,7 +61,21 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     leaderboard = await database.get_global_leaderboard()
-    return templates.TemplateResponse("index.html", {"request": request, "leaderboard": leaderboard, "loaded_apps": loaded_apps})
+    
+    gw_seen = set()
+    game_weights = []
+    for game in database.GAME_REGISTRY.values():
+        if game.name not in gw_seen:
+            gw_seen.add(game.name)
+            game_weights.append({"name": game.name, "weight": round(game.weight, 2)})
+    game_weights.sort(key=lambda x: x["weight"], reverse=True)
+    
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "leaderboard": leaderboard, 
+        "loaded_apps": loaded_apps,
+        "game_weights": game_weights
+    })
 
 @app.get("/gamelist", response_class=HTMLResponse)
 async def gamelist(request: Request):

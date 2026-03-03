@@ -335,7 +335,7 @@
 <div class="section-title"
     style="margin-top: var(--space-xl); margin-bottom: var(--space-md); font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
     🏆 全局成就榜
-    <i class="ph ph-info" style="font-size: 1.2rem; color: var(--apple-gray); cursor: help;" title="胜率为加权宏平均（根据游戏复杂度、理论人数及默认时长进行加权计算）"></i>
+    <i id="openInfoModalBtn" class="ph ph-info" style="font-size: 1.2rem; color: var(--apple-gray); cursor: pointer;"></i>
 </div>
 <div class="apple-list mb-xl">
     {% for player in leaderboard %}
@@ -353,6 +353,28 @@
 </div>
 {% endif %}
 
+<div id="infoModal" class="apple-modal" onclick="if(event.target === this) closeInfoModal()">
+    <div class="apple-modal-content">
+        <div class="apple-modal-header">
+            <h2 class="apple-modal-title">胜率计算规则</h2>
+            <button class="apple-modal-close" type="button" onclick="closeInfoModal()">
+                <i class="ph-bold ph-x"></i>
+            </button>
+        </div>
+        <div class="apple-modal-body" style="font-size: 0.95rem; color: var(--apple-black);">
+            <div style="margin-bottom: 16px; color: var(--apple-gray); line-height: 1.5; overflow-x: auto;">
+                $$W = \underbrace{\left( \alpha \frac{R}{10} + \beta \frac{C}{5} \right)}_{\text{质量与深度}} \times \underbrace{\log_2\left(1 + \frac{T}{T_0}\right)}_{\text{精力投入}} \times \underbrace{\max(1, \log_2(P_{rep}))}_{\text{理论对抗规模}}$$
+            </div>
+            <p style="font-weight: 700; margin-bottom: 8px;">各子游戏目前权重：</p>
+            <ul style="padding-left: 20px; margin-bottom: 0; display: flex; flex-direction: column; gap: 8px;">
+                {% for gw in game_weights %}
+                <li><strong>{{ gw.name }}</strong>：{{ gw.weight }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
 <footer class="apple-footer">
     <p>Board Game Portal © 2026</p>
 </footer>
@@ -367,9 +389,22 @@
         const countInput = document.getElementById('playerCountInput');
         const resultEl = document.getElementById('starterResult');
 
+        const infoModal = document.getElementById('infoModal');
+        const openInfoBtn = document.getElementById('openInfoModalBtn');
+
         window.closeStarterPicker = function () {
             modal.classList.remove('show');
         };
+
+        window.closeInfoModal = function () {
+            infoModal.classList.remove('show');
+        };
+
+        if (openInfoBtn && infoModal) {
+            openInfoBtn.addEventListener('click', function () {
+                infoModal.classList.add('show');
+            });
+        }
 
         openBtn.addEventListener('click', function () {
             modal.classList.add('show');

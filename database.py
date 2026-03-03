@@ -49,9 +49,16 @@ class BoardGame:
         """
         游戏权重 W_i，用于宏加权胜率公式:
             P_total = Σ(W_i × S_i) / Σ(W_i)
-        权重 = complexity × p_rep × (default_duration / 30)
+
+        W = (α·R/10 + β·C/5) × log₂(1 + T/T₀) × max(1, log₂(P_rep))
+        α=0.4, β=0.6, T₀=15
         """
-        return self.complexity * self.p_rep * (self.default_duration / 30.0)
+        import math
+        alpha, beta, t0 = 0.4, 0.6, 15
+        quality = alpha * (self.rating / 10) + beta * (self.complexity / 5)
+        effort = math.log2(1 + self.default_duration / t0)
+        scale = max(1, math.log2(self.p_rep))
+        return quality * effort * scale
 
 
 # ---------------------------------------------------------------------------
