@@ -310,14 +310,12 @@ async def _fetch_scored_leaderboard(
         for row in rows:
             total = row["total_games"]
             wins = row["wins"]
-            raw_rate = wins / total * 100 if total > 0 else 0
-            f = 1 - math.exp(-0.5 * total) if total > 0 else 0
-            adjusted_rate = round(f * raw_rate + (1 - f) * 50, 1)
+            raw_rate = round(wins / total * 100, 1) if total > 0 else 0
             item = {
                 "name": row["player_name"],
                 "total_games": total,
                 "wins": wins,
-                "win_rate": adjusted_rate,
+                "win_rate": raw_rate,
                 score_key: row["avg_value"],
             }
             if extra_row_parser:
@@ -378,15 +376,13 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
     stats = []
     for row in rows:
         p_name, total, wins, avg = row
-        raw_rate = wins / total * 100 if total > 0 else 0
-        f = 1 - math.exp(-0.5 * total) if total > 0 else 0
-        adjusted_rate = round(f * raw_rate + (1 - f) * 50, 1)
+        raw_rate = round(wins / total * 100, 1) if total > 0 else 0
         stats.append(
             {
                 "name": p_name,
                 "wins": wins,
                 "total": total,
-                "win_rate": adjusted_rate,
+                "win_rate": raw_rate,
                 "avg_score": round(avg, 1) if avg else 0,
             }
         )
@@ -397,10 +393,9 @@ async def get_global_leaderboard() -> List[Dict]:
     """
     宏加权胜率排行榜。
 
-    公式:  P_total = Σ(W_i × F_i × S_i) / Σ(W_i × F_i)
+    公式:  P_total = Σ(W_i × S_i) / Σ(W_i)
       - S_i = 玩家在游戏 i 的胜率 (wins / games)
       - W_i = GAME_REGISTRY 中该游戏的 weight
-      - F_i = 学习曲线因子 = 1 - exp(-λ · N), λ=0.5, N=玩家在该游戏的局数
     """
 
     # (registry_key, SQL) — 每条查询携带注册表 key 以便查找权重
@@ -467,11 +462,8 @@ async def get_global_leaderboard() -> List[Dict]:
             w = bg.weight if bg else 1.0
             n = counts["games"]
             s = counts["wins"] / n if n > 0 else 0.0
-            # 学习曲线因子: F = 1 - exp(-λ·N), λ=0.5
-            f_learning = 1 - math.exp(-0.5 * n)
-            effective_w = w * f_learning
-            sum_ws += effective_w * s
-            sum_w += effective_w
+            sum_ws += w * s
+            sum_w += w
 
         weighted_rate = (sum_ws / sum_w * 100) if sum_w > 0 else 0.0
         t = totals.get(p_name, {"total_games": 0, "total_wins": 0})
@@ -633,13 +625,11 @@ async def get_simple_leaderboard(game_name: str) -> List[Dict]:
     stats = []
     for row in rows:
         p_name, total, wins = row
-        raw_rate = wins / total * 100 if total > 0 else 0
-        f = 1 - math.exp(-0.5 * total) if total > 0 else 0
-        adjusted_rate = round(f * raw_rate + (1 - f) * 50, 1)
+        raw_rate = round(wins / total * 100, 1) if total > 0 else 0
         stats.append({
             "name": p_name,
             "wins": wins,
             "total": total,
-            "win_rate": adjusted_rate,
+            "win_rate": raw_rate,
         })
     return stats
