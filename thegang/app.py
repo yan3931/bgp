@@ -14,7 +14,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 import database
-from thegang.engine import GameState, SimpleGameEngine
+from thegang.engine import GameState, CoopGameEngine
 
 router = APIRouter(prefix="/thegang", tags=["TheGang"])
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +24,7 @@ templates = Jinja2Templates(directory=[base_dir, "templates"])
 # 状态 & 引擎实例
 # ---------------------------------------------------------------------------
 game_state = GameState()
-engine = SimpleGameEngine()
+engine = CoopGameEngine()
 global_lock = asyncio.Lock()
 
 GAME_NAME = "TheGang"
@@ -37,7 +37,7 @@ class NameRequest(BaseModel):
     name: str
 
 class RecordRequest(BaseModel):
-    winner: str
+    is_win: bool
 
 # ---------------------------------------------------------------------------
 # API 端点 — 接入层
@@ -56,19 +56,19 @@ async def remove_player(req: NameRequest):
 @router.post("/api/record")
 async def record_game(req: RecordRequest):
     async with global_lock:
-        validation = engine.validate_record(game_state, req.winner)
+        validation = engine.validate_record(game_state)
         if validation["status"] != "ok":
             return validation
 
         for player_name in game_state.players:
             await database.record_result(
-                GAME_NAME, player_name, player_name == req.winner
+                GAME_NAME, player_name, req.is_win
             )
 
         players_snapshot = list(game_state.players)
         engine.reset(game_state)
 
-    return {"status": "ok", "players": players_snapshot, "winner": req.winner}
+    return {"status": "ok", "players": players_snapshot, "is_win": req.is_win}
 
 @router.post("/api/reset")
 async def reset_game():

@@ -23,11 +23,15 @@
 <!-- 记录对局 -->
 <div class="section-title">🏅 记录对局</div>
 <div class="apple-card mb-lg">
-    <p class="text-muted mb-md" style="font-size: 0.9rem;">选择本局胜者后提交记录</p>
-    <div id="winnerSelect" class="mb-md"></div>
-    <button class="apple-btn apple-btn-success apple-btn-block" onclick="submitRecord()">
-        <i class="ph-bold ph-trophy"></i> 提交记录
-    </button>
+    <p class="text-muted mb-md" style="font-size: 0.9rem;">本游戏为合作模式，全员胜利或全员失败</p>
+    <div style="display: flex; gap: 8px;">
+        <button class="apple-btn apple-btn-success" style="flex: 1;" onclick="submitRecord(true)">
+            <i class="ph-bold ph-trophy"></i> 全员胜利
+        </button>
+        <button class="apple-btn apple-btn-danger" style="flex: 1;" onclick="submitRecord(false)">
+            <i class="ph-bold ph-x-circle"></i> 全员失败
+        </button>
+    </div>
     <button class="apple-btn apple-btn-secondary apple-btn-block" onclick="resetGame()" style="margin-top: 8px;">
         <i class="ph-bold ph-arrow-counter-clockwise"></i> 重置玩家
     </button>
@@ -48,7 +52,6 @@
 {% block extra_body %}
 <script>
     const API_BASE = '/thegang/api';
-    let selectedWinner = null;
 
     function escHtml(str) {
         const d = document.createElement('div');
@@ -77,23 +80,6 @@
                 </div>
             `).join('');
         }
-
-        const selectEl = document.getElementById('winnerSelect');
-        if (players.length === 0) {
-            selectEl.innerHTML = '<p class="text-muted" style="font-size: 0.9rem; text-align: center;">请先添加玩家</p>';
-            selectedWinner = null;
-        } else {
-            selectEl.innerHTML = players.map(name => `
-                <button class="apple-btn ${selectedWinner === name ? 'apple-btn-primary' : 'apple-btn-secondary'}"
-                        style="margin: 4px;"
-                        onclick="selectWinner('${escHtml(name)}')">${escHtml(name)}</button>
-            `).join('');
-        }
-    }
-
-    function selectWinner(name) {
-        selectedWinner = name;
-        fetchStatus();
     }
 
     async function addPlayer() {
@@ -120,24 +106,18 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({name})
         });
-        if (selectedWinner === name) selectedWinner = null;
         fetchStatus();
     }
 
-    async function submitRecord() {
-        if (!selectedWinner) {
-            window.showToast('请先选择胜者', 'error');
-            return;
-        }
+    async function submitRecord(isWin) {
         const res = await fetch(`${API_BASE}/record`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({winner: selectedWinner})
+            body: JSON.stringify({is_win: isWin})
         });
         const data = await res.json();
         if (data.status === 'ok') {
-            window.showToast(`已记录！胜者: ${data.winner}`, 'success');
-            selectedWinner = null;
+            window.showToast(isWin ? '已记录：全员胜利！🎉' : '已记录：全员失败 💀', isWin ? 'success' : 'error');
             fetchStatus();
             fetchLeaderboard();
         } else {
@@ -147,7 +127,6 @@
 
     async function resetGame() {
         await fetch(`${API_BASE}/reset`, {method: 'POST'});
-        selectedWinner = null;
         fetchStatus();
     }
 
