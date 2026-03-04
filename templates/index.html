@@ -345,7 +345,7 @@
         </div>
         <div class="apple-list-item-content">
             <div class="apple-list-item-title">{{ player.name }}</div>
-            <div class="apple-list-item-subtitle">总局数: {{ player.total_games }} · 胜 {{ player.total_wins }}局</div>
+            <div class="apple-list-item-subtitle">总局数: {{ player.total_games }} · 胜 {{ player.total_wins }}局{% if player.pve_win_rate is not none %} · PvE {{ player.pve_win_rate }}%{% endif %}{% if player.pvp_data_strength < 2.0 %} · ⏳定级中{% endif %}</div>
         </div>
         <div class="apple-list-item-trailing text-blue fw-700">胜率 {{ player.weighted_win_rate }}%</div>
     </div>
@@ -370,12 +370,18 @@
             </ul>
             <br><br>
             <div style="margin-bottom: 16px; color: var(--apple-gray); line-height: 1.5; overflow-x: auto;">
-                <p style="font-weight: 700; margin-bottom: 8px;">游戏权重计算规则：</p>
-                $$W = \underbrace{\left( \alpha \frac{\max(0, R-5)}{5} + \beta \left(\frac{C}{5}\right)^2 \right)}_{\text{质量与深度}} \times \underbrace{\log_2\left(1 + \frac{T}{T_0}\right)}_{\text{精力投入}} \times \underbrace{\left( \max(1, \log_2(P_{rep})) \times M_{mode} \right)}_{\text{对抗规模}}$$
+                <p style="font-weight: 700; margin-bottom: 8px;">V3.1 静态权重计算 (Softplus 平滑)：</p>
+                $$W^* = \left[ 0.2 \times \frac{R-5}{5} + 0.8 \times \left(\frac{C}{5}\right)^2 \right] \times \log_2\left(1 + \frac{T}{15}\right)$$
+                $$W_{static} = \tau \ln(1 + e^{W^*/\tau}), \quad \tau = 0.1$$
             </div>
             <div style="margin-bottom: 16px; color: var(--apple-gray); line-height: 1.5; overflow-x: auto;">
-                <p style="font-weight: 700; margin-bottom: 8px;">学习曲线因子（每人每个游戏独立计算）：</p>
-                $$F_{learning} = 1 - e^{-\lambda \cdot N} \quad (\lambda = 0.5)$$
+                <p style="font-weight: 700; margin-bottom: 8px;">PvP 综合胜率（对数优势模型）：</p>
+                $$\hat{p}_g = \frac{w_g + \lambda b_g}{n_g + \lambda}, \quad A_g = \text{logit}(\hat{p}_g) - \text{logit}(b_g)$$
+                $$\omega_g = W_{static} \times \frac{n_g}{n_g + k}, \quad P_{final} = \sigma\left(\text{logit}(0.25) + \frac{\sum \omega_g A_g}{\sum \omega_g}\right)$$
+            </div>
+            <div style="margin-bottom: 0; color: var(--apple-gray); line-height: 1.5; overflow-x: auto;">
+                <p style="font-weight: 700; margin-bottom: 8px;">PvE 综合通关率：</p>
+                $$P^{(pve)}_{final} = \frac{\sum \omega_g \hat{p}_g}{\sum \omega_g}, \quad k_{pve}=10$$
             </div>
         </div>
     </div>

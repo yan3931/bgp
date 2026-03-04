@@ -14,7 +14,7 @@ DB_NAME = "games.db"
 
 class BoardGame:
     """
-    桌游元数据模型，用于宏加权胜率计算。
+    桌游元数据模型，用于 V3.1 双轨制对数优势模型。
     """
 
     def __init__(
@@ -26,7 +26,7 @@ class BoardGame:
         max_players: int,
         default_duration: int,
         recommended_players: Optional[Set[int]] = None,
-        m_mode: float = 1.0,
+        game_type: str = "ffa",  # "ffa" | "faction" | "coop"
     ):
         self.name = name
         self.rating = rating
@@ -35,38 +35,49 @@ class BoardGame:
         self.max_players = max_players
         self.default_duration = default_duration
         self.recommended_players = recommended_players or set()
-        self.m_mode = m_mode
+        self.game_type = game_type
 
     @property
-    def p_rep(self) -> float:
+    def w_static(self) -> float:
         """
-        表征理论人数 (Representative Player Count)。
-        优先使用推荐人数的平均值；否则使用人数区间中位数。
+        V3.1 静态硬核权重 W_static (Softplus 平滑非负化)。
+
+        W* = [0.2×((R-5)/5) + 0.8×(C/5)²] × log₂(1 + T/15)
+        W_static = τ × ln(1 + exp(W*/τ))    (τ=0.1)
         """
-        if self.recommended_players:
-            return sum(self.recommended_players) / len(self.recommended_players)
-        return (self.min_players + self.max_players) / 2.0
+        alpha, beta, t0, tau = 0.2, 0.8, 15, 0.1
+        r_trans = (self.rating - 5) / 5.0
+        c_trans = (self.complexity / 5.0) ** 2
+        w_star = (alpha * r_trans + beta * c_trans) * math.log2(
+            1 + self.default_duration / t0
+        )
+        # Softplus 平滑: 防止 overflow，当 w_star/tau 很大时直接返回 w_star
+        ratio = w_star / tau
+        if ratio > 20:
+            return w_star
+        return tau * math.log(1 + math.exp(ratio))
 
     @property
     def weight(self) -> float:
-        """
-        游戏权重 W_i，用于宏加权胜率公式:
-            P_total = Σ(W_i × S_i) / Σ(W_i)
+        """向后兼容别名，等价于 w_static。"""
+        return self.w_static
 
-        W = (α·((R-5)/5) + β·(C/5)²) × log₂(1 + T/T₀) × [max(1, log₂(P_rep)) × M_mode]
-        α=0.2, β=0.8, T₀=15
+    @property
+    def base_win_rate(self) -> float:
         """
-        import math
-        alpha, beta, t0 = 0.2, 0.8, 15
-        # 评分基线偏移: 5分为及格线
-        r_trans = max(0, self.rating - 5) / 5.0
-        # 复杂度指数化: 平方
-        c_trans = (self.complexity / 5.0) ** 2
-        
-        quality = alpha * r_trans + beta * c_trans
-        effort = math.log2(1 + self.default_duration / t0)
-        scale = max(1, math.log2(self.p_rep)) * self.m_mode
-        return quality * effort * scale
+        静态基准胜率 b_g。
+        - Faction (阵营对抗): 0.5
+        - Coop (纯合作): 0.5
+        - FFA (纯竞争): 推荐人数倒数的期望
+        """
+        if self.game_type in ("faction", "coop"):
+            return 0.5
+        if self.recommended_players:
+            return sum(1.0 / n for n in self.recommended_players) / len(
+                self.recommended_players
+            )
+        avg_p = (self.min_players + self.max_players) / 2.0
+        return 1.0 / avg_p
 
 
 # ---------------------------------------------------------------------------
@@ -83,6 +94,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=4,
         default_duration=30,
         recommended_players={3},
+        game_type="ffa",
     ),
     "game_results:Avalon": BoardGame(
         name="阿瓦隆",
@@ -92,7 +104,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=12,
         default_duration=30,
         recommended_players={7, 8},
-        m_mode=0.75,
+        game_type="faction",
     ),
     "lasvegas_leaderboard": BoardGame(
         name="拉斯维加斯",
@@ -102,6 +114,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=6,
         default_duration=52.5,
         recommended_players={4, 5},
+        game_type="ffa",
     ),
     "game_results:LoveLetters": BoardGame(
         name="情书",
@@ -111,6 +124,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=8,
         default_duration=25,
         recommended_players={4, 5, 6},
+        game_type="ffa",
     ),
     "game_results:ExplodingKittens": BoardGame(
         name="炸弹猫",
@@ -120,6 +134,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=5,
         default_duration=15,
         recommended_players={4, 5},
+        game_type="ffa",
     ),
     "cabo_game_results": BoardGame(
         name="卡波",
@@ -129,6 +144,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=4,
         default_duration=45,
         recommended_players={3, 4},
+        game_type="ffa",
     ),
     "flip7_game_results": BoardGame(
         name="7连翻",
@@ -138,6 +154,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=18,
         default_duration=20,
         recommended_players={5, 6},
+        game_type="ffa",
     ),
     "modernart_game_results": BoardGame(
         name="现代艺术",
@@ -147,6 +164,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=5,
         default_duration=45,
         recommended_players={4, 5},
+        game_type="ffa",
     ),
     "game_results:TheGang": BoardGame(
         name="纸牌帮",
@@ -156,7 +174,7 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
         max_players=6,
         default_duration=20,
         recommended_players={5},
-        m_mode=0.5,
+        game_type="coop",
     ),
 }
 
@@ -391,14 +409,41 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
 
 async def get_global_leaderboard() -> List[Dict]:
     """
-    宏加权胜率排行榜。
+    V3.1 双轨制对数优势模型排行榜。
 
-    公式:  P_total = Σ(W_i × S_i) / Σ(W_i)
-      - S_i = 玩家在游戏 i 的胜率 (wins / games)
-      - W_i = GAME_REGISTRY 中该游戏的 weight
+    PvP (FFA + Faction):
+      1. 贝叶斯平滑胜率 p̂_g = (w_g + λ·b_g) / (n_g + λ)
+      2. 对数净优势 A_g = logit(p̂_g) − logit(b_g)
+      3. 样本可靠性锁 w_N = n_g / (n_g + k)  (k=5)
+      4. 动态权重 ω_g = W_static × w_N
+      5. 总对数优势 A_total = Σ(ω_g × A_g) / Σ(ω_g)
+      6. 标准参考胜率 P_final = sigmoid(logit(0.25) + A_total)
+
+    PvE (Coop):
+      1. 贝叶斯平滑通关率 p̂_g = (w_g + 2·0.5) / (n_g + 2)
+      2. 可靠性锁 w_N = n_g / (n_g + 10)
+      3. 动态权重 ω_g = W_static × w_N
+      4. 综合通关率 P_final = Σ(ω_g × p̂_g) / Σ(ω_g)
     """
 
-    # (registry_key, SQL) — 每条查询携带注册表 key 以便查找权重
+    # ── 辅助数学函数 ──────────────────────────────────────────
+    EPS = 1e-6
+
+    def _clamp(x: float) -> float:
+        return max(EPS, min(1 - EPS, x))
+
+    def _logit(x: float) -> float:
+        x = _clamp(x)
+        return math.log(x / (1 - x))
+
+    def _sigmoid(x: float) -> float:
+        if x > 20:
+            return 1.0
+        if x < -20:
+            return 0.0
+        return 1.0 / (1.0 + math.exp(-x))
+
+    # ── 数据查询 ─────────────────────────────────────────────
     queries = [
         ("game_results:Avalon",
          "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
@@ -429,7 +474,7 @@ async def get_global_leaderboard() -> List[Dict]:
          "FROM game_results WHERE game_name = 'TheGang'"),
     ]
 
-    # player_name -> { registry_key -> {"games": int, "wins": int} }
+    # player_name → { registry_key → {"w_g": int, "n_g": int} }
     per_game: Dict[str, Dict[str, Dict[str, int]]] = {}
     # 同时保留总局数 / 总胜场用于展示
     totals: Dict[str, Dict[str, int]] = {}
@@ -442,36 +487,83 @@ async def get_global_leaderboard() -> List[Dict]:
             except sqlite3.OperationalError:
                 continue
             for p_name, games, wins in rows:
-                # 累计 per-game
                 per_game.setdefault(p_name, {}).setdefault(
-                    reg_key, {"games": 0, "wins": 0}
+                    reg_key, {"w_g": 0, "n_g": 0}
                 )
-                per_game[p_name][reg_key]["games"] += games
-                per_game[p_name][reg_key]["wins"] += wins
-                # 累计 totals
+                per_game[p_name][reg_key]["w_g"] += wins
+                per_game[p_name][reg_key]["n_g"] += games
                 totals.setdefault(p_name, {"total_games": 0, "total_wins": 0})
                 totals[p_name]["total_games"] += games
                 totals[p_name]["total_wins"] += wins
 
+    # ── 算法常量 ─────────────────────────────────────────────
+    LAMBDA = 2.0        # 贝叶斯先验强度
+    K_PVP = 5           # PvP 出勤常数
+    K_PVE = 10          # PvE 出勤常数
+    REF_BASE = 0.25     # 标准 4 人局基准
+
     result = []
     for p_name, game_map in per_game.items():
-        sum_ws = 0.0   # Σ(W_i × F_i × S_i)
-        sum_w = 0.0     # Σ(W_i × F_i)
+        # ── PvP 累计 ─────────────────────────────────────
+        pvp_sum_omega_A = 0.0   # Σ(ω_g × A_g)
+        pvp_sum_omega = 0.0     # Σ(ω_g)
+
+        # ── PvE 累计 ─────────────────────────────────────
+        pve_sum_omega_p = 0.0   # Σ(ω_g × p̂_g)
+        pve_sum_omega = 0.0     # Σ(ω_g)
+
         for reg_key, counts in game_map.items():
             bg = GAME_REGISTRY.get(reg_key)
-            w = bg.weight if bg else 1.0
-            n = counts["games"]
-            s = counts["wins"] / n if n > 0 else 0.0
-            sum_ws += w * s
-            sum_w += w
+            if bg is None:
+                continue
 
-        weighted_rate = (sum_ws / sum_w * 100) if sum_w > 0 else 0.0
+            w_g = counts["w_g"]     # 胜场数
+            n_g = counts["n_g"]     # 总局数
+            if n_g <= 0:
+                continue
+
+            W_static = bg.w_static
+            b_g = bg.base_win_rate
+
+            if bg.game_type in ("ffa", "faction"):
+                # ── PvP 分支 ──────────────────────────
+                hat_p_g = _clamp((w_g + LAMBDA * b_g) / (n_g + LAMBDA))
+                A_g = _logit(hat_p_g) - _logit(b_g)
+                w_N = n_g / (n_g + K_PVP)
+                omega_g = W_static * w_N
+                pvp_sum_omega_A += omega_g * A_g
+                pvp_sum_omega += omega_g
+            else:
+                # ── PvE 分支 (coop) ───────────────────
+                hat_p_g = _clamp((w_g + LAMBDA * 0.5) / (n_g + LAMBDA))
+                w_N = n_g / (n_g + K_PVE)
+                omega_g = W_static * w_N
+                pve_sum_omega_p += omega_g * hat_p_g
+                pve_sum_omega += omega_g
+
+        # ── 汇总指标 ─────────────────────────────────────
+        if pvp_sum_omega > 0:
+            A_total = pvp_sum_omega_A / pvp_sum_omega
+            P_final = _sigmoid(_logit(REF_BASE) + A_total)
+            pvp_rate = round(P_final * 100, 1)
+        else:
+            A_total = 0.0
+            pvp_rate = 0.0
+
+        pve_rate = None
+        if pve_sum_omega > 0:
+            pve_rate = round(pve_sum_omega_p / pve_sum_omega * 100, 1)
+
         t = totals.get(p_name, {"total_games": 0, "total_wins": 0})
         result.append({
             "name": p_name,
             "total_games": t["total_games"],
             "total_wins": t["total_wins"],
-            "weighted_win_rate": round(weighted_rate, 1),
+            "weighted_win_rate": pvp_rate,          # PvP 综合胜率 (%)
+            "pvp_advantage": round(A_total, 3),     # PvP 隐藏优势分
+            "pve_win_rate": pve_rate,                # PvE 通关率 (%)
+            "pvp_data_strength": round(pvp_sum_omega, 2),
+            "pve_data_strength": round(pve_sum_omega, 2),
         })
 
     result.sort(key=lambda x: (-x["weighted_win_rate"], -x["total_wins"]))
