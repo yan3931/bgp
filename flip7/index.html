@@ -732,7 +732,7 @@
                                     <div class="rank-num ${rankClass}">${rankIcon}</div>
                                     
                                     <div class="apple-list-item-content" style="flex: 1;">
-                                        <div class="apple-list-item-title">${p.name}</div>
+                                        <div class="apple-list-item-title">${p.name} ${p.mastery === 'expert' ? '<span style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span>' : '<span style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳试玩</span>'}</div>
                                         <div class="history-trail">${p.total_games}局 · 胜率${p.win_rate}%</div>
                                     </div>
                                     

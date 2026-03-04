@@ -302,12 +302,19 @@ async def _fetch_scored_leaderboard(
     score_column: str,
     score_key: str,
     order_clause: str,
+    registry_key: str = "",
     extra_agg_select: str = "",
     extra_row_parser=None,
 ) -> List[Dict]:
     """
     Shared leaderboard query for games with (game_id, player_name, is_winner, score-like field).
+    Uses Bayesian smoothed win rate (V3.1 hat_p_g) and mastery status.
     """
+    LAMBDA = 2.0
+    K_MASTERY = 3
+    bg = GAME_REGISTRY.get(registry_key)
+    b_g = bg.base_win_rate if bg else 0.25
+
     async with aiosqlite.connect(DB_NAME) as db:
         db.row_factory = aiosqlite.Row
         extra_sql = f", {extra_agg_select}" if extra_agg_select else ""
@@ -326,19 +333,26 @@ async def _fetch_scored_leaderboard(
 
         stats = []
         for row in rows:
-            total = row["total_games"]
-            wins = row["wins"]
-            raw_rate = round(wins / total * 100, 1) if total > 0 else 0
+            n_g = row["total_games"]
+            w_g = row["wins"]
+            # Bayesian smoothed win rate
+            hat_p_g = (w_g + LAMBDA * b_g) / (n_g + LAMBDA) if n_g > 0 else b_g
+            smoothed_rate = round(hat_p_g * 100, 1)
+            mastery = "expert" if n_g >= K_MASTERY else "novice"
             item = {
                 "name": row["player_name"],
-                "total_games": total,
-                "wins": wins,
-                "win_rate": raw_rate,
+                "total_games": n_g,
+                "wins": w_g,
+                "win_rate": smoothed_rate,
+                "mastery": mastery,
                 score_key: row["avg_value"],
             }
             if extra_row_parser:
                 item.update(extra_row_parser(row))
             stats.append(item)
+
+        # Sort by smoothed win_rate descending (primary)
+        stats.sort(key=lambda x: -x["win_rate"])
 
         cursor = await db.execute(
             f"""
@@ -366,16 +380,18 @@ async def get_cabo_leaderboard() -> List[Dict]:
         score_column="final_score",
         score_key="avg_score",
         order_clause="avg_value ASC",
+        registry_key="cabo_game_results",
     )
 
 async def get_leaderboard() -> Dict[str, List[Dict]]:
     """
-    Returns stats per game:
-    {
-        "Avalon": [...],
-        ...
-    }
+    Returns stats per game (Avalon). Uses Bayesian smoothed win rate.
     """
+    LAMBDA = 2.0
+    K_MASTERY = 3
+    bg = GAME_REGISTRY.get("game_results:Avalon")
+    b_g = bg.base_win_rate if bg else 0.5
+
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute(
             """
@@ -393,17 +409,21 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
 
     stats = []
     for row in rows:
-        p_name, total, wins, avg = row
-        raw_rate = round(wins / total * 100, 1) if total > 0 else 0
+        p_name, n_g, w_g, avg = row
+        hat_p_g = (w_g + LAMBDA * b_g) / (n_g + LAMBDA) if n_g > 0 else b_g
+        smoothed_rate = round(hat_p_g * 100, 1)
+        mastery = "expert" if n_g >= K_MASTERY else "novice"
         stats.append(
             {
                 "name": p_name,
-                "wins": wins,
-                "total": total,
-                "win_rate": raw_rate,
+                "wins": w_g,
+                "total": n_g,
+                "win_rate": smoothed_rate,
+                "mastery": mastery,
                 "avg_score": round(avg, 1) if avg else 0,
             }
         )
+    stats.sort(key=lambda x: -x["win_rate"])
     return {"Avalon": stats}
 
 
@@ -663,6 +683,7 @@ async def get_flip7_leaderboard() -> List[Dict]:
         score_column="final_score",
         score_key="avg_score",
         order_clause="wins DESC, avg_value DESC",
+        registry_key="flip7_game_results",
         extra_agg_select="SUM(bust_count) as total_busts",
         extra_row_parser=lambda row: {"total_busts": row["total_busts"] or 0},
     )
@@ -691,14 +712,21 @@ async def get_modernart_leaderboard() -> List[Dict]:
         score_column="final_money",
         score_key="avg_money",
         order_clause="wins DESC, avg_value DESC",
+        registry_key="modernart_game_results",
     )
 
 
 async def get_simple_leaderboard(game_name: str) -> List[Dict]:
     """
     通用排行榜查询，用于只使用 game_results 表的简单游戏。
-    返回按胜场降序排列的玩家统计列表。
+    Uses Bayesian smoothed win rate (V3.1) and mastery status.
     """
+    LAMBDA = 2.0
+    K_MASTERY = 3
+    registry_key = f"game_results:{game_name}"
+    bg = GAME_REGISTRY.get(registry_key)
+    b_g = bg.base_win_rate if bg else 0.25
+
     async with _get_db() as db:
         cursor = await db.execute(
             """
@@ -716,12 +744,16 @@ async def get_simple_leaderboard(game_name: str) -> List[Dict]:
 
     stats = []
     for row in rows:
-        p_name, total, wins = row
-        raw_rate = round(wins / total * 100, 1) if total > 0 else 0
+        p_name, n_g, w_g = row
+        hat_p_g = (w_g + LAMBDA * b_g) / (n_g + LAMBDA) if n_g > 0 else b_g
+        smoothed_rate = round(hat_p_g * 100, 1)
+        mastery = "expert" if n_g >= K_MASTERY else "novice"
         stats.append({
             "name": p_name,
-            "wins": wins,
-            "total": total,
-            "win_rate": raw_rate,
+            "wins": w_g,
+            "total": n_g,
+            "win_rate": smoothed_rate,
+            "mastery": mastery,
         })
+    stats.sort(key=lambda x: -x["win_rate"])
     return stats

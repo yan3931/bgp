@@ -1082,7 +1082,7 @@
                     </div>
 
                     <div class="apple-list-item-content">
-                        <div class="apple-list-item-title">{{ p.name }}</div>
+                        <div class="apple-list-item-title">{{ p.name }} <span v-if="p.mastery === 'expert'" style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span><span v-else style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳试玩</span></div>
                     </div>
 
                     <div style="text-align: right; display: flex; align-items: center; gap: 16px;">

@@ -606,7 +606,7 @@
                     </div>
 
                     <div class="apple-list-item-content">
-                        <div class="apple-list-item-title">{{ item.name }}</div>
+                        <div class="apple-list-item-title">{{ item.name }} <span v-if="item.mastery === 'expert'" style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span><span v-else style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳试玩</span></div>
                         <div class="history-trail">{{ item.total_games }}局 · 胜率{{ item.win_rate }}%</div>
                     </div>
 
