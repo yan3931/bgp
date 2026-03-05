@@ -1,3 +1,4 @@
+import asyncio
 import math
 import sqlite3
 from contextlib import asynccontextmanager
@@ -5,7 +6,20 @@ from typing import AsyncIterator, Dict, List, Optional, Set
 
 import aiosqlite
 
+from state_store import get_store
+
 DB_NAME = "games.db"
+
+# ---------------------------------------------------------------------------
+# 缓存键常量与 TTL
+# ---------------------------------------------------------------------------
+CACHE_TTL = 3600  # 1 小时
+CACHE_KEY_GLOBAL = "cache:leaderboard:global"
+CACHE_KEY_AVALON = "cache:leaderboard:avalon"
+CACHE_KEY_CABO = "cache:leaderboard:cabo"
+CACHE_KEY_LASVEGAS = "cache:leaderboard:lasvegas"
+CACHE_KEY_FLIP7 = "cache:leaderboard:flip7"
+CACHE_KEY_MODERNART = "cache:leaderboard:modernart"
 
 
 # ---------------------------------------------------------------------------
@@ -204,11 +218,15 @@ def _sigmoid(x: float) -> float:
 async def _get_db() -> AsyncIterator[aiosqlite.Connection]:
     """统一的数据库连接获取入口。业务层应始终通过此函数获取连接。"""
     async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute("PRAGMA journal_mode=WAL")
+        await db.execute("PRAGMA synchronous=NORMAL")
+        await db.execute("PRAGMA cache_size=-8000")  # 8MB
+        await db.execute("PRAGMA temp_store=MEMORY")
         yield db
 
 
 async def init_db():
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         await db.execute(
             """
             CREATE TABLE IF NOT EXISTS game_results (
@@ -287,10 +305,28 @@ async def init_db():
         except sqlite3.OperationalError:
             pass
 
+        # ── 索引 ──────────────────────────────────────────
+        # game_results 表
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_game_results_player ON game_results(player_name)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_game_results_ts ON game_results(timestamp DESC)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_game_results_game_player ON game_results(game_name, player_name)")
+        # cabo_game_results 表
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_cabo_player ON cabo_game_results(player_name)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_cabo_ts ON cabo_game_results(timestamp DESC)")
+        # lasvegas_leaderboard 表
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_lasvegas_player ON lasvegas_leaderboard(player_name)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_lasvegas_ts ON lasvegas_leaderboard(timestamp DESC)")
+        # flip7_game_results 表
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_flip7_player ON flip7_game_results(player_name)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_flip7_ts ON flip7_game_results(timestamp DESC)")
+        # modernart_game_results 表
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_modernart_player ON modernart_game_results(player_name)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_modernart_ts ON modernart_game_results(timestamp DESC)")
+
         await db.commit()
 
 async def record_result(game_name: str, player_name: str, is_winner: bool, score: int = 0):
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         await db.execute(
             """
             INSERT INTO game_results (game_name, player_name, is_winner, score)
@@ -299,13 +335,19 @@ async def record_result(game_name: str, player_name: str, is_winner: bool, score
             (game_name, player_name, is_winner, score),
         )
         await db.commit()
+    # Cache invalidation
+    store = get_store()
+    await store.delete(CACHE_KEY_GLOBAL)
+    if game_name == "Avalon":
+        await store.delete(CACHE_KEY_AVALON)
+    await store.delete(f"cache:leaderboard:simple:{game_name}")
 
 async def record_cabo_game(game_id: str, players_data: List[Dict]):
     """
     Record a completed Cabo game.
     players_data: [{"name": str, "final_score": int, "is_winner": bool, "round_count": int}, ...]
     """
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         await db.executemany(
             """
             INSERT INTO cabo_game_results (game_id, player_name, final_score, is_winner, round_count)
@@ -317,6 +359,11 @@ async def record_cabo_game(game_id: str, players_data: List[Dict]):
             ],
         )
         await db.commit()
+    # Cache invalidation
+    store = get_store()
+    await store.delete(CACHE_KEY_GLOBAL)
+    await store.delete(CACHE_KEY_CABO)
+    await store.delete("cache:leaderboard:cabo_game_results")
 
 async def _fetch_scored_leaderboard(
     table_name: str,
@@ -331,13 +378,20 @@ async def _fetch_scored_leaderboard(
     Shared leaderboard query for games with (game_id, player_name, is_winner, score-like field).
     V3.1 P_ladder: logit-space interpolation with reliability lock.
     """
+    # ── Cache-Aside ──
+    cache_key = f"cache:leaderboard:{table_name}"
+    store = get_store()
+    cached = await store.get_json(cache_key)
+    if cached is not None:
+        return cached
+
     LAMBDA = 2.0
     K = 5  # 出勤常数
     K_PROVISIONAL = 3  # 定级阈值
     bg_obj = GAME_REGISTRY.get(registry_key)
     b_g = bg_obj.base_win_rate if bg_obj else 0.25
 
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         db.row_factory = aiosqlite.Row
         extra_sql = f", {extra_agg_select}" if extra_agg_select else ""
         query = f"""
@@ -411,6 +465,8 @@ async def _fetch_scored_leaderboard(
         last_key = "last_money" if score_key == "avg_money" else "last_score"
         for item in stats:
             item[last_key] = last_scores.get(item["name"])
+
+        await store.set_json(cache_key, stats, expire=CACHE_TTL)
         return stats
 
 
@@ -432,13 +488,19 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
     Returns stats per game (Avalon).
     V3.1 P_ladder: logit-space interpolation with reliability lock.
     """
+    # ── Cache-Aside ──
+    store = get_store()
+    cached = await store.get_json(CACHE_KEY_AVALON)
+    if cached is not None:
+        return cached
+
     LAMBDA = 2.0
     K = 5
     K_PROVISIONAL = 3
     bg_obj = GAME_REGISTRY.get("game_results:Avalon")
     b_g = bg_obj.base_win_rate if bg_obj else 0.5
 
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         cursor = await db.execute(
             """
             SELECT player_name,
@@ -484,7 +546,9 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
             ranked.append(entry)
     ranked.sort(key=lambda x: -x["win_rate"])
     provisional.sort(key=lambda x: -x["win_rate"])
-    return {"Avalon": ranked + provisional}
+    result = {"Avalon": ranked + provisional}
+    await store.set_json(CACHE_KEY_AVALON, result, expire=CACHE_TTL)
+    return result
 
 
 async def get_global_leaderboard() -> List[Dict]:
@@ -505,6 +569,12 @@ async def get_global_leaderboard() -> List[Dict]:
       3. 动态权重 ω_g = W_static × w_N
       4. 综合通关率 P_final = Σ(ω_g × p̂_g) / Σ(ω_g)
     """
+
+    # ── Cache-Aside ──
+    store = get_store()
+    cached = await store.get_json(CACHE_KEY_GLOBAL)
+    if cached is not None:
+        return cached
 
     # ── 辅助数学函数（使用模块级 _clamp/_logit/_sigmoid）───────
 
@@ -541,7 +611,7 @@ async def get_global_leaderboard() -> List[Dict]:
     # 同时保留总局数 / 总胜场用于展示
     totals: Dict[str, Dict[str, int]] = {}
 
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         for reg_key, sql in queries:
             try:
                 cursor = await db.execute(sql)
@@ -629,12 +699,13 @@ async def get_global_leaderboard() -> List[Dict]:
         })
 
     result.sort(key=lambda x: (-x["weighted_win_rate"], -x["total_wins"]))
+    await store.set_json(CACHE_KEY_GLOBAL, result, expire=CACHE_TTL)
     return result
 
 
 async def record_lasvegas_game(player_name: str, game_amount: int, bill_count: int, is_winner: bool = False):
     """Record a single player's Las Vegas game result."""
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         await db.execute(
             """
             INSERT INTO lasvegas_leaderboard (player_name, game_amount, bill_count, is_winner)
@@ -643,17 +714,27 @@ async def record_lasvegas_game(player_name: str, game_amount: int, bill_count: i
             (player_name, game_amount, bill_count, is_winner),
         )
         await db.commit()
+    # Cache invalidation
+    store = get_store()
+    await store.delete(CACHE_KEY_GLOBAL)
+    await store.delete(CACHE_KEY_LASVEGAS)
 
 
 async def get_lasvegas_leaderboard() -> List[Dict]:
     """Return Las Vegas leaderboard: cumulative total, latest game, total games played, along with P_ladder win rate calculation."""
+    # ── Cache-Aside ──
+    store = get_store()
+    cached = await store.get_json(CACHE_KEY_LASVEGAS)
+    if cached is not None:
+        return cached
+
     LAMBDA = 2.0
     K = 5
     K_PROVISIONAL = 3
     bg_obj = GAME_REGISTRY.get("lasvegas")
     b_g = bg_obj.base_win_rate if bg_obj else 0.25
 
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         cursor = await db.execute(
             """
             SELECT player_name,
@@ -714,13 +795,13 @@ async def get_lasvegas_leaderboard() -> List[Dict]:
             ranked.append(item)
 
     # Get the latest game timestamp
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         cursor = await db.execute("SELECT MAX(timestamp) FROM lasvegas_leaderboard")
         latest_ts_row = await cursor.fetchone()
     latest_ts = latest_ts_row[0] if latest_ts_row else None
 
     if latest_ts:
-        async with aiosqlite.connect(DB_NAME) as db:
+        async with _get_db() as db:
             cursor = await db.execute(
                 """
                 SELECT player_name, game_amount, bill_count
@@ -737,18 +818,19 @@ async def get_lasvegas_leaderboard() -> List[Dict]:
                 item["last_game_amount"] = last_data_map[item["name"]]["amt"]
                 item["last_game_bills"] = last_data_map[item["name"]]["bills"]
 
-    # Sort ranked by P_ladder desc, then provisional by P_ladder desc
     ranked.sort(key=lambda x: -x["win_rate"])
     provisional.sort(key=lambda x: -x["win_rate"])
     
-    return ranked + provisional
+    result = ranked + provisional
+    await store.set_json(CACHE_KEY_LASVEGAS, result, expire=CACHE_TTL)
+    return result
 
 async def record_flip7_game(game_id: str, players_data: List[Dict]):
     """
     Record a completed Flip 7 game.
     players_data: [{"name": str, "final_score": int, "is_winner": bool, "bust_count": int}, ...]
     """
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         await db.executemany(
             """
             INSERT INTO flip7_game_results (game_id, player_name, final_score, is_winner, bust_count)
@@ -760,6 +842,11 @@ async def record_flip7_game(game_id: str, players_data: List[Dict]):
             ],
         )
         await db.commit()
+    # Cache invalidation
+    store = get_store()
+    await store.delete(CACHE_KEY_GLOBAL)
+    await store.delete(CACHE_KEY_FLIP7)
+    await store.delete("cache:leaderboard:flip7_game_results")
 
 async def get_flip7_leaderboard() -> List[Dict]:
     """
@@ -781,7 +868,7 @@ async def record_modernart_game(game_id: str, players_data: List[Dict]):
     Record a completed Modern Art game.
     players_data: [{"name": str, "final_money": int, "is_winner": bool}, ...]
     """
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with _get_db() as db:
         await db.executemany(
             """
             INSERT INTO modernart_game_results (game_id, player_name, final_money, is_winner)
@@ -790,6 +877,11 @@ async def record_modernart_game(game_id: str, players_data: List[Dict]):
             [(game_id, p["name"], p["final_money"], p["is_winner"]) for p in players_data],
         )
         await db.commit()
+    # Cache invalidation
+    store = get_store()
+    await store.delete(CACHE_KEY_GLOBAL)
+    await store.delete(CACHE_KEY_MODERNART)
+    await store.delete("cache:leaderboard:modernart_game_results")
 
 async def get_modernart_leaderboard() -> List[Dict]:
     """
@@ -809,6 +901,13 @@ async def get_simple_leaderboard(game_name: str) -> List[Dict]:
     通用排行榜查询，用于只使用 game_results 表的简单游戏。
     V3.1 P_ladder: logit-space interpolation with reliability lock.
     """
+    # ── Cache-Aside ──
+    cache_key = f"cache:leaderboard:simple:{game_name}"
+    store = get_store()
+    cached = await store.get_json(cache_key)
+    if cached is not None:
+        return cached
+
     LAMBDA = 2.0
     K = 5
     K_PROVISIONAL = 3
@@ -861,4 +960,6 @@ async def get_simple_leaderboard(game_name: str) -> List[Dict]:
             ranked.append(entry)
     ranked.sort(key=lambda x: -x["win_rate"])
     provisional.sort(key=lambda x: -x["win_rate"])
-    return ranked + provisional
+    result = ranked + provisional
+    await store.set_json(cache_key, result, expire=CACHE_TTL)
+    return result

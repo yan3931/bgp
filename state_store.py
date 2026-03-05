@@ -35,8 +35,8 @@ class BaseStore(ABC):
         ...
 
     @abstractmethod
-    async def set(self, key: str, value: Any) -> None:
-        """将值序列化为 JSON 并存储。"""
+    async def set(self, key: str, value: Any, expire: int = None) -> None:
+        """将值序列化为 JSON 并存储。expire 为可选的过期秒数。"""
         ...
 
     @abstractmethod
@@ -61,9 +61,9 @@ class BaseStore(ABC):
             return None
         return json.loads(raw)
 
-    async def set_json(self, key: str, value: Any) -> None:
-        """将任意 Python 对象序列化为 JSON 存储。"""
-        await self.set(key, json.dumps(value, ensure_ascii=False))
+    async def set_json(self, key: str, value: Any, expire: int = None) -> None:
+        """将任意 Python 对象序列化为 JSON 存储。expire 为可选的过期秒数。"""
+        await self.set(key, json.dumps(value, ensure_ascii=False), expire=expire)
 
     async def close(self) -> None:
         """关闭连接 / 释放资源（子类按需实现）。"""
@@ -85,10 +85,11 @@ class MemoryStore(BaseStore):
         async with self._lock:
             return self._data.get(key)
 
-    async def set(self, key: str, value: Any) -> None:
+    async def set(self, key: str, value: Any, expire: int = None) -> None:
         serialized = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
         async with self._lock:
             self._data[key] = serialized
+        # expire 在 MemoryStore 中不生效，仅保持接口一致
 
     async def delete(self, key: str) -> None:
         async with self._lock:
@@ -127,9 +128,9 @@ class RedisStore(BaseStore):
     async def get(self, key: str) -> Optional[str]:
         return await self._redis.get(key)
 
-    async def set(self, key: str, value: Any) -> None:
+    async def set(self, key: str, value: Any, expire: int = None) -> None:
         serialized = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
-        await self._redis.set(key, serialized)
+        await self._redis.set(key, serialized, ex=expire)
 
     async def delete(self, key: str) -> None:
         await self._redis.delete(key)
