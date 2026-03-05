@@ -358,6 +358,22 @@
         </div>
     </div>
 </div>
+
+<!-- Reset Confirm Modal -->
+<div id="resetConfirmModal" class="apple-modal" style="z-index: 2000;">
+    <div class="apple-modal-content" style="max-width: 320px; margin: auto; border-radius: 20px;">
+        <div style="text-align: center; padding: 20px;">
+            <div class="winner-icon" style="font-size: 3rem; margin-bottom: 12px;">⚠️</div>
+            <h2 style="font-size: 1.3rem; color: var(--apple-black); margin-bottom: 8px;">重新开始？</h2>
+            <div style="color: var(--apple-gray); margin-bottom: 24px; font-size: 0.95rem;">确定要重新开始吗？分数将清零。</div>
+
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button onclick="closeResetConfirm()" class="apple-btn apple-btn-secondary" style="flex: 1;">取消</button>
+                <button onclick="executeResetGame()" class="apple-btn apple-btn-danger" style="flex: 1;">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_body %}
@@ -644,8 +660,16 @@
         fetchStatus();
     }
 
-    async function resetGame() {
-        if (!confirm("确定要重新开始吗？分数将清零。")) return;
+    function resetGame() {
+        document.getElementById('resetConfirmModal').classList.add('show');
+    }
+
+    function closeResetConfirm() {
+        document.getElementById('resetConfirmModal').classList.remove('show');
+    }
+
+    async function executeResetGame() {
+        closeResetConfirm();
         await fetch(`${API_BASE}/reset`, {
             method: 'POST'
         });
