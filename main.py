@@ -35,6 +35,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Board Game Portal", lifespan=lifespan)
 
+from fastapi import Response
+
+# 放在 app = FastAPI() 之后
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    # 204 No Content 告诉浏览器：通讯成功，但我没有图标给你
+    return Response(status_code=204)
+
 # Mount Static Files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
