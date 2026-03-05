@@ -649,30 +649,72 @@ async def record_lasvegas_game(player_name: str, game_amount: int, bill_count: i
 
 
 async def get_lasvegas_leaderboard() -> List[Dict]:
-    """Return Las Vegas leaderboard: cumulative total, latest game, total games played."""
+    """Return Las Vegas leaderboard: cumulative total, latest game, total games played, along with P_ladder win rate calculation."""
+    LAMBDA = 2.0
+    K = 5
+    K_PROVISIONAL = 3
+    bg_obj = GAME_REGISTRY.get("lasvegas")
+    b_g = bg_obj.base_win_rate if bg_obj else 0.25
+
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute(
             """
             SELECT player_name,
                    SUM(game_amount) as total_amount,
+                   SUM(CASE WHEN is_winner THEN 1 ELSE 0 END) as wins,
                    COUNT(*) as games_played
             FROM lasvegas_leaderboard
             GROUP BY player_name
-            ORDER BY total_amount DESC
             """
         )
         cumulative_rows = await cursor.fetchall()
-    cumulative = {}
+        
+    ranked = []
+    provisional = []
+    
     for row in cumulative_rows:
-        games_played = row[2]
-        cumulative[row[0]] = {
-            "name": row[0],
-            "total_amount": row[1],
-            "games_played": games_played,
+        name = row[0]
+        total_amount = row[1]
+        wins = row[2]
+        games_played = row[3]
+        
+        n_g = games_played
+        w_g = wins
+        
+        # 1. Bayesian smoothed win rate
+        hat_p_g = (w_g + LAMBDA * b_g) / (n_g + LAMBDA) if n_g > 0 else b_g
+        smoothed_pct = round(hat_p_g * 100, 1)
+        # 2. Reliability lock
+        w_N = n_g / (n_g + K) if n_g > 0 else 0.0
+        # 3. P_ladder via logit interpolation
+        logit_blend = (1 - w_N) * _logit(b_g) + w_N * _logit(hat_p_g)
+        p_ladder = _sigmoid(logit_blend)
+        ladder_pct = round(p_ladder * 100, 1)
+        # 4. Three-tier mastery
+        if n_g < K_PROVISIONAL:
+            mastery = "provisional"
+        elif n_g < K:
+            mastery = "rookie"
+        else:
+            mastery = "expert"
+
+        item = {
+            "name": name,
+            "total_amount": total_amount,
+            "total_games": games_played,
+            "wins": wins,
+            "win_rate": ladder_pct,         # P_ladder (排名主键)
+            "smoothed_rate": smoothed_pct,  # hat_p_g (表现胜率)
+            "mastery": mastery,
             "last_game_amount": 0,
             "last_game_bills": 0,
-            "avg_amount": round(row[1] / games_played, 1) if games_played > 0 else 0,
+            "avg_amount": round(total_amount / games_played, 1) if games_played > 0 else 0,
         }
+        
+        if mastery == "provisional":
+            provisional.append(item)
+        else:
+            ranked.append(item)
 
     # Get the latest game timestamp
     async with aiosqlite.connect(DB_NAME) as db:
@@ -691,14 +733,18 @@ async def get_lasvegas_leaderboard() -> List[Dict]:
                 (latest_ts,),
             )
             last_rows = await cursor.fetchall()
-        for row in last_rows:
-            if row[0] in cumulative:
-                cumulative[row[0]]["last_game_amount"] = row[1]
-                cumulative[row[0]]["last_game_bills"] = row[2]
+            
+        last_data_map = {row[0]: {"amt": row[1], "bills": row[2]} for row in last_rows}
+        for item in ranked + provisional:
+            if item["name"] in last_data_map:
+                item["last_game_amount"] = last_data_map[item["name"]]["amt"]
+                item["last_game_bills"] = last_data_map[item["name"]]["bills"]
 
-    # Sort by total_amount DESC
-    result = sorted(cumulative.values(), key=lambda x: (-x["total_amount"], -x["games_played"]))
-    return result
+    # Sort ranked by P_ladder desc, then provisional by P_ladder desc
+    ranked.sort(key=lambda x: -x["win_rate"])
+    provisional.sort(key=lambda x: -x["win_rate"])
+    
+    return ranked + provisional
 
 async def record_flip7_game(game_id: str, players_data: List[Dict]):
     """

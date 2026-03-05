@@ -753,15 +753,13 @@
                     </div>
                 </div>
                 <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
+                    <div style="text-align: right;">
+                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">金额</div>
+                        <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);" x-text="p.total_amount + '万'"></div>
+                    </div>
                     <div style="text-align: right; width: 40px;">
                         <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">张数</div>
-                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);"
-                            x-text="p.bill_count + '张'"></div>
-                    </div>
-                    <div style="text-align: right; width: 60px;">
-                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">金额</div>
-                        <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-green);"
-                            x-text="p.total_amount + '万'"></div>
+                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);" x-text="p.bill_count + '张'"></div>
                     </div>
                 </div>
             </div>
@@ -835,30 +833,40 @@
         <div class="section-title" style="margin-top: var(--space-xl); margin-bottom: var(--space-md);">🏆 历史排行榜
         </div>
         <div class="apple-list mb-xl" x-show="histLeaderboard.length === 0">
-            <div class="empty-state">
-                <span class="empty-icon">👻</span>
-                还没人玩过呢，快去开一局！
+            <div class="text-center text-muted" style="padding: var(--space-xl);">
+                <div class="empty-state">
+                    <span class="empty-icon">👻</span>
+                    还没人玩过呢，快去开一局！
+                </div>
             </div>
         </div>
         <div class="apple-list mb-xl" x-show="histLeaderboard.length > 0">
             <template x-for="(p, idx) in histLeaderboard" :key="p.name">
-                <div class="apple-list-item">
-                    <div class="rank-num" :class="getRankClass(idx, p)">
-                        <span x-text="getRankIcon(idx, p)"></span>
+                <div class="apple-list-item" :style="p.mastery === 'provisional' ? 'opacity:0.65;' : ''">
+                    <div class="rank-num" :class="idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : 'rank-other'))">
+                        <span x-text="idx === 0 ? '👑' : idx + 1"></span>
                     </div>
+                    
                     <div class="apple-list-item-content">
-                        <div class="apple-list-item-title" x-text="p.name"></div>
+                        <div class="apple-list-item-title">
+                            <span x-text="p.name"></span>
+                            <span x-show="p.mastery === 'expert'" style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span>
+                            <span x-show="p.mastery === 'rookie'" style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span>
+                            <span x-show="p.mastery === 'provisional'" style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span>
+                        </div>
+                        <div class="history-trail" x-text="p.total_games + '局 · 战力' + p.win_rate + '% · 胜率' + p.smoothed_rate + '%'"></div>
                     </div>
+                    
                     <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
                         <div style="text-align: right; width: 60px;">
                             <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">场均</div>
-                            <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-green);"
-                                x-text="p.avg_amount > 0 ? p.avg_amount + '万' : '--'"></div>
+                            <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);"
+                                x-text="p.avg_amount > 0 ? '$' + p.avg_amount + '万' : '--'"></div>
                         </div>
                         <div style="text-align: right; width: 60px;">
                             <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">上场</div>
                             <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);"
-                                x-text="p.last_game_amount > 0 ? '+' + p.last_game_amount + '万' : '--'"></div>
+                                x-text="p.last_game_amount > 0 ? '$' + p.last_game_amount + '万' : '--'"></div>
                         </div>
                     </div>
                 </div>
