@@ -179,6 +179,27 @@ GAME_REGISTRY: Dict[str, BoardGame] = {
 }
 
 
+
+# ---------------------------------------------------------------------------
+# V3.1 辅助数学函数 (logit / sigmoid / clamp)
+# ---------------------------------------------------------------------------
+EPS = 1e-6
+
+def _clamp(x: float) -> float:
+    return max(EPS, min(1 - EPS, x))
+
+def _logit(x: float) -> float:
+    x = _clamp(x)
+    return math.log(x / (1 - x))
+
+def _sigmoid(x: float) -> float:
+    if x > 20:
+        return 1.0
+    if x < -20:
+        return 0.0
+    return 1.0 / (1.0 + math.exp(-x))
+
+
 @asynccontextmanager
 async def _get_db() -> AsyncIterator[aiosqlite.Connection]:
     """统一的数据库连接获取入口。业务层应始终通过此函数获取连接。"""
@@ -308,12 +329,13 @@ async def _fetch_scored_leaderboard(
 ) -> List[Dict]:
     """
     Shared leaderboard query for games with (game_id, player_name, is_winner, score-like field).
-    Uses Bayesian smoothed win rate (V3.1 hat_p_g) and mastery status.
+    V3.1 P_ladder: logit-space interpolation with reliability lock.
     """
     LAMBDA = 2.0
-    K_MASTERY = 3
-    bg = GAME_REGISTRY.get(registry_key)
-    b_g = bg.base_win_rate if bg else 0.25
+    K = 5  # 出勤常数
+    K_PROVISIONAL = 3  # 定级阈值
+    bg_obj = GAME_REGISTRY.get(registry_key)
+    b_g = bg_obj.base_win_rate if bg_obj else 0.25
 
     async with aiosqlite.connect(DB_NAME) as db:
         db.row_factory = aiosqlite.Row
@@ -331,28 +353,50 @@ async def _fetch_scored_leaderboard(
         cursor = await db.execute(query)
         rows = await cursor.fetchall()
 
-        stats = []
+        ranked = []   # n_g >= K_PROVISIONAL  (正式天梯)
+        provisional = []  # n_g < K_PROVISIONAL (定级试玩区)
+
         for row in rows:
             n_g = row["total_games"]
             w_g = row["wins"]
-            # Bayesian smoothed win rate
+            # 1. Bayesian smoothed win rate (表现胜率)
             hat_p_g = (w_g + LAMBDA * b_g) / (n_g + LAMBDA) if n_g > 0 else b_g
-            smoothed_rate = round(hat_p_g * 100, 1)
-            mastery = "expert" if n_g >= K_MASTERY else "novice"
+            smoothed_pct = round(hat_p_g * 100, 1)
+            # 2. Reliability lock (出勤锁)
+            w_N = n_g / (n_g + K) if n_g > 0 else 0.0
+            # 3. P_ladder via logit interpolation
+            logit_blend = (1 - w_N) * _logit(b_g) + w_N * _logit(hat_p_g)
+            p_ladder = _sigmoid(logit_blend)
+            ladder_pct = round(p_ladder * 100, 1)
+            # 4. Three-tier mastery
+            if n_g < K_PROVISIONAL:
+                mastery = "provisional"
+            elif n_g < K:
+                mastery = "rookie"
+            else:
+                mastery = "expert"
+
             item = {
                 "name": row["player_name"],
                 "total_games": n_g,
                 "wins": w_g,
-                "win_rate": smoothed_rate,
+                "win_rate": ladder_pct,         # P_ladder (排名主键)
+                "smoothed_rate": smoothed_pct,  # hat_p_g  (表现胜率)
                 "mastery": mastery,
                 score_key: row["avg_value"],
             }
             if extra_row_parser:
                 item.update(extra_row_parser(row))
-            stats.append(item)
 
-        # Sort by smoothed win_rate descending (primary)
-        stats.sort(key=lambda x: -x["win_rate"])
+            if mastery == "provisional":
+                provisional.append(item)
+            else:
+                ranked.append(item)
+
+        # Sort ranked by P_ladder desc, then provisional by P_ladder desc
+        ranked.sort(key=lambda x: -x["win_rate"])
+        provisional.sort(key=lambda x: -x["win_rate"])
+        stats = ranked + provisional
 
         cursor = await db.execute(
             f"""
@@ -385,12 +429,14 @@ async def get_cabo_leaderboard() -> List[Dict]:
 
 async def get_leaderboard() -> Dict[str, List[Dict]]:
     """
-    Returns stats per game (Avalon). Uses Bayesian smoothed win rate.
+    Returns stats per game (Avalon).
+    V3.1 P_ladder: logit-space interpolation with reliability lock.
     """
     LAMBDA = 2.0
-    K_MASTERY = 3
-    bg = GAME_REGISTRY.get("game_results:Avalon")
-    b_g = bg.base_win_rate if bg else 0.5
+    K = 5
+    K_PROVISIONAL = 3
+    bg_obj = GAME_REGISTRY.get("game_results:Avalon")
+    b_g = bg_obj.base_win_rate if bg_obj else 0.5
 
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute(
@@ -407,24 +453,38 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
         )
         rows = await cursor.fetchall()
 
-    stats = []
+    ranked = []
+    provisional = []
     for row in rows:
         p_name, n_g, w_g, avg = row
         hat_p_g = (w_g + LAMBDA * b_g) / (n_g + LAMBDA) if n_g > 0 else b_g
-        smoothed_rate = round(hat_p_g * 100, 1)
-        mastery = "expert" if n_g >= K_MASTERY else "novice"
-        stats.append(
-            {
-                "name": p_name,
-                "wins": w_g,
-                "total": n_g,
-                "win_rate": smoothed_rate,
-                "mastery": mastery,
-                "avg_score": round(avg, 1) if avg else 0,
-            }
-        )
-    stats.sort(key=lambda x: -x["win_rate"])
-    return {"Avalon": stats}
+        smoothed_pct = round(hat_p_g * 100, 1)
+        w_N = n_g / (n_g + K) if n_g > 0 else 0.0
+        logit_blend = (1 - w_N) * _logit(b_g) + w_N * _logit(hat_p_g)
+        p_ladder = _sigmoid(logit_blend)
+        ladder_pct = round(p_ladder * 100, 1)
+        if n_g < K_PROVISIONAL:
+            mastery = "provisional"
+        elif n_g < K:
+            mastery = "rookie"
+        else:
+            mastery = "expert"
+        entry = {
+            "name": p_name,
+            "wins": w_g,
+            "total": n_g,
+            "win_rate": ladder_pct,
+            "smoothed_rate": smoothed_pct,
+            "mastery": mastery,
+            "avg_score": round(avg, 1) if avg else 0,
+        }
+        if mastery == "provisional":
+            provisional.append(entry)
+        else:
+            ranked.append(entry)
+    ranked.sort(key=lambda x: -x["win_rate"])
+    provisional.sort(key=lambda x: -x["win_rate"])
+    return {"Avalon": ranked + provisional}
 
 
 async def get_global_leaderboard() -> List[Dict]:
@@ -446,22 +506,7 @@ async def get_global_leaderboard() -> List[Dict]:
       4. 综合通关率 P_final = Σ(ω_g × p̂_g) / Σ(ω_g)
     """
 
-    # ── 辅助数学函数 ──────────────────────────────────────────
-    EPS = 1e-6
-
-    def _clamp(x: float) -> float:
-        return max(EPS, min(1 - EPS, x))
-
-    def _logit(x: float) -> float:
-        x = _clamp(x)
-        return math.log(x / (1 - x))
-
-    def _sigmoid(x: float) -> float:
-        if x > 20:
-            return 1.0
-        if x < -20:
-            return 0.0
-        return 1.0 / (1.0 + math.exp(-x))
+    # ── 辅助数学函数（使用模块级 _clamp/_logit/_sigmoid）───────
 
     # ── 数据查询 ─────────────────────────────────────────────
     queries = [
@@ -719,13 +764,14 @@ async def get_modernart_leaderboard() -> List[Dict]:
 async def get_simple_leaderboard(game_name: str) -> List[Dict]:
     """
     通用排行榜查询，用于只使用 game_results 表的简单游戏。
-    Uses Bayesian smoothed win rate (V3.1) and mastery status.
+    V3.1 P_ladder: logit-space interpolation with reliability lock.
     """
     LAMBDA = 2.0
-    K_MASTERY = 3
+    K = 5
+    K_PROVISIONAL = 3
     registry_key = f"game_results:{game_name}"
-    bg = GAME_REGISTRY.get(registry_key)
-    b_g = bg.base_win_rate if bg else 0.25
+    bg_obj = GAME_REGISTRY.get(registry_key)
+    b_g = bg_obj.base_win_rate if bg_obj else 0.25
 
     async with _get_db() as db:
         cursor = await db.execute(
@@ -742,18 +788,34 @@ async def get_simple_leaderboard(game_name: str) -> List[Dict]:
         )
         rows = await cursor.fetchall()
 
-    stats = []
+    ranked = []
+    provisional = []
     for row in rows:
         p_name, n_g, w_g = row
         hat_p_g = (w_g + LAMBDA * b_g) / (n_g + LAMBDA) if n_g > 0 else b_g
-        smoothed_rate = round(hat_p_g * 100, 1)
-        mastery = "expert" if n_g >= K_MASTERY else "novice"
-        stats.append({
+        smoothed_pct = round(hat_p_g * 100, 1)
+        w_N = n_g / (n_g + K) if n_g > 0 else 0.0
+        logit_blend = (1 - w_N) * _logit(b_g) + w_N * _logit(hat_p_g)
+        p_ladder = _sigmoid(logit_blend)
+        ladder_pct = round(p_ladder * 100, 1)
+        if n_g < K_PROVISIONAL:
+            mastery = "provisional"
+        elif n_g < K:
+            mastery = "rookie"
+        else:
+            mastery = "expert"
+        entry = {
             "name": p_name,
             "wins": w_g,
             "total": n_g,
-            "win_rate": smoothed_rate,
+            "win_rate": ladder_pct,
+            "smoothed_rate": smoothed_pct,
             "mastery": mastery,
-        })
-    stats.sort(key=lambda x: -x["win_rate"])
-    return stats
+        }
+        if mastery == "provisional":
+            provisional.append(entry)
+        else:
+            ranked.append(entry)
+    ranked.sort(key=lambda x: -x["win_rate"])
+    provisional.sort(key=lambda x: -x["win_rate"])
+    return ranked + provisional

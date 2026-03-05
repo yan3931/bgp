@@ -751,13 +751,13 @@
                     const lastScoreText = p.last_score !== null ? `${p.last_score}分` : '--';
 
                     html += `
-                            <div class="apple-list-item" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 16px;">
+                            <div class="apple-list-item" style="flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; ${p.mastery === 'provisional' ? 'opacity:0.65;' : ''}">
                                 <div style="display: flex; align-items: center;">
                                     <div class="rank-num ${rankClass}">${rankIcon}</div>
                                     
                                     <div class="apple-list-item-content" style="flex: 1;">
-                                        <div class="apple-list-item-title">${p.name} ${p.mastery === 'expert' ? '<span style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span>' : '<span style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳试玩</span>'}</div>
-                                        <div class="history-trail">${p.total_games}局 · 胜率${p.win_rate}%</div>
+                                        <div class="apple-list-item-title">${p.name} ${p.mastery === 'expert' ? '<span style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span>' : p.mastery === 'rookie' ? '<span style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span>' : '<span style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span>'}</div>
+                                        <div class="history-trail">${p.total_games}局 · 战力${p.win_rate}% · 胜率${p.smoothed_rate}%</div>
                                     </div>
                                     
                                     <div style="text-align: right;">

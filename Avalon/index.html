@@ -1075,14 +1075,14 @@
                 </div>
             </div>
             <div v-else>
-                <div v-for="(p, i) in lbData" :key="p.name" class="apple-list-item">
+                <div v-for="(p, i) in lbData" :key="p.name" class="apple-list-item" :style="p.mastery === 'provisional' ? 'opacity:0.65;' : ''">
                     <div class="rank-num"
                         :class="i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : (i === 2 ? 'rank-3' : 'rank-other'))">
                         {{ i === 0 ? '👑' : i + 1 }}
                     </div>
 
                     <div class="apple-list-item-content">
-                        <div class="apple-list-item-title">{{ p.name }} <span v-if="p.mastery === 'expert'" style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span><span v-else style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳试玩</span></div>
+                        <div class="apple-list-item-title">{{ p.name }} <span v-if="p.mastery === 'expert'" style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span><span v-else-if="p.mastery === 'rookie'" style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span><span v-else style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span></div>
                     </div>
 
                     <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
@@ -1092,7 +1092,7 @@
                                 }}-{{ p.total - p.wins }}</div>
                         </div>
                         <div style="text-align: right; width: 60px;">
-                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">胜率</div>
+                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">战力</div>
                             <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-green);">{{ p.win_rate
                                 }}%</div>
                         </div>

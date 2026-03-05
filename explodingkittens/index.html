@@ -168,11 +168,11 @@
             let rankClass = rank === 1 ? 'rank-1' : (rank === 2 ? 'rank-2' : (rank === 3 ? 'rank-3' : 'rank-other'));
             let rankIcon = rank === 1 ? '👑' : rank;
             html += `
-                <div class="apple-list-item">
+                <div class="apple-list-item" ${p.mastery === 'provisional' ? 'style="opacity:0.65;"' : ''}>
                     <div class="rank-num ${rankClass}">${rankIcon}</div>
                     <div class="apple-list-item-content">
-                        <div class="apple-list-item-title">${escHtml(p.name)} ${p.mastery === 'expert' ? '<span style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span>' : '<span style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳试玩</span>'}</div>
-                        <div class="history-trail">${p.total} 局 · 胜率 ${p.win_rate}%</div>
+                        <div class="apple-list-item-title">${escHtml(p.name)} ${p.mastery === 'expert' ? '<span style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span>' : p.mastery === 'rookie' ? '<span style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span>' : '<span style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span>'}</div>
+                        <div class="history-trail">${p.total} 局 · 战力 ${p.win_rate}% · 胜率 ${p.smoothed_rate}%</div>
                     </div>
                     <div style="text-align: right; width: 60px;">
                         <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">胜场</div>
