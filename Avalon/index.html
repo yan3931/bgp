@@ -1083,23 +1083,17 @@
 
                     <div class="apple-list-item-content">
                         <div class="apple-list-item-title">{{ p.name }} <span v-if="p.mastery === 'expert'" style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span><span v-else-if="p.mastery === 'rookie'" style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span><span v-else style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span></div>
+                        <div class="history-trail">{{ p.total }}局 · 战力{{ p.win_rate }}% · 胜率{{ p.smoothed_rate }}%</div>
                     </div>
 
                     <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
                         <div style="text-align: right;">
                             <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">胜负</div>
-                            <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">{{ p.wins
-                                }}-{{ p.total - p.wins }}</div>
-                        </div>
-                        <div style="text-align: right; width: 60px;">
-                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">战力</div>
-                            <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-green);">{{ p.win_rate
-                                }}%</div>
+                            <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);">{{ p.wins }}-{{ p.total - p.wins }}</div>
                         </div>
                         <div style="text-align: right; width: 40px;">
-                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">场次</div>
-                            <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">{{ p.total }}局
-                            </div>
+                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">战力</div>
+                            <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">{{ p.win_rate }}%</div>
                         </div>
                     </div>
                 </div>

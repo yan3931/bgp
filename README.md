@@ -119,54 +119,49 @@
 即使数据为空，也应在 `.apple-list` 下保持卡片式边框背景（防止排版坍塌）：
 
 ```html
-<!-- Vue.js 渲染空状态模板 -->
+<!-- Vue.js 渲染视图模板（包括空状态和列表项） -->
 <div class="apple-list mb-xl">
-    <div class="empty-state">
-        <span class="empty-icon">👻</span> <!-- 也可用 🏆, 🃏, 等贴合主题的表情 -->
-        还没人玩过呢，快去开一局！
+    <!-- 空白状态 -->
+    <div v-if="leaderboard.length === 0" class="text-center text-muted" style="padding: var(--space-xl);">
+        <div class="empty-state">
+            <span class="empty-icon">👻</span> <!-- 也可用 🏆, 🃏, 等贴合主题的表情 -->
+            还没人玩过呢，快去开一局！
+        </div>
     </div>
-</div>
-```
-
-### 4.2 排行榜列表项渲染 (List Item Structure)
-数据列表渲染应使用 `.apple-list-item` 为基础包裹。名次使用 `rank-*` 类标识金、银、铜牌及普通名次，并用 Flex 拆分出右对齐的数据统计（Stat Badges）。
-
-**原生 JS（或 Vue `v-for`）模板标准结构：**
-```javascript
-// JS拼接模板示例
-data.leaderboard.forEach((p, idx) => {
-    const rank = idx + 1;
-    // 使用全局统一定义的 rank-* CSS工具类
-    let rankClass = rank === 1 ? 'rank-1' : (rank === 2 ? 'rank-2' : (rank === 3 ? 'rank-3' : 'rank-other'));
-    let rankIcon = rank === 1 ? '👑' : rank;
-
-    html += `
-        <div class="apple-list-item">
+    
+    <!-- 列表数据 -->
+    <div v-else>
+        <div v-for="(item, idx) in leaderboard" :key="item.name" class="apple-list-item" :style="item.mastery === 'provisional' ? 'opacity:0.65;' : ''">
             <!-- 1. 左侧名次/奖牌 -->
-            <div class="rank-num ${rankClass}">${rankIcon}</div>
-            
-            <!-- 2. 中间玩家信息 -->
-            <div class="apple-list-item-content">
-                <div class="apple-list-item-title">${p.name}</div>
-                <!-- 附属统计信息可用 .history-trail 工具类并调整透明度或字号 -->
-                <div class="history-trail">${p.total_games}局 · 胜率${p.win_rate}%</div>
+            <div class="rank-num"
+                :class="idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : 'rank-other'))">
+                {{ idx === 0 ? '👑' : idx + 1 }}
             </div>
-            
+
+            <!-- 2. 中间玩家信息及战力概览 -->
+            <div class="apple-list-item-content">
+                <div class="apple-list-item-title">{{ item.name }} 
+                    <span v-if="item.mastery === 'expert'" style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span>
+                    <span v-else-if="item.mastery === 'rookie'" style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span>
+                    <span v-else style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span>
+                </div>
+                <div class="history-trail">{{ item.total_games }}局 · 战力{{ item.win_rate }}% · 胜率{{ item.smoothed_rate }}%</div>
+            </div>
+
             <!-- 3. 右侧并排数值统计区 -->
             <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
-                <div style="text-align: right; width: 60px;">
-                    <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">爆牌数</div>
-                    <!-- 使用不同的苹果主题色 -->
-                    <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-red);">${p.total_busts}</div>
+                <div style="text-align: right;">
+                    <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">业务指标A</div>
+                    <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);">{{ item.avg_score }}</div>
                 </div>
-                <div style="text-align: right; width: 60px;">
-                    <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">场均得分</div>
-                    <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);">${p.avg_score}</div>
+                <div style="text-align: right; width: 40px;">
+                    <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">指标B</div>
+                    <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">{{ item.last_score !== null ? item.last_score : '--' }}</div>
                 </div>
             </div>
         </div>
-    `;
-});
+    </div>
+</div>
 ```
 
 ---
@@ -237,20 +232,3 @@ data.leaderboard.forEach((p, idx) => {
 * 已在首页和游戏列表中添加了入口。
 
 ---
-
-## 7. PWA (渐进式 Web 应用) 支持
-桌游助手现已全面支持 PWA！你可以直接在手机浏览器（如 Safari 或 Chrome）中选择“添加到主屏幕”。
-- **沉浸式体验**：从主屏幕启动时，将完全隐藏浏览器的地址栏与底部导航条，呈现纯净的全屏应用界面。
-- **类原生质感**：配合 Apple HIG 设计规范和全局的平滑转场动画，体验将和原生的 iOS App 完全一致。
-- **配置资源**：相关的 `manifest.json` 与 PWA 图标均已存放于 `static/icons` 和 `static` 目录下，所有页面通过 `base.html` 中心化接入，无缝兼容所有子游戏。
-
----
-
-## LasVegas Recent Architecture Updates
-
-- Added Socket.IO state broadcasting for LasVegas state mutations (`add_player`, `remove_player`, `add_bill`, `remove_bill`, `setup_field`, `end_game`, `reset`), emitting `state_update`.
-- Moved field setup randomization into backend truth state:
-  - New API: `POST /lasvegas/api/setup_field`
-  - New API: `GET /lasvegas/api/field`
-  - `GET /lasvegas/api/status` now includes `field`.
-- Frontend LasVegas page now uses Alpine.js for reactive leaderboard/player/history rendering, reducing `innerHTML` string rendering in core views.

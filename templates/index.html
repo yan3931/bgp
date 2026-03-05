@@ -344,8 +344,8 @@
             {% if loop.index0 == 0 %}👑{% else %}{{ loop.index0 + 1 }}{% endif %}
         </div>
         <div class="apple-list-item-content">
-            <div class="apple-list-item-title">{{ player.name }}</div>
-            <div class="apple-list-item-subtitle">总局数: {{ player.total_games }} · 胜 {{ player.total_wins }}局{% if player.pve_win_rate is not none %} · PvE {{ player.pve_win_rate }}%{% endif %}{% if player.pvp_data_strength < 2.0 %} · ⏳定级中{% endif %}</div>
+            <div class="apple-list-item-title">{{ player.name }}<p class="apple-list-item-subtitle">{% if player.pvp_data_strength < 2.0 %}⏳定级中{% endif %}</p></div>
+            <div class="apple-list-item-subtitle">总局数: {{ player.total_games }} · 胜 {{ player.total_wins }}局{% if player.pve_win_rate is not none %} · PvE {{ player.pve_win_rate }}%{% endif %}</div>
         </div>
         <div class="apple-list-item-trailing text-blue fw-700">胜率 {{ player.weighted_win_rate }}%</div>
     </div>
