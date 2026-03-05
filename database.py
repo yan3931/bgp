@@ -513,9 +513,6 @@ async def get_global_leaderboard() -> List[Dict]:
         ("game_results:Avalon",
          "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
          "FROM game_results WHERE game_name = 'Avalon'"),
-        ("game_results:LoveLetters",
-         "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
-         "FROM game_results WHERE game_name = 'LoveLetters'"),
         ("cabo_game_results",
          "SELECT player_name, 1, CASE WHEN is_winner THEN 1 ELSE 0 END "
          "FROM cabo_game_results"),
