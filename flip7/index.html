@@ -660,16 +660,8 @@
         fetchStatus();
     }
 
-    function resetGame() {
-        document.getElementById('resetConfirmModal').classList.add('show');
-    }
-
-    function closeResetConfirm() {
-        document.getElementById('resetConfirmModal').classList.remove('show');
-    }
-
-    async function executeResetGame() {
-        closeResetConfirm();
+    async function resetGame() {
+        if (!await window.showConfirm("确定重置？", "重置", "取消")) return;
         await fetch(`${API_BASE}/reset`, {
             method: 'POST'
         });

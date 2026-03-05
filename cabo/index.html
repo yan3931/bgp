@@ -528,7 +528,7 @@
 {% endblock %}
 
 {% block nav_right %}
-<button class="apple-btn apple-btn-sm apple-btn-secondary" style="min-height: 44px;" @click="resetGame">重置</button>
+<button class="apple-btn apple-btn-sm apple-btn-secondary" style="min-height: 44px;" onclick="window.caboApp.resetGame()">重置</button>
 {% endblock %}
 
 {% block content %}
@@ -737,7 +737,7 @@
     const {
         createApp
     } = Vue;
-    createApp({
+    const app = createApp({
         data() {
             return {
                 players: [],
@@ -789,7 +789,7 @@
                 }
             },
             async resetGame() {
-                if (!confirm("清空重置？")) return;
+                if (!await window.showConfirm("确定要清空所有数据并重置对局吗？", "清空重置", "点错了")) return;
                 try {
                     await axios.post('/cabo/api/reset');
                     this.gameStatus = 'active';
@@ -841,7 +841,8 @@
                 }
             }
         }
-    }).mount('#app');
+    });
+    window.caboApp = app.mount('#app');
 </script>
 {% endraw %}
 {% endblock %}

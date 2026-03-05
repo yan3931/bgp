@@ -1134,7 +1134,7 @@
             },
 
             async removePlayer(name) {
-                if (!confirm(`确定移除 ${name}？`)) return;
+                if (!await window.showConfirm(`确定移除 ${name}？`, '移除', '取消')) return;
                 await this.apiPost('/api/remove_player', { name });
                 const i = this.expandedPlayers.indexOf(name);
                 if (i >= 0) this.expandedPlayers.splice(i, 1);
@@ -1206,7 +1206,7 @@
             },
 
             async resetGame() {
-                if (!confirm('确定重置？当前数据将清除（不影响历史记录）。')) return;
+                if (!await window.showConfirm('确定重置？当前数据将清除（不影响历史记录）。', '重置', '取消')) return;
                 await this.apiPost('/api/reset');
                 this.expandedPlayers = [];
                 showToast('游戏已重置');

@@ -477,8 +477,8 @@
         namespaceSocket.emit('switch_mode', mode);
     }
 
-    function resetGame() {
-        if (confirm('重置所有数据？')) {
+    async function resetGame() {
+        if (await window.showConfirm('确定要重置所有牌库数据吗？', '重置', '取消')) {
             namespaceSocket.emit('reset_game');
         }
     }

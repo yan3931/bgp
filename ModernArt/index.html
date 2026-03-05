@@ -579,7 +579,7 @@
 
     async function joinGame() {
         const name = document.getElementById('my-name-input').value.trim();
-        if (!name) return alert("请输入你的名字！");
+        if (!name) return window.showToast("请输入你的名字！", 'error');
 
         try {
             const res = await fetch(API_BASE + '/join', {
@@ -604,15 +604,15 @@
                 }
                 startPolling();
             } else {
-                alert("加入失败: " + JSON.stringify(data));
+                window.showToast("加入失败: " + JSON.stringify(data), 'error');
             }
         } catch (e) {
-            alert("加入失败: " + e);
+            window.showToast("加入失败: " + e, 'error');
         }
     }
 
     async function resetGame() {
-        if (!confirm("确定要清空大厅并重新开始吗？")) return;
+        if (!await window.showConfirm("确定要清空大厅并重新开始吗？", "清空", "取消")) return;
         try {
             const res = await fetch(API_BASE + '/reset', {
                 method: 'POST'

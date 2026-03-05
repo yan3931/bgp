@@ -78,6 +78,81 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         };
+
+        // Standardized Native-like Async Confirm Dialog
+        window.showConfirm = function(message, confirmText = '确认', cancelText = '取消') {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'apple-confirm-overlay';
+                
+                // Styles applied inline to ensure no extra CSS payload is strictly required 
+                // but utilizes HIG spacing & tokens
+                overlay.style.cssText = `
+                    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+                    z-index: 10000; display: flex; align-items: center; justify-content: center;
+                    opacity: 0; transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+                `;
+
+                const modal = document.createElement('div');
+                modal.className = 'apple-confirm-modal';
+                modal.style.cssText = `
+                    background: var(--apple-bg); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);
+                    width: 290px; text-align: center; overflow: hidden; transform: scale(0.95);
+                    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); padding-top: var(--space-lg);
+                `;
+
+                const msgEl = document.createElement('div');
+                msgEl.style.cssText = `
+                    padding: 0 var(--space-md) var(--space-lg); font-size: 1.05rem; font-weight: 600; 
+                    color: var(--apple-black); line-height: 1.4; letter-spacing: -0.01em;
+                `;
+                msgEl.innerHTML = message; // allows light html
+
+                const btnRow = document.createElement('div');
+                btnRow.style.cssText = `
+                    display: flex; border-top: 1px solid rgba(0,0,0,0.1); border-bottom-left-radius: var(--radius-xl); border-bottom-right-radius: var(--radius-xl);
+                `;
+
+                const btnCancel = document.createElement('button');
+                btnCancel.textContent = cancelText;
+                btnCancel.style.cssText = `
+                    flex: 1; padding: 14px 0; background: transparent; border: none; border-right: 1px solid rgba(0,0,0,0.1);
+                    font-size: 1.05rem; color: var(--apple-gray); font-family: var(--font-family); font-weight: 500; cursor: pointer;
+                    -webkit-tap-highlight-color: transparent;
+                `;
+
+                const btnConfirm = document.createElement('button');
+                btnConfirm.textContent = confirmText;
+                btnConfirm.style.cssText = `
+                    flex: 1; padding: 14px 0; background: transparent; border: none;
+                    font-size: 1.05rem; color: var(--apple-blue); font-family: var(--font-family); font-weight: 700; cursor: pointer;
+                    -webkit-tap-highlight-color: transparent;
+                `;
+
+                const cleanup = (result) => {
+                    overlay.style.opacity = '0';
+                    modal.style.transform = 'scale(0.95)';
+                    setTimeout(() => overlay.remove(), 300);
+                    resolve(result);
+                };
+
+                btnCancel.addEventListener('click', () => cleanup(false));
+                btnConfirm.addEventListener('click', () => cleanup(true));
+
+                btnRow.appendChild(btnCancel);
+                btnRow.appendChild(btnConfirm);
+                modal.appendChild(msgEl);
+                modal.appendChild(btnRow);
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+
+                // Trigger animations
+                requestAnimationFrame(() => {
+                    overlay.style.opacity = '1';
+                    modal.style.transform = 'scale(1)';
+                });
+            });
+        };
     </script>
 </body>
 
