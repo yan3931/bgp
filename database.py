@@ -386,7 +386,7 @@ async def _fetch_scored_leaderboard(
         return cached
 
     LAMBDA = 2.0
-    K = 5  # 出勤常数
+    K = 3  # 出勤常数
     K_PROVISIONAL = 3  # 定级阈值
     bg_obj = GAME_REGISTRY.get(registry_key)
     b_g = bg_obj.base_win_rate if bg_obj else 0.25
@@ -495,7 +495,7 @@ async def get_leaderboard() -> Dict[str, List[Dict]]:
         return cached
 
     LAMBDA = 2.0
-    K = 5
+    K = 3
     K_PROVISIONAL = 3
     bg_obj = GAME_REGISTRY.get("game_results:Avalon")
     b_g = bg_obj.base_win_rate if bg_obj else 0.5
@@ -729,7 +729,7 @@ async def get_lasvegas_leaderboard() -> List[Dict]:
         return cached
 
     LAMBDA = 2.0
-    K = 5
+    K = 3
     K_PROVISIONAL = 3
     bg_obj = GAME_REGISTRY.get("lasvegas")
     b_g = bg_obj.base_win_rate if bg_obj else 0.25
@@ -909,7 +909,7 @@ async def get_simple_leaderboard(game_name: str) -> List[Dict]:
         return cached
 
     LAMBDA = 2.0
-    K = 5
+    K = 3
     K_PROVISIONAL = 3
     registry_key = f"game_results:{game_name}"
     bg_obj = GAME_REGISTRY.get(registry_key)
