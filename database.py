@@ -630,8 +630,8 @@ async def get_global_leaderboard() -> List[Dict]:
 
     # ── 算法常量 ─────────────────────────────────────────────
     LAMBDA = 2.0        # 贝叶斯先验强度
-    K_PVP = 5           # PvP 出勤常数
-    K_PVE = 10          # PvE 出勤常数
+    K_PVP = 3           # PvP 出勤常数
+    K_PVE = 5          # PvE 出勤常数
     REF_BASE = 0.25     # 标准 4 人局基准
 
     result = []
