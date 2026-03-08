@@ -452,20 +452,6 @@ async def _fetch_scored_leaderboard(
         provisional.sort(key=lambda x: -x["win_rate"])
         stats = ranked + provisional
 
-        cursor = await db.execute(
-            f"""
-            SELECT player_name, {score_column}
-            FROM {table_name}
-            WHERE game_id = (
-                SELECT game_id FROM {table_name} ORDER BY timestamp DESC LIMIT 1
-            )
-            """
-        )
-        last_scores = {row[0]: row[1] for row in await cursor.fetchall()}
-        last_key = "last_money" if score_key == "avg_money" else "last_score"
-        for item in stats:
-            item[last_key] = last_scores.get(item["name"])
-
         await store.set_json(cache_key, stats, expire=CACHE_TTL)
         return stats
 
@@ -784,8 +770,6 @@ async def get_lasvegas_leaderboard() -> List[Dict]:
             "win_rate": ladder_pct,         # P_ladder (排名主键)
             "smoothed_rate": smoothed_pct,  # hat_p_g (表现胜率)
             "mastery": mastery,
-            "last_game_amount": 0,
-            "last_game_bills": 0,
             "avg_amount": round(total_amount / games_played, 1) if games_played > 0 else 0,
         }
         
@@ -793,30 +777,6 @@ async def get_lasvegas_leaderboard() -> List[Dict]:
             provisional.append(item)
         else:
             ranked.append(item)
-
-    # Get the latest game timestamp
-    async with _get_db() as db:
-        cursor = await db.execute("SELECT MAX(timestamp) FROM lasvegas_leaderboard")
-        latest_ts_row = await cursor.fetchone()
-    latest_ts = latest_ts_row[0] if latest_ts_row else None
-
-    if latest_ts:
-        async with _get_db() as db:
-            cursor = await db.execute(
-                """
-                SELECT player_name, game_amount, bill_count
-                FROM lasvegas_leaderboard
-                WHERE timestamp = ?
-                """,
-                (latest_ts,),
-            )
-            last_rows = await cursor.fetchall()
-            
-        last_data_map = {row[0]: {"amt": row[1], "bills": row[2]} for row in last_rows}
-        for item in ranked + provisional:
-            if item["name"] in last_data_map:
-                item["last_game_amount"] = last_data_map[item["name"]]["amt"]
-                item["last_game_bills"] = last_data_map[item["name"]]["bills"]
 
     ranked.sort(key=lambda x: -x["win_rate"])
     provisional.sort(key=lambda x: -x["win_rate"])

@@ -339,7 +339,7 @@
 </div>
 <div class="apple-list mb-xl">
     {% for player in leaderboard %}
-    <div class="apple-list-item" {% if player.pvp_data_strength < 2.0 %}style="opacity:0.65;"{% endif %}>
+    <div class="apple-list-item">
         <div class="rank-num {% if loop.index0 == 0 %}rank-1{% elif loop.index0 == 1 %}rank-2{% elif loop.index0 == 2 %}rank-3{% else %}rank-other{% endif %}">
             {% if loop.index0 == 0 %}👑{% else %}{{ loop.index0 + 1 }}{% endif %}
         </div>

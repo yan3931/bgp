@@ -145,7 +145,7 @@
                     <span v-else-if="item.mastery === 'rookie'" style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span>
                     <span v-else style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span>
                 </div>
-                <div class="history-trail">{{ item.total_games }}局 · 战力{{ item.win_rate }}% · 胜率{{ item.smoothed_rate }}%</div>
+                <div class="history-trail">{{ item.total_games }}局 · 胜{{ item.wins }}场 · 战力{{ item.win_rate }}% · 胜率{{ item.smoothed_rate }}%</div>
             </div>
 
             <!-- 3. 右侧并排数值统计区 -->
@@ -154,10 +154,7 @@
                     <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">业务指标A</div>
                     <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);">{{ item.avg_score }}</div>
                 </div>
-                <div style="text-align: right; width: 40px;">
-                    <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">指标B</div>
-                    <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">{{ item.last_score !== null ? item.last_score : '--' }}</div>
-                </div>
+
             </div>
         </div>
     </div>

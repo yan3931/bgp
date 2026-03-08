@@ -854,7 +854,7 @@
                             <span x-show="p.mastery === 'rookie'" style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span>
                             <span x-show="p.mastery === 'provisional'" style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span>
                         </div>
-                        <div class="history-trail" x-text="p.total_games + '局 · 战力' + p.win_rate + '% · 胜率' + p.smoothed_rate + '%'"></div>
+                        <div class="history-trail" x-text="p.total_games + '局 · 胜' + p.wins + '场 · 战力' + p.win_rate + '% · 胜率' + p.smoothed_rate + '%'"></div>
                     </div>
                     
                     <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
@@ -862,11 +862,6 @@
                             <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">场均</div>
                             <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);"
                                 x-text="p.avg_amount > 0 ? '$' + p.avg_amount + '万' : '--'"></div>
-                        </div>
-                        <div style="text-align: right; width: 60px;">
-                            <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">上场</div>
-                            <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);"
-                                x-text="p.last_game_amount > 0 ? '$' + p.last_game_amount + '万' : '--'"></div>
                         </div>
                     </div>
                 </div>

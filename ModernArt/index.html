@@ -808,17 +808,13 @@
                                 
                                 <div class="apple-list-item-content">
                                     <div class="apple-list-item-title">${player.name} ${player.mastery === 'expert' ? '<span style="font-size:0.7rem;color:var(--apple-orange);font-weight:700;">👑专精</span>' : player.mastery === 'rookie' ? '<span style="font-size:0.7rem;color:var(--apple-blue);font-weight:600;">🔰新手</span>' : '<span style="font-size:0.7rem;color:var(--apple-gray);font-weight:600;">⏳定级中</span>'}</div>
-                                    <div class="history-trail">${player.total_games}局 · 战力${player.win_rate}% · 胜率${player.smoothed_rate}%</div>
+                                    <div class="history-trail">${player.total_games}局 · 胜${player.wins}场 · 战力${player.win_rate}% · 胜率${player.smoothed_rate}%</div>
                                 </div>
                                 
                                 <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
                                     <div style="text-align: right;">
                                         <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">均资</div>
                                         <div class="score-badge" style="font-size: 1.2rem; color: var(--apple-blue);">$${player.avg_money}</div>
-                                    </div>
-                                    <div style="text-align: right; width: 40px;">
-                                        <div class="history-trail" style="font-size: 0.7rem; margin-bottom: 2px;">上局</div>
-                                        <div class="score-badge" style="font-size: 1.1rem; color: var(--apple-gray);">${lastMoneyText}</div>
                                     </div>
                                 </div>
                             </div>
